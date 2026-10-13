@@ -9,3 +9,6 @@ export const coreModule: ModuleInfo = {
   icon: Briefcase,
   status: "core",
 };
+
+// Tables other modules may reference (foreign keys, joins).
+export { employee, job, publicHoliday, team, teamMember } from "./schema";

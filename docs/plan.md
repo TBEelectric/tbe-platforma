@@ -17,7 +17,7 @@ Docházka má prioritu. Vozový park se připravuje souběžně (Traccar, ověř
 
 ## Milník 2 – Jádro
 
-- [ ] Schéma `core`: employee, employment, team, team_member, role_assignment, customer, job, site, public_holiday, audit_log
+- [x] Schéma `core`: employee, employment, team, team_member, role_assignment, customer, job, site, public_holiday, audit_log
 - [ ] Generování státních svátků ČR (včetně Velikonoc)
 - [ ] Správa zaměstnanců, úvazků, part a zakázek (jednoduché tabulky a formuláře)
 - [ ] Napojit uživatele na zaměstnance, `role_assignment`, nahradit dočasný allow-list (přihlásí se jen aktivní zaměstnanec s e-mailem)

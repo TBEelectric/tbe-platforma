@@ -1,9 +1,10 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as coreSchema from "@/modules/core/schema";
+import * as timesheetsSchema from "@/modules/timesheets/schema";
 import { env } from "@/lib/env";
 
-const schema = { ...coreSchema };
+const schema = { ...coreSchema, ...timesheetsSchema };
 
 // Reuse one pool across hot reloads in development.
 const globalForDb = globalThis as unknown as { pgPool?: Pool };

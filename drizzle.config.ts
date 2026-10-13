@@ -11,8 +11,8 @@ export default defineConfig({
   out: "./drizzle",
   dbCredentials: { url: process.env.DATABASE_URL },
   casing: "snake_case",
-  // Each module owns its Postgres schema; add "timesheets" with the first timesheets table.
-  schemaFilter: ["core"],
+  // Each module owns its Postgres schema.
+  schemaFilter: ["core", "timesheets"],
   strict: true,
   verbose: true,
 });

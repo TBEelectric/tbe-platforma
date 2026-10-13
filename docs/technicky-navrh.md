@@ -11,6 +11,7 @@ Nový pojem se nejdřív zapíše sem.
 | Česky | V kódu | Význam |
 | --- | --- | --- |
 | Zaměstnanec | `employee` | Osoba v evidenci (HPP, DPP, DPČ); nemusí mít přihlášení |
+| Eviduje docházku | `tracks_time` | Zaměstnanec vykazuje docházku; vypnuté u účtů bez docházky (např. administrátor mimo firmu) |
 | Uživatel | `user` | Přihlašovací účet (Google), navázaný na zaměstnance |
 | Pracovní poměr | `employment` | Typ úvazku a platnost od–do |
 | Tým / parta | `team` | Skupina zaměstnanců s vedoucím |
@@ -38,12 +39,12 @@ Sazby se zatím neevidují, `employment` i `job` je mohou dostat později.
 
 | Tabulka | Klíčová pole | Poznámka |
 | --- | --- | --- |
-| `user` | email, name, employee_id | Vytváří Better Auth; přihlášení jen pro povolené e-maily |
-| `employee` | first_name, last_name, personal_number, email, active | Základ pro všechny moduly |
+| `user` | email, name, employee_id | Vytváří Better Auth; přihlásí se jen aktivní zaměstnanec s tímto e-mailem, propojení podle e-mailu |
+| `employee` | first_name, last_name, personal_number, email, active, tracks_time | Základ pro všechny moduly; e-mail = povolený účet |
 | `employment` | employee_id, type (`hpp`,`dpp`,`dpc`), valid_from, valid_to, weekly_hours, schedule_type (`flexible`,`uneven`) | Výpočty berou úvazek platný v daný den |
 | `team` | name, lead_employee_id | Parta s vedoucím |
 | `team_member` | team_id, employee_id, valid_from, valid_to | Členství s historií |
-| `role_assignment` | user_id, module, role | Role po modulech |
+| `role_assignment` | employee_id, module, role | Role po modulech; přiřazuje se zaměstnanci, aby šla zadat před prvním přihlášením |
 | `customer` | name, ico, external_id | |
 | `job` | code, name, customer_id, status (`active`,`closed`), external_id | |
 | `site` | name, type, address, lat, lng, customer_id | Hlavně pro vozový park |
@@ -113,7 +114,7 @@ pod 11 h, týdenní pod 35 h; pracovní den bez záznamu a absence (e-mail dalš
 | Zaměstnanci, týmy, úvazky, nároky | Ne | Ne | Ano | Ano |
 | Role a povolené účty | Ne | Ne | Ne | Ano |
 
-Role v `role_assignment`: `module = '*'`, `role = 'admin'` (administrátor) a `module = 'timesheets'`, `role = 'manager'`
+Role v `role_assignment` (přes `employee_id`): `module = '*'`, `role = 'admin'` (administrátor) a `module = 'timesheets'`, `role = 'manager'`
 (správce docházky). Zaměstnanec = každý přihlášený uživatel navázaný na aktivního zaměstnance, bez další role.
 Vedoucí není samostatná role; práva plynou z `team.lead_employee_id`. Tabulky Better Auth (`user`, `session`,
 `account`, `verification`) jsou ve schématu `core`.
