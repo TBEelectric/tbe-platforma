@@ -33,3 +33,7 @@ pnpm-debug.log*
 # local
 *.pem
 .vercel
+
+# pnp
+.pnp
+.pnp.*

@@ -4,7 +4,7 @@ Docházka má prioritu. Vozový park se připravuje souběžně (Traccar, ověř
 
 ## Milník 1 – Základ projektu
 
-- [ ] Založit Next.js projekt (TypeScript, Tailwind, ESLint, App Router, `src/`), pnpm, Prettier.
+- [x] Založit Next.js projekt (TypeScript, Tailwind, ESLint, App Router, `src/`), pnpm, Prettier.
       `create-next-app` odmítne neprázdnou složku (je tu `CLAUDE.md` a `docs/`): vygeneruj ho do dočasné složky
       a soubory přesuň sem, nic z `docs/` ani `CLAUDE.md` nepřepiš.
 - [ ] `docker-compose.yml` s PostgreSQL 16 pro lokální vývoj
