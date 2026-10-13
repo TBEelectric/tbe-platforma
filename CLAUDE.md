@@ -130,8 +130,9 @@ Notes:
   One task = one commit. Commit message in English, imperative, short subject
   (e.g. `Add Drizzle setup and first migration`), body with what and why if useful.
 - Never commit secrets: `.env` stays local; keep `.env.example` with placeholder values up to date.
-- Do not push, create remotes or rewrite history (rebase, force push, reset of committed work)
-  unless the user asks.
+- **Push after every commit:** `git push origin main` (remote `origin` = github.com/TBEelectric/tbe-platforma).
+  If the push fails (conflict, no network), stop and tell the user. Never force push, never push other
+  branches, never rewrite history (rebase, reset of committed work) unless the user asks.
 
 ## Working style
 
