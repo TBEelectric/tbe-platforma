@@ -13,7 +13,7 @@ Docházka má prioritu. Vozový park se připravuje souběžně (Traccar, ověř
 - [x] Layout s bočním menu, přepínač modulů, launcher s dlaždicemi (Docházka aktivní, ostatní moduly jako „Plánováno“)
 - [ ] Better Auth + Google (tabulky Better Auth ve schématu `core`), dočasný allow-list e-mailů v `.env` (`AUTH_ALLOWED_EMAILS`); role přijdou v milníku 2
 - [x] Vitest nastavený, první test projde
-- [ ] Doplnit sekci Commands v `CLAUDE.md`
+- [x] Doplnit sekci Commands v `CLAUDE.md`
 
 ## Milník 2 – Jádro
 

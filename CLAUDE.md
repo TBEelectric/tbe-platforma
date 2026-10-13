@@ -82,17 +82,33 @@ Module boundaries: a module may import another module only through that module's
 
 ## Commands
 
-(confirm once the project is scaffolded)
+First run: `cp .env.example .env`, fill it in, then `pnpm install`, `docker compose up -d db`, `pnpm db:migrate`.
 
 ```
-docker compose up -d db   # start local PostgreSQL
-pnpm dev                  # run web app
+docker compose up -d db   # start local PostgreSQL 16 (port 5432, db/user/password: tbe)
+pnpm dev                  # run web app on http://localhost:3000
 pnpm worker               # run scheduled jobs locally
-pnpm test                 # vitest
+pnpm test                 # vitest (run once); pnpm test:watch for watch mode
+pnpm lint                 # eslint
+pnpm typecheck            # next typegen + tsc
+pnpm format               # prettier --write (format:check in CI)
+pnpm build                # production build (also type-checks)
 pnpm db:generate          # drizzle-kit generate (new migration from schema changes)
 pnpm db:migrate           # apply migrations
 pnpm db:seed              # sample data
+pnpm db:studio            # Drizzle Studio (browse the database)
 ```
+
+Before each commit: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`.
+
+Notes:
+- Next.js 16 docs for the installed version are in `node_modules/next/dist/docs/` (see `AGENTS.md`).
+  Cache Components are on: request data (`headers()`, session, `new Date()`) must sit under `<Suspense>`,
+  after `await io()`, or on a route with `export const instant = false`.
+- Auth: every protected page, server action and export calls `requireUser()` from `src/lib/current-user.ts`.
+  Layouts do not protect pages (they render in parallel); `src/proxy.ts` is only an optimistic cookie check.
+- Drizzle uses `casing: "snake_case"`: write camelCase keys in `schema.ts`, columns become snake_case.
+- shadcn/ui: `pnpm dlx shadcn@latest add <component>`; then adjust sizes to the TBE style (44 px controls).
 
 ## Git
 
