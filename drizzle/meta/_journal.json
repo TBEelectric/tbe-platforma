@@ -29,6 +29,20 @@
       "when": 1791918117443,
       "tag": "0003_exclusion_constraints",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791923127705,
+      "tag": "0004_timesheets_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791923135323,
+      "tag": "0005_timesheets_exclusion_constraints",
+      "breakpoints": true
     }
   ]
 }

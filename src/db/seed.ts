@@ -1,7 +1,7 @@
 // Sample data for local development (pnpm db:seed), matching the screen references and the
 // import template (same personal numbers, so importing the template updates these records).
 // Safe to run repeatedly: existing records are left as they are.
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { writeAudit } from "@/lib/audit";
 import { closeDb, db, type DbOrTx } from "@/lib/db";
 import { ensureAdmin, syncPublicHolidays } from "@/modules/core";
@@ -13,7 +13,11 @@ import {
   team,
   teamMember,
 } from "@/modules/core/schema";
-import { leaveEntitlement } from "@/modules/timesheets/schema";
+import {
+  leaveEntitlement,
+  timesheetSettings,
+  workType,
+} from "@/modules/timesheets/schema";
 
 const YEAR = new Date().getFullYear();
 
@@ -148,6 +152,27 @@ const jobs = [
     ico: "34567890",
   },
 ];
+
+const workTypes = [
+  { code: "montaz", name: "Montáž", requiresJob: true, sortOrder: 10 },
+  { code: "revize", name: "Revize", requiresJob: true, sortOrder: 20 },
+  { code: "cesta", name: "Cesta", requiresJob: true, sortOrder: 30 },
+  { code: "rezie", name: "Režie", requiresJob: false, sortOrder: 40 },
+];
+
+/** Default thresholds (see docs/technicky-navrh.md); minutes unless the key says otherwise. */
+const SETTINGS_VALID_FROM = "2020-01-01";
+const settings: Record<string, unknown> = {
+  night_start: "22:00",
+  night_end: "06:00",
+  break_after_work_minutes: 360,
+  break_min_minutes: 30,
+  break_part_min_minutes: 15,
+  daily_work_warning_minutes: 720,
+  daily_rest_minutes: 660,
+  weekly_rest_minutes: 2100,
+  dpp_yearly_limit_hours: 300,
+};
 
 /** Inserts a row unless one with the same unique key exists; audits new rows. Returns the row id. */
 async function upsertAudited<T extends { id: string }>(
@@ -297,11 +322,50 @@ async function seedJobs(tx: DbOrTx) {
   }
 }
 
+async function seedTimesheetCatalogues(tx: DbOrTx) {
+  for (const w of workTypes) {
+    const [found] = await tx
+      .select()
+      .from(workType)
+      .where(eq(workType.code, w.code));
+    await upsertAudited(
+      tx,
+      "work_type",
+      found,
+      async () => (await tx.insert(workType).values(w).returning())[0],
+    );
+  }
+  for (const [key, value] of Object.entries(settings)) {
+    const [found] = await tx
+      .select()
+      .from(timesheetSettings)
+      .where(
+        and(
+          eq(timesheetSettings.key, key),
+          eq(timesheetSettings.validFrom, SETTINGS_VALID_FROM),
+        ),
+      );
+    await upsertAudited(
+      tx,
+      "timesheet_settings",
+      found,
+      async () =>
+        (
+          await tx
+            .insert(timesheetSettings)
+            .values({ key, value, validFrom: SETTINGS_VALID_FROM })
+            .returning()
+        )[0],
+    );
+  }
+}
+
 async function main() {
   const holidays = await syncPublicHolidays(db, YEAR - 1, YEAR + 5);
   await db.transaction(async (tx) => {
     await seedPeople(tx);
     await seedJobs(tx);
+    await seedTimesheetCatalogues(tx);
   });
   await ensureAdmin(db, {
     email: "marketing@tbeelectric.cz",

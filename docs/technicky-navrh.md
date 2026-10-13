@@ -22,6 +22,8 @@ Nový pojem se nejdřív zapíše sem.
 | Druh práce | `work_type` | Montáž, revize, cesta, režie |
 | Interval | `time_entry` | Úsek od–do: práce na zakázce, nebo přestávka |
 | Absence | `absence` | Dovolená, nemoc, OČR, lékař |
+| Žádost o absenci | `absence.status = requested` | Absence podaná zaměstnancem, čeká na schválení (`approved`) nebo zamítnutí (`rejected`) |
+| Celodenní absence | `absence.hours is null` | Absence na celé dny; s `hours` jde o část jednoho dne (např. lékař) |
 | Pohotovost | `standby` | Pracovní pohotovost od–do |
 | Měsíční výkaz | `timesheet` | Měsíc jednoho zaměstnance se stavem schválení |
 | Uzávěrka | `period_close` | Uzavření měsíce pro všechny zaměstnance |
@@ -56,8 +58,8 @@ Sazby se zatím neevidují, `employment` i `job` je mohou dostat později.
 | Tabulka | Klíčová pole | Poznámka |
 | --- | --- | --- |
 | `work_type` | code, name, counts_as_work, requires_job | Montáž, revize, cesta (se zakázkou), režie (bez zakázky) |
-| `time_entry` | employee_id, work_date, start_at, end_at, kind (`work`,`break`), job_id, work_type_id, note, created_by_user_id, source (`self`,`manager`) | Práce vyžaduje druh práce a zakázku; druh „režie“ (`requires_job = false`) zakázku nevyžaduje |
-| `absence` | employee_id, type (`vacation`,`sick`,`ocr`,`doctor`,`other`), date_from, date_to, hours, note | |
+| `time_entry` | employee_id, work_date, start_at, end_at, kind (`work`,`break`), job_id, work_type_id, note, created_by_user_id, source (`self`,`manager`) | Práce vyžaduje druh práce a zakázku; druh „režie“ (`requires_job = false`) zakázku nevyžaduje. `work_date` = den začátku (Europe/Prague). Smazání v otevřeném měsíci je skutečné, zůstává v auditu |
+| `absence` | employee_id, type (`vacation`,`sick`,`ocr`,`doctor`,`other`), date_from, date_to, hours, note, status (`requested`,`approved`,`rejected`), decided_by, decided_at, decision_reason | `hours` jen u jednoho dne (část dne); bez `hours` celé dny podle úvazku. Absenci zadanou vedoucím nebo správcem rovnou schválí |
 | `standby` | employee_id, start_at, end_at, note | |
 | `leave_entitlement` | employee_id, year, hours_entitled, hours_carried_over | Zůstatek = nárok + převod − čerpáno |
 | `timesheet` | employee_id, month, status, confirmed_at, approved_by, approved_at, return_reason | Jeden řádek na zaměstnance a měsíc |
@@ -83,9 +85,10 @@ Všechna pravidla jsou čisté funkce v `src/modules/timesheets/rules` s testy.
 
 **Validace (blokuje uložení):** konec po začátku, max 24 h; bez překryvů (i exclusion constraint v DB);
 práce má druh práce a aktivní zakázku (kromě režie); nelze měnit potvrzený/schválený/uzavřený měsíc; nekoliduje
-s celodenní absencí.
+s celodenní absencí (žádost nebo schválená; zamítnutá a absence na hodiny neblokují).
 
-**Upozornění (neblokuje):** přes 6 h práce bez přestávky ≥ 30 min; přes 12 h za den; odpočinek mezi dny
+**Upozornění (neblokuje):** přes 6 h práce bez přestávky ≥ 30 min (přestávka = interval `break` nebo mezera
+mezi intervaly; části aspoň 15 min); přes 12 h za den; odpočinek mezi dny
 pod 11 h, týdenní pod 35 h; pracovní den bez záznamu a absence (e-mail další ráno); DPP u limitu.
 
 | Hodnota | Výpočet |

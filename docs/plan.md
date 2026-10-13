@@ -29,15 +29,18 @@ Docházka má prioritu. Vozový park se připravuje souběžně (Traccar, ověř
 
 ## Milník 3 – Docházka: denní zápis
 
-- [ ] Schéma `timesheets`: work_type, time_entry, absence, standby, leave_entitlement, timesheet, period_close, timesheet_settings
-- [ ] Pravidla s testy: validace intervalu, překryvy, upozornění (přestávka, 12 h, odpočinek)
+- [x] Schéma `timesheets`: work_type, time_entry, absence, standby, timesheet, period_close, timesheet_settings
+      (leave_entitlement už je z milníku 2); výchozí druhy práce a nastavení v seedu
+- [ ] Pravidla s testy: validace intervalu, překryvy, zamčený měsíc, kolize s absencí, upozornění
+      (přestávka, 12 h, odpočinek), interval přes půlnoc a změna času
 - [ ] Obrazovka Můj den (desktop i mobil), „Pokračovat od …“
 - [ ] Zápis za jiného zaměstnance s důvodem
-- [ ] Absence a dovolená, zůstatek
+- [ ] Absence a dovolená, zůstatek; žádost zaměstnance, schválení vedoucím nebo správcem
+- [ ] Seed: intervaly za aktuální měsíc pro ukázkové zaměstnance (jeden den Jana Nováka prázdný)
 
 ## Milník 4 – Měsíc, schválení, uzávěrka
 
-- [ ] Výpočty za měsíc s testy (noc, víkend, svátek, pohotovost, fond)
+- [ ] Výpočty za měsíc s testy (noc, víkend, svátek, pohotovost, fond); zadávání pohotovosti
 - [ ] Můj měsíc, potvrzení zaměstnancem
 - [ ] Schvalování vedoucím, vrácení s důvodem
 - [ ] Uzávěrka, znovuotevření, verze exportu
