@@ -12,7 +12,7 @@ const pool =
   globalForDb.pgPool ?? new Pool({ connectionString: env.DATABASE_URL });
 if (process.env.NODE_ENV !== "production") globalForDb.pgPool = pool;
 
-export const db = drizzle({ client: pool, schema });
+export const db = drizzle({ client: pool, schema, casing: "snake_case" });
 export type Db = typeof db;
 
 /** Closes the pool; for scripts (seed, worker) that must exit. */

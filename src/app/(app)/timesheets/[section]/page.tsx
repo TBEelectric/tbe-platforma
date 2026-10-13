@@ -3,9 +3,10 @@
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/shell/page-header";
 import { Card, CardContent } from "@/components/ui/card";
+import { requireUser } from "@/lib/current-user";
 import { timesheetsMenu } from "@/modules/timesheets";
 
-// Temporary page: blocking navigation is fine, no need for a streamed shell.
+// Blocks on the auth check; layouts do not protect pages, so every page checks itself.
 export const instant = false;
 
 const plannedMilestone: Record<string, number> = {
@@ -32,6 +33,7 @@ export function generateStaticParams() {
 export default async function PlaceholderPage({
   params,
 }: PageProps<"/timesheets/[section]">) {
+  await requireUser();
   const { section } = await params;
   const item = findItem(section);
   if (!item) notFound();

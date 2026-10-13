@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { ModuleTile } from "@/components/launcher/module-tile";
 import { Brand } from "@/components/shell/brand";
 import { HeaderUser, UserPlaceholder } from "@/components/shell/user-chip";
+import { requireUser } from "@/lib/current-user";
 import { formatLongDate } from "@/lib/dates";
 import { platformModules } from "@/modules/registry";
 
@@ -12,7 +13,11 @@ async function Today() {
   return <>{formatLongDate(new Date())}</>;
 }
 
-export default function LauncherPage() {
+// Auth check blocks the page on the server; layouts do not protect pages, so every page checks itself.
+export const instant = false;
+
+export default async function LauncherPage() {
+  await requireUser();
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="flex h-[72px] items-center justify-between bg-sidebar px-4 sm:px-8">
