@@ -21,7 +21,7 @@ Docházka má prioritu. Vozový park se připravuje souběžně (Traccar, ověř
 - [x] Generování státních svátků ČR (včetně Velikonoc)
 - [ ] Správa zaměstnanců, úvazků, part a zakázek (jednoduché tabulky a formuláře)
 - [x] Napojit uživatele na zaměstnance, `role_assignment`, nahradit dočasný allow-list (přihlásí se jen aktivní zaměstnanec s e-mailem)
-- [ ] Seed s ukázkovými zaměstnanci, partami a zakázkami (podle náhledů obrazovek)
+- [x] Seed s ukázkovými zaměstnanci, partami a zakázkami (podle náhledů obrazovek)
 - [x] Audit log jako sdílená funkce
 - [ ] Import zaměstnanců a zakázek z Excelu podle `docs/import/sablona-importu.xlsx` (listy Zaměstnanci a Zakázky):
       náhled změn a chyb po řádcích před uložením, opakovaný import aktualizuje podle osobního čísla / čísla zakázky, nic nemaže.
