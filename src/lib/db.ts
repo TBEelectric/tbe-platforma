@@ -15,6 +15,8 @@ if (process.env.NODE_ENV !== "production") globalForDb.pgPool = pool;
 
 export const db = drizzle({ client: pool, schema, casing: "snake_case" });
 export type Db = typeof db;
+/** The database or an open transaction. */
+export type DbOrTx = Db | Parameters<Parameters<Db["transaction"]>[0]>[0];
 
 /** Closes the pool; for scripts (seed, worker) that must exit. */
 export async function closeDb() {

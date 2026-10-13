@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import type { Actor } from "@/modules/core/permissions";
 
 /** A sidebar item of a module (defined in the module's menu.ts). */
 export type MenuItem = {
@@ -7,6 +8,8 @@ export type MenuItem = {
   icon: LucideIcon;
   /** Items with placement "bottom" are pinned above the user at the bottom of the sidebar. */
   placement?: "main" | "bottom";
+  /** Who sees the item. The page itself must check the same permission on the server. */
+  visible: (actor: Actor) => boolean;
 };
 
 /**

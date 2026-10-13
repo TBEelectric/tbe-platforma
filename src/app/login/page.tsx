@@ -3,8 +3,8 @@ import { redirect } from "next/navigation";
 import { Brand } from "@/components/shell/brand";
 import { SignOutButton } from "@/components/shell/sign-out-button";
 import { Card, CardContent } from "@/components/ui/card";
-import { EMAIL_NOT_ALLOWED } from "@/lib/allowed-emails";
-import { getSession } from "@/lib/current-user";
+import { getCurrentUser } from "@/lib/current-user";
+import { ACCOUNT_NOT_ALLOWED } from "@/modules/core";
 import { GoogleSignInButton } from "./google-sign-in-button";
 
 export const metadata: Metadata = { title: "Přihlášení · TBE platforma" };
@@ -14,8 +14,8 @@ export const instant = false;
 
 function errorMessage(code: string | undefined): string | null {
   if (!code) return null;
-  if (code === EMAIL_NOT_ALLOWED) {
-    return "Tento účet nemá do aplikace přístup. Přihlaste se firemním účtem, nebo požádejte administrátora o povolení.";
+  if (code === ACCOUNT_NOT_ALLOWED) {
+    return "Tento účet nemá do aplikace přístup. Přihlásit se může aktivní zaměstnanec, kterému správce zadal tento e-mail. Obraťte se na administrátora.";
   }
   return "Přihlášení se nepovedlo. Zkuste to prosím znovu.";
 }
@@ -26,7 +26,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const message = errorMessage(code);
 
   // Signed in and allowed: nothing to do here.
-  if (!code && (await getSession())) redirect("/");
+  if (!code && (await getCurrentUser()).ok) redirect("/");
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -51,7 +51,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
               </p>
             )}
             <GoogleSignInButton />
-            {code === EMAIL_NOT_ALLOWED && (
+            {code === ACCOUNT_NOT_ALLOWED && (
               <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
                 Přihlásit se jiným účtem? Nejdřív se odhlaste.
                 <SignOutButton className="text-foreground hover:bg-muted hover:text-foreground" />

@@ -2,7 +2,8 @@
 import { Clock } from "lucide-react";
 import type { ModuleInfo } from "@/lib/navigation";
 
-export { timesheetsMenu } from "./menu";
+export { timesheetsMenu, visibleMenu } from "./menu";
+export * from "./permissions";
 
 export const timesheetsModule: ModuleInfo = {
   id: "timesheets",

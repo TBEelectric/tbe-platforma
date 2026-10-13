@@ -3,7 +3,7 @@
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/shell/page-header";
 import { Card, CardContent } from "@/components/ui/card";
-import { requireUser } from "@/lib/current-user";
+import { requirePermission } from "@/lib/current-user";
 import { timesheetsMenu } from "@/modules/timesheets";
 
 // Blocks on the auth check; layouts do not protect pages, so every page checks itself.
@@ -33,10 +33,10 @@ export function generateStaticParams() {
 export default async function PlaceholderPage({
   params,
 }: PageProps<"/timesheets/[section]">) {
-  await requireUser();
   const { section } = await params;
   const item = findItem(section);
   if (!item) notFound();
+  await requirePermission(item.visible);
 
   return (
     <>
