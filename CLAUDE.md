@@ -68,8 +68,11 @@ internal files. This keeps an easy path to split modules into packages later.
 - `index.ts` – server-side API (may use the database); re-exports `shared.ts`.
 - `shared.ts` – client-safe API: types, constants, Zod schemas, pure rules (no database access).
   Client components import `@/modules/<module>/shared`.
-- `schema.ts` may import another module's `schema.ts` directly, only for foreign keys
-  (drizzle-kit loads schema files without the app's server code).
+- **Exception – foreign keys:** a module's `schema.ts` may import tables from another module's
+  `schema.ts` directly (e.g. `timesheets/schema.ts` imports `employee`, `job` from `../core/schema`),
+  only to declare foreign keys. drizzle-kit loads schema files without the app's server code, so they
+  cannot go through `index.ts`. Other module code (services, actions, components) must not
+  import another module's `schema.ts`; `src/lib` and `src/db` (db client, auth, seed) may.
 
 ## Rules that matter
 
