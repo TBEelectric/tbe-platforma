@@ -46,6 +46,8 @@ src/
   app/                 Next.js routes (App Router); thin pages that call module code
   modules/
     core/              employees, teams, customers, jobs, sites, holidays
+      index.ts         server-side public API
+      shared.ts        client-safe public API (types, Zod schemas, pure rules)
       schema.ts        Drizzle tables (Postgres schema `core`)
       rules/           pure functions + tests
       actions.ts       server actions
@@ -61,8 +63,13 @@ drizzle/               generated migrations
 docker-compose.yml     local PostgreSQL
 ```
 
-Module boundaries: a module may import another module only through that module's `index.ts`
-(public API), never its internal files. This keeps an easy path to split modules into packages later.
+Module boundaries: a module may import another module only through its public API, never its
+internal files. This keeps an easy path to split modules into packages later.
+- `index.ts` – server-side API (may use the database); re-exports `shared.ts`.
+- `shared.ts` – client-safe API: types, constants, Zod schemas, pure rules (no database access).
+  Client components import `@/modules/<module>/shared`.
+- `schema.ts` may import another module's `schema.ts` directly, only for foreign keys
+  (drizzle-kit loads schema files without the app's server code).
 
 ## Rules that matter
 

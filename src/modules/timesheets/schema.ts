@@ -7,7 +7,8 @@ import {
   uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
-import { employee } from "../core";
+// Cross-module foreign key: schema files may import other modules' schema.ts directly.
+import { employee } from "../core/schema";
 
 /** Postgres schema for the timesheets module. */
 export const timesheetsSchema = pgSchema("timesheets");

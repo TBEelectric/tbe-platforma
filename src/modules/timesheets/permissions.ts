@@ -3,7 +3,7 @@ import {
   canManageJobs,
   isTeamLead,
   type Actor,
-} from "../core";
+} from "../core/shared";
 
 /** Own day, month and absences: everyone who records attendance. */
 export function canRecordOwnTime(actor: Actor): boolean {

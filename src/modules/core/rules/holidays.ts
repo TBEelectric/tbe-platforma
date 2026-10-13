@@ -1,4 +1,5 @@
 // Czech public holidays (zákon č. 245/2000 Sb.). Pure function; dates as "YYYY-MM-DD".
+import { addDays } from "@/lib/dates";
 
 export type PublicHoliday = { date: string; name: string };
 
@@ -22,13 +23,6 @@ const FIRST_SUPPORTED_YEAR = 2001;
 
 function isoDate(year: number, month: number, day: number): string {
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-}
-
-/** Shifts a "YYYY-MM-DD" date by whole days (calendar arithmetic in UTC, no time zone involved). */
-function addDays(date: string, days: number): string {
-  const d = new Date(`${date}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + days);
-  return d.toISOString().slice(0, 10);
 }
 
 /** Western (Gregorian) Easter Sunday, anonymous Gregorian algorithm (Meeus/Jones/Butcher). */

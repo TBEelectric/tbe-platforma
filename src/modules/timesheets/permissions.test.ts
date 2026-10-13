@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Actor } from "../core";
+import type { Actor } from "../core/shared";
 import {
   canApproveTimesheets,
   canCloseTimesheetPeriod,

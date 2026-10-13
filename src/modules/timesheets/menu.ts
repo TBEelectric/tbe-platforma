@@ -9,7 +9,7 @@ import {
   Users,
 } from "lucide-react";
 import type { MenuItem } from "@/lib/navigation";
-import type { Actor } from "../core";
+import type { Actor } from "../core/shared";
 import {
   canApproveTimesheets,
   canCloseTimesheetPeriod,
