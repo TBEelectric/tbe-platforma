@@ -10,7 +10,7 @@ Docházka má prioritu. Vozový park se připravuje souběžně (Traccar, ověř
 - [x] `docker-compose.yml` s PostgreSQL 16 pro lokální vývoj
 - [x] Drizzle: připojení v `src/lib/db.ts`, Postgres schéma `core` (`pgSchema`, v drizzle-kit `schemaFilter`), první migrace, kostra seed skriptu
 - [x] shadcn/ui, barvy a písmo podle `design.md`
-- [ ] Layout s bočním menu, přepínač modulů, launcher s dlaždicemi (Docházka aktivní, ostatní moduly jako „Plánováno“)
+- [x] Layout s bočním menu, přepínač modulů, launcher s dlaždicemi (Docházka aktivní, ostatní moduly jako „Plánováno“)
 - [ ] Better Auth + Google (tabulky Better Auth ve schématu `core`), dočasný allow-list e-mailů v `.env` (`AUTH_ALLOWED_EMAILS`); role přijdou v milníku 2
 - [x] Vitest nastavený, první test projde
 - [ ] Doplnit sekci Commands v `CLAUDE.md`

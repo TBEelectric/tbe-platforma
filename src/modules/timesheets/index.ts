@@ -1,2 +1,14 @@
 // Public API of the timesheets module. Other modules import timesheets only from here.
-export {};
+import { Clock } from "lucide-react";
+import type { ModuleInfo } from "@/lib/navigation";
+
+export { timesheetsMenu } from "./menu";
+
+export const timesheetsModule: ModuleInfo = {
+  id: "timesheets",
+  name: "Docházka",
+  description: "Pracovní doba, hodiny na zakázky, absence",
+  icon: Clock,
+  status: "active",
+  href: "/timesheets/day",
+};
