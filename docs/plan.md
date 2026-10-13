@@ -7,7 +7,7 @@ Docházka má prioritu. Vozový park se připravuje souběžně (Traccar, ověř
 - [x] Založit Next.js projekt (TypeScript, Tailwind, ESLint, App Router, `src/`), pnpm, Prettier.
       `create-next-app` odmítne neprázdnou složku (je tu `CLAUDE.md` a `docs/`): vygeneruj ho do dočasné složky
       a soubory přesuň sem, nic z `docs/` ani `CLAUDE.md` nepřepiš.
-- [ ] `docker-compose.yml` s PostgreSQL 16 pro lokální vývoj
+- [x] `docker-compose.yml` s PostgreSQL 16 pro lokální vývoj
 - [ ] Drizzle: připojení v `src/lib/db.ts`, Postgres schéma `core` (`pgSchema`, v drizzle-kit `schemaFilter`), první migrace, kostra seed skriptu
 - [ ] shadcn/ui, barvy a písmo podle `design.md`
 - [ ] Layout s bočním menu, přepínač modulů, launcher s dlaždicemi (Docházka aktivní, ostatní moduly jako „Plánováno“)
