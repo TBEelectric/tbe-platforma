@@ -13,3 +13,14 @@ export {
 export * from "./employees";
 export * from "./teams";
 export * from "./jobs";
+// Core tables for other modules' server code (joins, bulk import). Write through insertAudited/updateAudited.
+export {
+  customer,
+  employee,
+  employment,
+  job,
+  publicHoliday,
+  roleAssignment,
+  team,
+  teamMember,
+} from "./schema";

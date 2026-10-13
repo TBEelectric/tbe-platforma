@@ -116,6 +116,10 @@ Notes:
   Layouts do not protect pages (they render in parallel); `src/proxy.ts` is only an optimistic cookie check.
 - Drizzle uses `casing: "snake_case"`: write camelCase keys in `schema.ts`, columns become snake_case.
 - shadcn/ui: `pnpm dlx shadcn@latest add <component>`; then adjust sizes to the TBE style (44 px controls).
+- Import (Zaměstnanci → Import z Excelu, admin only) follows `docs/import/sablona-importu.xlsx`, which is
+  also served as the download; keep `docs/import/` in the production image.
+- Server actions: use `handleFormAction` (`src/lib/form-action.ts`); services write through
+  `insertAudited`/`updateAudited` so every change lands in `audit_log` in the same transaction.
 
 ## Git
 
