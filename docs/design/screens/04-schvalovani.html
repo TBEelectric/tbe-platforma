@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Docházka – Schvalování</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#f3f5f8;font-family:'Figtree',system-ui,sans-serif;color:#142433}
+a{color:#0b5f57}a:hover{color:#08463f}
+.side{flex:0 0 248px;background:#0f2f45;color:#d7e2ea;display:flex;flex-direction:column;padding:20px 14px;box-sizing:border-box;gap:4px}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 18px;color:#fff;font-weight:700;font-size:19px}
+.mod{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.08);border-radius:10px;padding:10px 12px;margin-bottom:14px;color:#fff;font-size:14px;text-decoration:none}
+.mod:hover{background:rgba(255,255,255,.14);color:#fff}
+.nav{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;color:#d7e2ea;text-decoration:none;font-size:15px}
+.nav:hover{background:rgba(255,255,255,.06);color:#fff}
+.nav.on{background:#0e7c72;color:#fff}
+.nav svg,.mod svg{width:20px;height:20px;flex:0 0 20px}
+.user{display:flex;align-items:center;gap:10px;border-top:1px solid rgba(255,255,255,.1);padding:16px 8px 0;margin-top:12px}
+.av{width:38px;height:38px;border-radius:50%;background:#c9d4dd;color:#0f2f45;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:0 0 38px}
+.main{flex:999 1 560px;min-width:0;padding:28px 32px;box-sizing:border-box;display:flex;flex-direction:column;gap:20px}
+.card{background:#fff;border:1px solid #e2e7ee;border-radius:14px;padding:20px;box-sizing:border-box}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#0e7c72;color:#fff;border:0;border-radius:10px;padding:0 16px;height:44px;font:inherit;font-weight:600;font-size:15px;cursor:pointer;text-decoration:none;white-space:nowrap}
+.btn.sec{background:#fff;color:#142433;border:1px solid #d5dce5}
+.btn.warn{background:#fff;color:#8a4205;border:1px solid #e8b77d}
+.kpi .l{font-size:14px;color:#5b6877}.kpi .v{font-size:28px;font-weight:700;margin-top:6px}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:780px}
+th{text-align:left;font-weight:600;color:#5b6877;font-size:13px;padding:10px 12px;border-bottom:1px solid #e2e7ee;background:#f8fafb}
+td{padding:12px;border-bottom:1px solid #eef1f5;vertical-align:middle}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;font-size:13px;font-weight:600;white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.p-teal{background:#e3f3f1;color:#0b5f57}.p-orange{background:#fdf0e1;color:#9a4a06}.p-grey{background:#eef1f4;color:#46525f}.p-green{background:#e4f4ea;color:#14663d}.p-blue{background:#e6eef9;color:#244f8f}
+.lnk{background:none;border:0;color:#0b5f57;font:inherit;font-size:14px;font-weight:600;cursor:pointer;padding:6px}
+.tabs{display:flex;gap:4px;border-bottom:1px solid #e2e7ee}
+.tab{padding:10px 14px;font-size:15px;color:#5b6877;border-bottom:2px solid transparent;text-decoration:none}
+.tab.on{color:#0b5f57;border-color:#0e7c72;font-weight:600}
+.warnitem{display:flex;gap:10px;font-size:14px;padding:10px 12px;background:#fdf6ec;border-radius:10px}
+.row{display:flex;justify-content:space-between;font-size:14px;padding:7px 0;border-bottom:1px solid #eef1f5}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr)) !important}.side{flex:1 1 100%}.cols{flex-direction:column}}
+</style>
+</head>
+<body>
+<div style="display: flex; flex-wrap: wrap; min-height: 1000px">
+<nav class="side" aria-label="Menu docházky">
+<div class="brand"><svg aria-hidden="true" viewBox="0 0 24 24" width="28" height="28"><path d="M13 2L4.5 13.5h6.2L9.5 22l9-12h-6.3z" fill="#2bb3a6"></path></svg><span>TBE electric</span></div>
+<a class="mod" href="01-launcher.html"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"></rect><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"></rect><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"></rect><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"></rect></svg><span style="flex: 1">Docházka</span><span style="font-size: 12px; color: #9fb3c2">Přepnout</span></a>
+<a class="nav" href="02-muj-den.html"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Můj den</a>
+<a class="nav" href="03-muj-mesic.html"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="2"></rect><path d="M3.5 10h17M8 3v4M16 3v4"></path></svg>Můj měsíc</a>
+<a class="nav" href="#"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20h16M12 20V9M5 11a7 7 0 0 1 14 0z"></path></svg>Absence</a>
+<a class="nav on" href="04-schvalovani.html"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3"></rect><path d="M8 12.5l3 3 5-6"></path></svg>Schvalování</a>
+<a class="nav" href="05-uzaverka.html"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="10.5" width="14" height="10" rx="2"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg>Uzávěrka</a>
+<a class="nav" href="#"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="7" width="17" height="13" rx="2"></rect><path d="M9 7V5h6v2M3.5 12.5h17"></path></svg>Zakázky</a>
+<a class="nav" href="#"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="8.5" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 5.2a3.5 3.5 0 0 1 0 6.6M18 14.5a6.5 6.5 0 0 1 3.5 5.5"></path></svg>Zaměstnanci</a>
+<div style="flex: 1"></div>
+<a class="nav" href="#"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"></path></svg>Nastavení</a>
+<div class="user"><div class="av">JN</div><div style="display: flex; flex-direction: column"><span style="color: #fff; font-weight: 600; font-size: 15px">Jan Novák</span><span style="font-size: 13px; color: #9fb3c2">Vedoucí party</span></div></div>
+</nav>
+<main class="main">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+<div>
+<h1 style="margin: 0; font-size: 28px; font-weight: 700">Schvalování · září 2026</h1>
+<p style="margin: 6px 0 0; font-size: 15px; color: #5b6877">Parta Jan Novák · fond září 168 h (21 pracovních dnů, 28. 9. svátek) · schválit do 5. 10.</p>
+</div>
+<button class="btn">Schválit 2 bez upozornění</button>
+</div>
+<div class="kpis" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px">
+<div class="card kpi"><div class="l">Výkazů v partě</div><div class="v">5</div></div>
+<div class="card kpi"><div class="l">Čeká na schválení</div><div class="v">3</div></div>
+<div class="card kpi"><div class="l">Schváleno</div><div class="v">1</div></div>
+<div class="card kpi"><div class="l">Nepotvrzeno zaměstnancem</div><div class="v" style="color: #9a4a06">1</div></div>
+</div>
+<div class="cols" style="display: flex; gap: 20px; align-items: flex-start">
+<section class="card" style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+<nav class="tabs" aria-label="Filtr výkazů"><a class="tab on" href="#">Všechny 5</a><a class="tab" href="#">Ke schválení 3</a><a class="tab" href="#">S upozorněním 1</a><a class="tab" href="#">Schválené 1</a></nav>
+<div style="overflow-x: auto">
+<table>
+<thead><tr><th>Zaměstnanec</th><th>Úvazek</th><th class="num">Odpracováno</th><th class="num">Rozdíl</th><th>Noc, víkend</th><th>Absence</th><th>Upozornění</th><th>Stav</th></tr></thead>
+<tbody>
+<tr style="background: #eef7f6; box-shadow: inset 3px 0 0 #0e7c72"><td><strong>Petr Svoboda</strong></td><td>HPP</td><td class="num">171:30</td><td class="num">+3:30</td><td>víkend 6:00</td><td style="color: #5b6877">–</td><td><span class="pill p-orange">2 upozornění</span></td><td><span class="pill p-blue">Potvrzeno</span></td></tr>
+<tr><td><strong>Martin Dvořák</strong></td><td>HPP</td><td class="num">160:00</td><td class="num">0:00</td><td style="color: #5b6877">–</td><td>dovolená 8:00</td><td style="color: #5b6877">–</td><td><span class="pill p-blue">Potvrzeno</span></td></tr>
+<tr><td><strong>Tomáš Král</strong></td><td>HPP</td><td class="num">152:00</td><td class="num">0:00</td><td style="color: #5b6877">–</td><td>nemoc 16:00</td><td style="color: #5b6877">–</td><td><span class="pill p-blue">Potvrzeno</span></td></tr>
+<tr><td><strong>Lukáš Beneš</strong></td><td>DPP</td><td class="num">42:00</td><td class="num" style="color: #5b6877">–</td><td style="color: #5b6877">–</td><td style="color: #5b6877">–</td><td><span class="pill p-grey">DPP 236 h z limitu roku</span></td><td><span class="pill p-orange">Nepotvrzeno</span> <button class="lnk">Připomenout</button></td></tr>
+<tr><td><strong>Ondřej Marek</strong></td><td>HPP</td><td class="num">168:00</td><td class="num">0:00</td><td>noc 4:00</td><td style="color: #5b6877">–</td><td style="color: #5b6877">–</td><td><span class="pill p-green">Schváleno</span></td></tr>
+</tbody>
+</table>
+</div>
+<p style="margin: 0; font-size: 13px; color: #5b6877">Váš vlastní výkaz schvaluje správce docházky.</p>
+</section>
+<aside class="card" style="flex: 0 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px">
+<div><h2 style="margin: 0; font-size: 18px">Petr Svoboda</h2><div style="font-size: 14px; color: #5b6877; margin-top: 4px">Září 2026 · potvrzeno 1. 10. v 7:42</div></div>
+<span class="pill p-blue">Potvrzeno</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<div style="font-weight: 600; font-size: 14px">Upozornění</div>
+<div class="warnitem"><span class="pill p-orange">Přestávka</span><span>9. 9. a 22. 9.: přes 6 h práce bez přestávky (7:15 a 6:45)</span></div>
+<div class="warnitem"><span class="pill p-orange">Odpočinek</span><span>17.–18. 9.: odpočinek mezi směnami 10:30 h</span></div>
+</div>
+<div>
+<div style="font-weight: 600; font-size: 14px; margin-bottom: 4px">Podle zakázek</div>
+<div class="row"><span>250147 Rozvaděče hala A</span><strong>96:00</strong></div>
+<div class="row"><span>250201 Servis technologie</span><strong>58:30</strong></div>
+<div class="row" style="border-bottom: 0"><span>Režie</span><strong>17:00</strong></div>
+</div>
+<a href="#" style="font-size: 14px; font-weight: 600">Otevřít všechny intervaly a historii změn</a>
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 600; color: #3a4756">Důvod vrácení (povinný při vrácení)
+<textarea rows="3" placeholder="Např. doplň přestávku 9. 9." style="border: 1px solid #cfd7e0; border-radius: 10px; padding: 10px 12px; font: inherit; font-size: 15px; resize: vertical"></textarea>
+</label>
+<div style="display: flex; gap: 10px">
+<button class="btn" style="flex: 1">Schválit</button>
+<button class="btn warn" style="flex: 1">Vrátit k opravě</button>
+</div>
+</aside>
+</div>
+</main>
+</div>
+</body>
+</html>

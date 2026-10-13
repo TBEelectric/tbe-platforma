@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Docházka – Můj měsíc</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#f3f5f8;font-family:'Figtree',system-ui,sans-serif;color:#142433}
+a{color:#0b5f57}a:hover{color:#08463f}
+.side{flex:0 0 248px;background:#0f2f45;color:#d7e2ea;display:flex;flex-direction:column;padding:20px 14px;box-sizing:border-box;gap:4px}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 18px;color:#fff;font-weight:700;font-size:19px}
+.mod{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.08);border-radius:10px;padding:10px 12px;margin-bottom:14px;color:#fff;font-size:14px;text-decoration:none}
+.mod:hover{background:rgba(255,255,255,.14);color:#fff}
+.nav{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;color:#d7e2ea;text-decoration:none;font-size:15px}
+.nav:hover{background:rgba(255,255,255,.06);color:#fff}
+.nav.on{background:#0e7c72;color:#fff}
+.nav svg,.mod svg{width:20px;height:20px;flex:0 0 20px}
+.user{display:flex;align-items:center;gap:10px;border-top:1px solid rgba(255,255,255,.1);padding:16px 8px 0;margin-top:12px}
+.av{width:38px;height:38px;border-radius:50%;background:#c9d4dd;color:#0f2f45;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:0 0 38px}
+.main{flex:999 1 560px;min-width:0;padding:28px 32px;box-sizing:border-box;display:flex;flex-direction:column;gap:20px}
+.card{background:#fff;border:1px solid #e2e7ee;border-radius:14px;padding:20px;box-sizing:border-box}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#0e7c72;color:#fff;border:0;border-radius:10px;padding:0 16px;height:44px;font:inherit;font-weight:600;font-size:15px;cursor:pointer;text-decoration:none;white-space:nowrap}
+.btn.sec{background:#fff;color:#142433;border:1px solid #d5dce5}
+.btn:disabled{background:#d9e0e7;color:#4e5b69;cursor:not-allowed}
+.kpi .l{font-size:14px;color:#5b6877}.kpi .v{font-size:28px;font-weight:700;margin-top:6px}.kpi .s{font-size:13px;color:#5b6877;margin-top:4px}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;font-size:13px;font-weight:600;white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.p-teal{background:#e3f3f1;color:#0b5f57}.p-orange{background:#fdf0e1;color:#9a4a06}.p-grey{background:#eef1f4;color:#46525f}
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+.wd{font-size:13px;font-weight:600;color:#5b6877;padding:0 4px}
+.cell{min-height:86px;border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:3px;background:#fff;border:1px solid #e2e7ee;box-sizing:border-box}
+.cell .d{font-size:13px;color:#5b6877;font-weight:600}
+.cell .h{font-size:17px;font-weight:700}
+.cell .sub{font-size:12px;color:#5b6877}
+.out{background:transparent;border-color:transparent}.out .d{color:#8a96a2}
+.wk{background:#f6f8fa}
+.miss{background:#fdf0e1;border-color:#f1c58f}.miss .h,.miss .sub{color:#8a4205}
+.today{border:2px solid #0e7c72}
+.hol{background:#eef1f4}
+.fut .h{color:#6b7785;font-weight:500}
+.row{display:flex;justify-content:space-between;font-size:14px;padding:8px 0;border-bottom:1px solid #eef1f5}
+.step{display:flex;gap:12px;align-items:flex-start;font-size:14px}
+.num{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;flex:0 0 26px}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr)) !important}.side{flex:1 1 100%}.cols{flex-direction:column}}
+</style>
+</head>
+<body>
+<div style="display: flex; flex-wrap: wrap; min-height: 1040px">
+<nav class="side" aria-label="Menu docházky">
+<div class="brand"><svg aria-hidden="true" viewBox="0 0 24 24" width="28" height="28"><path d="M13 2L4.5 13.5h6.2L9.5 22l9-12h-6.3z" fill="#2bb3a6"></path></svg><span>TBE electric</span></div>
+<a class="mod" href="01-launcher.html"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"></rect><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"></rect><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"></rect><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"></rect></svg><span style="flex: 1">Docházka</span><span style="font-size: 12px; color: #9fb3c2">Přepnout</span></a>
+<a class="nav" href="02-muj-den.html"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Můj den</a>
+<a class="nav on" href="03-muj-mesic.html"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="2"></rect><path d="M3.5 10h17M8 3v4M16 3v4"></path></svg>Můj měsíc</a>
+<a class="nav" href="#"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20h16M12 20V9M5 11a7 7 0 0 1 14 0z"></path></svg>Absence</a>
+<a class="nav" href="04-schvalovani.html"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3"></rect><path d="M8 12.5l3 3 5-6"></path></svg>Schvalování</a>
+<a class="nav" href="05-uzaverka.html"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="10.5" width="14" height="10" rx="2"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg>Uzávěrka</a>
+<a class="nav" href="#"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="7" width="17" height="13" rx="2"></rect><path d="M9 7V5h6v2M3.5 12.5h17"></path></svg>Zakázky</a>
+<a class="nav" href="#"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="8.5" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 5.2a3.5 3.5 0 0 1 0 6.6M18 14.5a6.5 6.5 0 0 1 3.5 5.5"></path></svg>Zaměstnanci</a>
+<div style="flex: 1"></div>
+<a class="nav" href="#"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"></path></svg>Nastavení</a>
+<div class="user"><div class="av">JN</div><div style="display: flex; flex-direction: column"><span style="color: #fff; font-weight: 600; font-size: 15px">Jan Novák</span><span style="font-size: 13px; color: #9fb3c2">Vedoucí party</span></div></div>
+</nav>
+<main class="main">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+<div>
+<div style="display: flex; align-items: center; gap: 12px"><h1 style="margin: 0; font-size: 28px; font-weight: 700">Můj měsíc · říjen 2026</h1><span class="pill p-teal"><span class="dot" style="background: #0e7c72"></span>Otevřený</span></div>
+<p style="margin: 6px 0 0; font-size: 15px; color: #5b6877">Jan Novák · HPP 40 h týdně · fond října 168 h (21 pracovních dnů, 28. 10. svátek)</p>
+</div>
+<div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap">
+<button class="btn sec">Stáhnout PDF</button>
+<button class="btn" disabled>Potvrdit měsíc</button>
+</div>
+</div>
+<div class="kpis" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px">
+<div class="card kpi"><div class="l">Odpracováno</div><div class="v">64:00</div><div class="s">k 13. 10.</div></div>
+<div class="card kpi"><div class="l">Absence</div><div class="v">2:00</div><div class="s">lékař 9. 10.</div></div>
+<div class="card kpi"><div class="l">Rozdíl proti fondu</div><div class="v" style="color: #9a4a06">−6:00</div><div class="s">fond k dnešku 72:00, chybí 12. 10.</div></div>
+<div class="card kpi"><div class="l">Pohotovost</div><div class="v">12:00</div><div class="s">víkend 10.–11. 10.</div></div>
+</div>
+<div class="cols" style="display: flex; gap: 20px; align-items: flex-start">
+<section class="card" style="flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap">
+<h2 style="margin: 0; font-size: 18px">Kalendář</h2>
+<div style="display: flex; gap: 14px; font-size: 13px; color: #5b6877; flex-wrap: wrap"><span><span class="dot" style="background: #0e7c72"></span> dnes</span><span><span class="dot" style="background: #e8a65a"></span> chybí záznam</span><span><span class="dot" style="background: #c3ccd6"></span> víkend, svátek</span></div>
+</div>
+<div class="cal">
+<div class="wd">Po</div><div class="wd">Út</div><div class="wd">St</div><div class="wd">Čt</div><div class="wd">Pá</div><div class="wd">So</div><div class="wd">Ne</div>
+<div class="cell out"><div class="d">28</div><div class="h"></div><div class="sub"></div></div>
+<div class="cell out"><div class="d">29</div><div class="h"></div><div class="sub"></div></div>
+<div class="cell out"><div class="d">30</div><div class="h"></div><div class="sub"></div></div>
+<div class="cell "><div class="d">1</div><div class="h">8:00</div><div class="sub">Montáž, cesta</div></div>
+<div class="cell "><div class="d">2</div><div class="h">7:30</div><div class="sub">Revize</div></div>
+<div class="cell wk"><div class="d">3</div><div class="h"></div><div class="sub"></div></div>
+<div class="cell wk"><div class="d">4</div><div class="h"></div><div class="sub"></div></div>
+<div class="cell "><div class="d">5</div><div class="h">8:45</div><div class="sub">Montáž</div></div>
+<div class="cell "><div class="d">6</div><div class="h">8:00</div><div class="sub">Montáž</div></div>
+<div class="cell "><div class="d">7</div><div class="h">9:30</div><div class="sub">Montáž, cesta</div></div>
+<div class="cell "><div class="d">8</div><div class="h">8:00</div><div class="sub">Revize</div></div>
+<div class="cell "><div class="d">9</div><div class="h">6:00</div><div class="sub">+ lékař 2:00</div></div>
+<div class="cell wk"><div class="d">10</div><div class="h"></div><div class="sub">Pohotovost 6:00</div></div>
+<div class="cell wk"><div class="d">11</div><div class="h"></div><div class="sub">Pohotovost 6:00</div></div>
+<div class="cell miss"><div class="d">12</div><div class="h">Chybí</div><div class="sub">Doplňte záznam</div></div>
+<div class="cell today"><div class="d">13</div><div class="h">8:15</div><div class="sub">Dnes</div></div>
+<div class="cell fut"><div class="d">14</div><div class="h">–</div><div class="sub"></div></div>
+<div class="cell fut"><div class="d">15</div><div class="h">–</div><div class="sub"></div></div>
+<div class="cell fut"><div class="d">16</div><div class="h">–</div><div class="sub"></div></div>
+<div class="cell wk"><div class="d">17</div><div class="h"></div><div class="sub"></div></div>
+<div class="cell wk"><div class="d">18</div><div class="h"></div><div class="sub"></div></div>
+<div class="cell fut"><div class="d">19</div><div class="h">–</div><div class="sub"></div></div>
+<div class="cell fut"><div class="d">20</div><div class="h">–</div><div class="sub"></div></div>
+<div class="cell fut"><div class="d">21</div><div class="h">–</div><div class="sub"></div></div>
+<div class="cell fut"><div class="d">22</div><div class="h">–</div><div class="sub"></div></div>
+<div class="cell fut"><div class="d">23</div><div class="h">–</div><div class="sub"></div></div>
+<div class="cell wk"><div class="d">24</div><div class="h"></div><div class="sub"></div></div>
+<div class="cell wk"><div class="d">25</div><div class="h"></div><div class="sub"></div></div>
+<div class="cell fut"><div class="d">26</div><div class="h">–</div><div class="sub"></div></div>
+<div class="cell fut"><div class="d">27</div><div class="h">–</div><div class="sub"></div></div>
+<div class="cell hol"><div class="d">28</div><div class="h">Svátek</div><div class="sub">Den vzniku státu</div></div>
+<div class="cell fut"><div class="d">29</div><div class="h">–</div><div class="sub"></div></div>
+<div class="cell fut"><div class="d">30</div><div class="h">–</div><div class="sub"></div></div>
+<div class="cell wk"><div class="d">31</div><div class="h"></div><div class="sub"></div></div>
+<div class="cell out"><div class="d">1</div><div class="h"></div><div class="sub"></div></div>
+
+</div>
+<div style="background: #fdf0e1; border-radius: 10px; padding: 12px 14px; font-size: 14px; color: #6e3604; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap">
+<span>Měsíc půjde potvrdit od 1. 11., až bude doplněno pondělí 12. 10.</span>
+<a href="02-muj-den.html" style="font-weight: 600; color: #6e3604">Doplnit 12. 10.</a>
+</div>
+</section>
+<aside style="flex: 0 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+<section class="card">
+<h2 style="margin: 0 0 6px; font-size: 16px">Podle zakázek</h2>
+<div class="row"><span>250147 Rozvaděče hala A</span><strong>31:15</strong></div>
+<div class="row"><span>250162 Elektroinstalace kanc.</span><strong>18:30</strong></div>
+<div class="row"><span>250201 Servis technologie</span><strong>9:45</strong></div>
+<div class="row" style="border-bottom: 0"><span>Režie (bez zakázky)</span><strong>4:30</strong></div>
+</section>
+<section class="card">
+<h2 style="margin: 0 0 6px; font-size: 16px">Podle druhu práce</h2>
+<div class="row"><span>Montáž</span><strong>41:00</strong></div>
+<div class="row"><span>Revize</span><strong>9:45</strong></div>
+<div class="row"><span>Cesta</span><strong>8:45</strong></div>
+<div class="row" style="border-bottom: 0"><span>Režie</span><strong>4:30</strong></div>
+</section>
+<section class="card" style="display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 16px">Průběh schválení</h2>
+<div class="step"><span class="num" style="background: #0e7c72; color: #fff">1</span><div><strong>Otevřený</strong><div style="color: #5b6877">Zapisujete intervaly a absence.</div></div></div>
+<div class="step"><span class="num" style="background: #eef1f4; color: #46525f">2</span><div><strong>Potvrzení</strong><div style="color: #5b6877">Vy, od 1. 11. do 2. 11.</div></div></div>
+<div class="step"><span class="num" style="background: #eef1f4; color: #46525f">3</span><div><strong>Schválení</strong><div style="color: #5b6877">Správce docházky (jste vedoucí)</div></div></div>
+<div class="step"><span class="num" style="background: #eef1f4; color: #46525f">4</span><div><strong>Uzávěrka a export</strong><div style="color: #5b6877">Podklad pro mzdovou účetní</div></div></div>
+</section>
+</aside>
+</div>
+</main>
+</div>
+</body>
+</html>

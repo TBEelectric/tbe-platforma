@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TBE electric – výběr modulu</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#f3f5f8;font-family:'Figtree',system-ui,sans-serif;color:#142433}
+a{color:#0b5f57}a:hover{color:#08463f}
+.tile{display:flex;flex-direction:column;gap:14px;background:#fff;border:1px solid #e2e7ee;border-radius:16px;padding:22px;text-decoration:none;color:#142433;min-height:190px;box-sizing:border-box}
+a.tile:hover{border-color:#0e7c72;box-shadow:0 4px 16px rgba(15,47,69,.08)}
+.ico{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center}
+.ico svg{width:26px;height:26px}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;font-size:13px;font-weight:600;align-self:flex-start}
+.p-teal{background:#e3f3f1;color:#0b5f57}.p-orange{background:#fdf0e1;color:#9a4a06}.p-grey{background:#eef1f4;color:#46525f}.p-blue{background:#e6eef9;color:#244f8f}
+.task{display:flex;align-items:center;gap:14px;padding:14px 0;border-top:1px solid #eef1f5;text-decoration:none;color:#142433}
+@media(max-width:900px){.tiles{grid-template-columns:repeat(1,minmax(0,1fr)) !important}.top-row{flex-direction:column}}
+</style>
+</head>
+<body>
+<div style="min-height: 900px; display: flex; flex-direction: column">
+<header style="background: #0f2f45; color: #fff; display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; gap: 16px">
+<div style="display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 20px">
+<svg aria-hidden="true" viewBox="0 0 24 24" width="30" height="30"><path d="M13 2L4.5 13.5h6.2L9.5 22l9-12h-6.3z" fill="#2bb3a6"></path></svg>
+<span>TBE electric</span>
+</div>
+<div style="display: flex; align-items: center; gap: 12px">
+<span style="font-size: 14px; color: #c9d6df">Jan Novák · Vedoucí party</span>
+<div style="width: 40px; height: 40px; border-radius: 50%; background: #c9d4dd; color: #0f2f45; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px">JN</div>
+</div>
+</header>
+<main style="width: 100%; max-width: 1200px; margin: 0 auto; padding: 40px 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 28px">
+<div class="top-row" style="display: flex; gap: 24px; align-items: stretch">
+<div style="flex: 1 1 0; display: flex; flex-direction: column; justify-content: center; gap: 8px">
+<h1 style="margin: 0; font-size: 34px; font-weight: 700">Dobrý den, Jane</h1>
+<p style="margin: 0; font-size: 16px; color: #5b6877">Úterý 13. října 2026 · vyberte, s čím chcete pracovat</p>
+</div>
+<section style="flex: 0 1 460px; background: #fff; border: 1px solid #e2e7ee; border-radius: 16px; padding: 18px 22px 6px">
+<h2 style="margin: 0 0 6px; font-size: 16px; font-weight: 700">Čeká na vás</h2>
+<a class="task" href="02-muj-den.html">
+<span class="pill p-orange">Docházka</span>
+<span style="flex: 1">Doplnit pondělí 12. 10.</span>
+<span style="color: #5b6877; font-size: 14px">dnes</span>
+</a>
+<a class="task" href="04-schvalovani.html">
+<span class="pill p-teal">Docházka</span>
+<span style="flex: 1">Schválit 3 výkazy za září</span>
+<span style="color: #5b6877; font-size: 14px">do 5. 10.</span>
+</a>
+</section>
+</div>
+<div class="tiles" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px">
+<a class="tile" href="02-muj-den.html">
+<div class="ico" style="background: #e3f3f1; color: #0e7c72"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="font-size: 19px; font-weight: 700">Docházka</div>
+<div style="font-size: 14px; color: #5b6877">Pracovní doba, hodiny na zakázky, absence</div>
+</div>
+<span class="pill p-teal">Dnes 8:15 h · říjen otevřený</span>
+</a>
+<a class="tile" href="#">
+<div class="ico" style="background: #e6eef9; color: #244f8f"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="7" width="17" height="13" rx="2"></rect><path d="M9 7V5h6v2M3.5 12.5h17"></path></svg></div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="font-size: 19px; font-weight: 700">Zakázky a zákazníci</div>
+<div style="font-size: 14px; color: #5b6877">Číselník zakázek pro docházku i vozidla</div>
+</div>
+<span class="pill p-blue">Součást jádra</span>
+</a>
+<div class="tile">
+<div class="ico" style="background: #eef1f4; color: #46525f"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16V9.5A2.5 2.5 0 0 1 5.5 7h9l4.5 4.5V16"></path><path d="M3 16h18"></path><circle cx="7.5" cy="17.5" r="2"></circle><circle cx="16.5" cy="17.5" r="2"></circle></svg></div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="font-size: 19px; font-weight: 700">Vozový park</div>
+<div style="font-size: 14px; color: #5b6877">Vozidla, kniha jízd, živá mapa, termíny</div>
+</div>
+<span class="pill p-orange">Ve vývoji</span>
+</div>
+<div class="tile">
+<div class="ico" style="background: #eef1f4; color: #46525f"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10l8-6 8 6v10z"></path><path d="M10 20v-5h4v5"></path></svg></div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="font-size: 19px; font-weight: 700">Nemovitosti</div>
+<div style="font-size: 14px; color: #5b6877">Objekty, smlouvy, revize a náklady</div>
+</div>
+<span class="pill p-grey">Plánováno</span>
+</div>
+<div class="tile">
+<div class="ico" style="background: #eef1f4; color: #46525f"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8L12 4l8.5 4v12h-17z"></path><path d="M7.5 20v-7h9v7M7.5 16.5h9"></path></svg></div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="font-size: 19px; font-weight: 700">Sklad</div>
+<div style="font-size: 14px; color: #5b6877">Materiál, příjem a výdej na zakázky</div>
+</div>
+<span class="pill p-grey">Plánováno</span>
+</div>
+<div class="tile">
+<div class="ico" style="background: #eef1f4; color: #46525f"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 6.5a4 4 0 0 0-5.3 5.3L4 17l3 3 5.2-5.2a4 4 0 0 0 5.3-5.3l-2.5 2.5-2.5-.5-.5-2.5z"></path></svg></div>
+<div style="display: flex; flex-direction: column; gap: 4px">
+<div style="font-size: 19px; font-weight: 700">Nářadí a technika</div>
+<div style="font-size: 14px; color: #5b6877">Evidence kusů, výdej lidem, revize</div>
+</div>
+<span class="pill p-grey">Plánováno</span>
+</div>
+</div>
+</main>
+</div>
+</body>
+</html>
