@@ -1,0 +1,17 @@
+import { defineConfig } from "drizzle-kit";
+
+process.loadEnvFile?.(".env");
+
+if (!process.env.DATABASE_URL)
+  throw new Error("DATABASE_URL is not set (see .env.example)");
+
+export default defineConfig({
+  dialect: "postgresql",
+  schema: "./src/modules/*/schema.ts",
+  out: "./drizzle",
+  dbCredentials: { url: process.env.DATABASE_URL },
+  // Each module owns its Postgres schema; add "timesheets" with the first timesheets table.
+  schemaFilter: ["core"],
+  strict: true,
+  verbose: true,
+});

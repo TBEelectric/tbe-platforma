@@ -8,7 +8,7 @@ Docházka má prioritu. Vozový park se připravuje souběžně (Traccar, ověř
       `create-next-app` odmítne neprázdnou složku (je tu `CLAUDE.md` a `docs/`): vygeneruj ho do dočasné složky
       a soubory přesuň sem, nic z `docs/` ani `CLAUDE.md` nepřepiš.
 - [x] `docker-compose.yml` s PostgreSQL 16 pro lokální vývoj
-- [ ] Drizzle: připojení v `src/lib/db.ts`, Postgres schéma `core` (`pgSchema`, v drizzle-kit `schemaFilter`), první migrace, kostra seed skriptu
+- [x] Drizzle: připojení v `src/lib/db.ts`, Postgres schéma `core` (`pgSchema`, v drizzle-kit `schemaFilter`), první migrace, kostra seed skriptu
 - [ ] shadcn/ui, barvy a písmo podle `design.md`
 - [ ] Layout s bočním menu, přepínač modulů, launcher s dlaždicemi (Docházka aktivní, ostatní moduly jako „Plánováno“)
 - [ ] Better Auth + Google (tabulky Better Auth ve schématu `core`), dočasný allow-list e-mailů v `.env` (`AUTH_ALLOWED_EMAILS`); role přijdou v milníku 2
