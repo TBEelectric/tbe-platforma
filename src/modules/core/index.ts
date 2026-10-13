@@ -12,3 +12,5 @@ export const coreModule: ModuleInfo = {
 
 // Tables other modules may reference (foreign keys, joins).
 export { employee, job, publicHoliday, team, teamMember } from "./schema";
+export { czechPublicHolidays, type PublicHoliday } from "./rules/holidays";
+export { syncPublicHolidays } from "./holidays";
