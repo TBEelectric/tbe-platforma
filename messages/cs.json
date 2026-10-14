@@ -306,7 +306,7 @@
       "reasonPlaceholder": "Proč zapisujete za zaměstnance",
       "reasonNeeded": "Nejdřív uveďte důvod zápisu.",
       "saveFailed": "Změna se neuložila, zkontrolujte připojení. Zobrazený je poslední uložený stav.",
-      "noJobForNew": "Není zakázka pro nový interval. Vyberte ji ve formuláři na počítači.",
+      "noJobForNew": "Pro nový interval není k dispozici žádná zakázka.",
       "panelLabel": "Úprava intervalu",
       "start": "Začátek",
       "end": "Konec",
@@ -327,6 +327,26 @@
       "usual": "Obvyklý den",
       "usualOwn": "Můj obvyklý den",
       "likeYesterday": "Jako včera",
+      "night": {
+        "showTop": "Zobrazit noc 0:00–5:00",
+        "hideTop": "Skrýt noc 0:00–5:00",
+        "showBottom": "Zobrazit čas po půlnoci (do 6:00)",
+        "hideBottom": "Skrýt čas po půlnoci",
+        "note": "Noční práce – zkontrolujte čas."
+      },
+      "desktop": {
+        "title": "Intervaly dne",
+        "hint": "Táhnutím po ose nakreslete interval · klik do mezery ji vyplní · tažením okrajů upravíte · šipky ±5 min (Shift = začátek)",
+        "emptyHint": "Den je prázdný. Nakreslete interval na ose, nebo:",
+        "jobOrBreak": "Zakázka nebo přestávka",
+        "workType": "Druh práce",
+        "otherJob": "Jiná zakázka – firma, místo, název nebo číslo",
+        "searchJob": "Hledat zakázku",
+        "done": "Hotovo",
+        "nowMark": "teď {time}",
+        "intervals": "Seznam intervalů",
+        "noJob": "Bez zakázky"
+      },
       "picker": {
         "title": "Výběr zakázky",
         "back": "Zpět",

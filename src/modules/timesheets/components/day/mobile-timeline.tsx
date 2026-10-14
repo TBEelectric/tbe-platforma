@@ -4,6 +4,7 @@ import { Coffee, Lock, Minus, Plus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -16,25 +17,27 @@ import { jobLabel } from "@/modules/core/shared";
 import type { TimelineDay, TimelineJob } from "../../timeline";
 import {
   AXIS_END,
-  AXIS_HEIGHT_PX,
+  AXIS_START,
   axisTime,
+  DAY_FROM,
   blockHeightPx,
   blockLines,
   dragCreate,
   halfHourMarks,
   HANDLE_PX,
   HOLD_MS,
-  VISIBLE_FROM,
-  VISIBLE_TO,
   hourMarks,
+  isNightEntry,
   jobChipIds,
   localAdjust,
   localSetRange,
   minuteAtOffset,
   minuteToPx,
   movedBeyondTap,
-  NIGHT_BANDS,
+  nightBands,
   pxToMinutes,
+  PX_PER_MINUTE,
+  rangeHeightPx,
   SNAP_TOUCH,
   startCreate,
   tapCreate,
@@ -44,7 +47,9 @@ import {
 } from "../../shared";
 import { pinTeamJobAction } from "../../timeline-actions";
 import { JobPickerScreen } from "./job-picker-screen";
+import { NightToggle } from "./night-toggle";
 import { TemplateSave } from "./template-save";
+import { useNight } from "./use-night";
 import { useTimeline } from "./use-timeline";
 
 const BREAK_COLOR = "#f6e6d2";
@@ -110,10 +115,20 @@ export function MobileTimeline({
   const [picking, setPicking] = useState(false);
 
   // Latest values and handlers for the window listeners (they live across renders).
-  const live = useRef({ tl, readOnly, needsReason, reason });
+  const { night, range, toggleTop, toggleBottom } = useNight(entries);
+  const live = useRef({ tl, readOnly, needsReason, reason, range });
   useEffect(() => {
-    live.current = { tl, readOnly, needsReason, reason };
+    live.current = { tl, readOnly, needsReason, reason, range };
   });
+
+  // Opening or folding the night above the axis keeps 5:00 where it was on the screen.
+  const topShown = useRef(night.top);
+  useLayoutEffect(() => {
+    if (topShown.current === night.top) return;
+    const shift = (DAY_FROM - AXIS_START) * PX_PER_MINUTE;
+    window.scrollBy(0, night.top ? shift : -shift);
+    topShown.current = night.top;
+  }, [night.top]);
 
   const jobsById = useMemo(
     () => new Map(day.jobs.map((j) => [j.id, j])),
@@ -123,8 +138,11 @@ export function MobileTimeline({
     () => new Map(day.workTypes.map((w) => [w.id, w.name])),
     [day.workTypes],
   );
-  const marks = useMemo(() => hourMarks(), []);
-  const halves = useMemo(() => halfHourMarks(), []);
+  const marks = useMemo(() => hourMarks(range), [range]);
+  const halves = useMemo(() => halfHourMarks(range), [range]);
+  const bands = useMemo(() => nightBands(range), [range]);
+  const minuteTop = (minute: number) => minuteToPx(minute, range.start);
+  const axisHeight = rangeHeightPx(range);
 
   // Message disappears by itself.
   useEffect(() => {
@@ -160,6 +178,8 @@ export function MobileTimeline({
 
   const offsetY = (clientY: number) =>
     clientY - colRef.current!.getBoundingClientRect().top;
+  const minuteAtY = (clientY: number, step: number) =>
+    minuteAtOffset(offsetY(clientY), step, live.current.range);
 
   // Window listeners: set once, they act only while a gesture started on the axis is running.
   useEffect(() => {
@@ -189,7 +209,7 @@ export function MobileTimeline({
       if (g.type === "create" && g.create) {
         const range = dragCreate(
           g.create,
-          minuteAtOffset(offsetY(event.clientY), g.create.step),
+          minuteAtY(event.clientY, g.create.step),
         );
         if (!g.tempId) {
           if (!line.ensureCanCreate()) {
@@ -333,7 +353,7 @@ export function MobileTimeline({
       if (handle || !touch) next.armed = true;
       if (!handle && !touch) line.select(id);
     } else {
-      const minute = minuteAtOffset(offsetY(event.clientY), SNAP_TOUCH);
+      const minute = minuteAtY(event.clientY, SNAP_TOUCH);
       const started = startCreate(
         [
           ...line.entries,
@@ -457,34 +477,32 @@ export function MobileTimeline({
         </div>
       )}
 
-      <div
-        className="pt-3"
-        style={{ paddingBottom: selectedId ? 340 : canFill ? 120 : 24 }}
-      >
-        {/* Only VISIBLE_FROM–VISIBLE_TO is shown: the day opens at 6:00 and ends at midnight. */}
+      <div style={{ paddingBottom: selectedId ? 340 : canFill ? 120 : 24 }}>
+        <NightRow
+          shown={!night.topForced}
+          edge="top"
+          open={night.top}
+          onToggle={toggleTop}
+        />
         <div
-          className="overflow-hidden"
-          style={{ height: minuteToPx(VISIBLE_TO) - minuteToPx(VISIBLE_FROM) }}
+          ref={colRef}
+          onPointerDown={onPointerDown}
+          onContextMenu={(e) => e.preventDefault()}
+          className="relative mr-1 ml-[52px] touch-pan-y select-none [-webkit-touch-callout:none]"
+          style={{
+            height: axisHeight,
+            cursor: readOnly ? "default" : "crosshair",
+          }}
         >
-          <div
-            ref={colRef}
-            onPointerDown={onPointerDown}
-            onContextMenu={(e) => e.preventDefault()}
-            className="relative mr-1 ml-[52px] touch-pan-y select-none [-webkit-touch-callout:none]"
-            style={{
-              height: AXIS_HEIGHT_PX,
-              marginTop: -minuteToPx(VISIBLE_FROM),
-              cursor: readOnly ? "default" : "crosshair",
-            }}
-          >
-            {NIGHT_BANDS.map((b) => (
+          <>
+            {bands.map((b) => (
               <div
                 key={b.start}
                 aria-hidden
                 className="absolute inset-x-0 bg-[#142433]/[0.05]"
                 style={{
-                  top: minuteToPx(b.start),
-                  height: minuteToPx(b.end) - minuteToPx(b.start),
+                  top: minuteTop(b.start),
+                  height: minuteTop(b.end) - minuteTop(b.start),
                 }}
               />
             ))}
@@ -493,7 +511,7 @@ export function MobileTimeline({
                 key={m}
                 aria-hidden
                 className="pointer-events-none absolute inset-x-0 border-t border-dashed border-border/60"
-                style={{ top: minuteToPx(m) }}
+                style={{ top: minuteTop(m) }}
               />
             ))}
             {marks.map((m) => (
@@ -501,7 +519,7 @@ export function MobileTimeline({
                 key={m.minute}
                 aria-hidden
                 className="pointer-events-none absolute right-0 -left-[52px] border-t border-border"
-                style={{ top: minuteToPx(m.minute) }}
+                style={{ top: minuteTop(m.minute) }}
               >
                 <span className="absolute -top-2.5 left-0 w-[46px] bg-background pr-1 text-right text-xs font-semibold text-muted-foreground tabular-nums">
                   {m.nextDay
@@ -517,8 +535,8 @@ export function MobileTimeline({
                 aria-label={t("timesheets.timeline.blockedLabel")}
                 className="pointer-events-none absolute inset-x-0 rounded-lg bg-neutral"
                 style={{
-                  top: minuteToPx(b.start),
-                  height: minuteToPx(b.end) - minuteToPx(b.start),
+                  top: minuteTop(b.start),
+                  height: minuteTop(b.end) - minuteTop(b.start),
                   backgroundImage:
                     "repeating-linear-gradient(135deg, rgba(20,36,51,.08) 0 6px, transparent 6px 12px)",
                 }}
@@ -567,7 +585,7 @@ export function MobileTimeline({
                     active && "z-10 ring-[3px] ring-foreground",
                   )}
                   style={{
-                    top: minuteToPx(e.start),
+                    top: minuteTop(e.start),
                     height,
                     backgroundColor: fill,
                     borderColor: `color-mix(in srgb, ${fill} 78%, black)`,
@@ -613,8 +631,8 @@ export function MobileTimeline({
                 aria-hidden
                 className="pointer-events-none absolute inset-x-0 bg-background/60"
                 style={{
-                  top: minuteToPx(futureFrom),
-                  height: AXIS_HEIGHT_PX - minuteToPx(futureFrom),
+                  top: minuteTop(futureFrom),
+                  height: axisHeight - minuteTop(futureFrom),
                 }}
               />
             )}
@@ -622,15 +640,21 @@ export function MobileTimeline({
               <div
                 aria-hidden
                 className="pointer-events-none absolute right-0 -left-[52px] z-20 border-t-2 border-destructive"
-                style={{ top: minuteToPx(futureFrom) }}
+                style={{ top: minuteTop(futureFrom) }}
               >
                 <span className="absolute -top-2.5 left-0 rounded bg-destructive px-1 text-xs font-bold text-white tabular-nums">
                   {timeText(futureFrom)}
                 </span>
               </div>
             )}
-          </div>
+          </>
         </div>
+        <NightRow
+          shown={!night.bottomForced}
+          edge="bottom"
+          open={night.bottom}
+          onToggle={toggleBottom}
+        />
       </div>
 
       {!readOnly && !needsReason && entries.length > 0 && !selected && (
@@ -661,6 +685,7 @@ export function MobileTimeline({
         <EntryPanel
           entry={selected}
           label={titleOf(selected)}
+          night={isNightEntry(selected)}
           chips={chips}
           workTypes={day.workTypes}
           onJob={tl.setJob}
@@ -719,6 +744,7 @@ function Handle({
 function EntryPanel({
   entry,
   label,
+  night,
   chips,
   workTypes,
   onJob,
@@ -731,6 +757,7 @@ function EntryPanel({
 }: {
   entry: TimelineEntry;
   label: string;
+  night: boolean;
   chips: TimelineJob[];
   workTypes: TimelineDay["workTypes"];
   onJob: (jobId: string) => void;
@@ -825,6 +852,11 @@ function EntryPanel({
           ))}
         </div>
       )}
+      {night && (
+        <p className="rounded-lg bg-info px-3 py-1.5 text-[13px] text-info-foreground">
+          {t("night.note")}
+        </p>
+      )}
       <div className="flex items-center justify-between">
         <span className="min-w-0 truncate text-sm font-semibold text-muted-foreground">
           {t("duration", { duration: formatMinutes(entry.end - entry.start) })}
@@ -892,5 +924,24 @@ function KindChip({
     >
       {children}
     </button>
+  );
+}
+
+/** Row with the night arrow in the time column, above/below the axis (collapses when there is no arrow). */
+function NightRow({
+  shown,
+  edge,
+  open,
+  onToggle,
+}: {
+  shown: boolean;
+  edge: "top" | "bottom";
+  open: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div className="flex h-7 w-[46px] items-center justify-end pr-1">
+      {shown && <NightToggle edge={edge} open={open} onToggle={onToggle} />}
+    </div>
   );
 }
