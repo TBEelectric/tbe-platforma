@@ -270,10 +270,13 @@ export function DayScreen({
         <section className="flex flex-col gap-4 lg:rounded-xl lg:border lg:border-border lg:bg-card lg:p-5">
           <div className="hidden items-center justify-between gap-3 lg:flex">
             <h2 className="text-lg font-bold">{longDate}</h2>
-            <Badge variant={lockedOrOpen}>
-              <span aria-hidden className="size-2 rounded-full bg-current" />
-              {statusText}
-            </Badge>
+            <div className="flex items-center gap-3">
+              <Badge variant={lockedOrOpen}>
+                <span aria-hidden className="size-2 rounded-full bg-current" />
+                {statusText}
+              </Badge>
+              <div className="flex items-center gap-2">{nav}</div>
+            </div>
           </div>
           <div className="hidden lg:block">{banners}</div>
           <ResponsiveTimeline
