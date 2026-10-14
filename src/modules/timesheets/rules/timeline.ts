@@ -124,6 +124,9 @@ export function tapCreate(create: CreateStart): AxisRange {
   };
 }
 
+/** Ids starting with this are fixed obstacles (neighbouring days), see `adjustEntry`. */
+export const FIXED_ID_PREFIX = "~";
+
 export type AdjustAction = "start" | "end" | "move";
 
 /**
@@ -144,8 +147,10 @@ export function adjustEntry(
   if (!x) return { ok: false };
   const d = snapMinutes(delta, opts.step);
   const others = entries.filter((e) => e.id !== id);
-  const prev = others.find((e) => e.end === x.start);
-  const next = others.find((e) => e.start === x.end);
+  // Entries of other days (id starting with "~") only stop an edge; they never move with it.
+  const adjoining = others.filter((e) => !e.id.startsWith(FIXED_ID_PREFIX));
+  const prev = adjoining.find((e) => e.end === x.start);
+  const next = adjoining.find((e) => e.start === x.end);
   const { prevEnd, nextStart } = freeBounds(entries, id, x, opts.maxEnd);
   let { start, end } = x;
   const updates: AxisEntry[] = [];

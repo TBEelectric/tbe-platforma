@@ -561,7 +561,7 @@ export function DesktopTimeline({
       <div
         className={cn(
           "grid items-start gap-6",
-          selected && !readOnly && "xl:grid-cols-[minmax(0,1fr)_24rem]",
+          selected && !readOnly && "xl:grid-cols-[minmax(0,1fr)_26rem]",
         )}
       >
         <ul
@@ -741,8 +741,9 @@ function IntervalPanel({
       <StepButton label={earlier} onClick={() => onNudge(edge, -SNAP_FINE)}>
         <Minus aria-hidden />
       </StepButton>
-      <strong className="min-w-[3.25rem] text-center text-[17px] tabular-nums">
-        {timeText(value)}
+      <strong className="min-w-[3.25rem] text-center text-[17px] whitespace-nowrap tabular-nums">
+        {axisTime(value).time}
+        {value >= 1440 && <small className="ml-0.5 text-[11px]">+1</small>}
       </strong>
       <StepButton label={later} onClick={() => onNudge(edge, SNAP_FINE)}>
         <Plus aria-hidden />
@@ -756,15 +757,12 @@ function IntervalPanel({
       aria-label={t("panelLabel")}
       className="flex flex-col gap-3.5 rounded-xl border border-border bg-muted/40 p-4 max-xl:order-1"
     >
-      <div className="flex flex-wrap items-center gap-2.5">
+      <div className="flex flex-nowrap items-center justify-between gap-2">
         {step("start", entry.start, t("startEarlier"), t("startLater"))}
         <span aria-hidden className="text-muted-foreground">
           –
         </span>
         {step("end", entry.end, t("endEarlier"), t("endLater"))}
-        <span className="ml-auto font-semibold text-muted-foreground">
-          {formatMinutes(entry.end - entry.start)}
-        </span>
       </div>
       {night && (
         <p className="rounded-lg bg-info px-3 py-1.5 text-[13px] text-info-foreground">

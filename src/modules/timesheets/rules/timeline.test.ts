@@ -306,3 +306,21 @@ describe("axis and instants", () => {
     );
   });
 });
+
+describe("entries of neighbouring days", () => {
+  it("lets an entry ending at a foreign entry be shortened without moving it", () => {
+    const entries = [
+      { id: "a", start: 16 * 60 + 50, end: 24 * 60 + 45 },
+      { id: "~blocked0", start: 24 * 60 + 45, end: 26 * 60 },
+    ];
+    const res = adjustEntry(entries, "a", "end", -5, { maxEnd: 1800, step: 5 });
+    expect(res).toEqual({
+      ok: true,
+      updates: [{ id: "a", start: 16 * 60 + 50, end: 24 * 60 + 40 }],
+    });
+    // Extending stops at the foreign entry.
+    expect(
+      adjustEntry(entries, "a", "end", 5, { maxEnd: 1800, step: 5 }).ok,
+    ).toBe(false);
+  });
+});
