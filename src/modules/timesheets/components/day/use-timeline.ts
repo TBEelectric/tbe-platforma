@@ -10,6 +10,7 @@ import {
   type TimelineActionInput,
 } from "../../timeline-actions";
 import {
+  JOB_CHIPS_MAX,
   jobChipIds,
   localAdjust,
   localCreate,
@@ -309,8 +310,11 @@ export function useTimeline({
         activeJobIds: day.jobs.filter((j) => j.active).map((j) => j.id),
       });
       const ids = chipIdsRef.current;
-      if (entry.kind === "work" && entry.jobId && !ids.includes(entry.jobId))
+      if (entry.kind === "work" && entry.jobId && !ids.includes(entry.jobId)) {
         ids.unshift(entry.jobId);
+        // Never more than the usual 4 + the entry's own.
+        ids.splice(JOB_CHIPS_MAX + 1);
+      }
       return ids.map((id) => byId.get(id)).filter((j) => j !== undefined);
     },
     [day],
