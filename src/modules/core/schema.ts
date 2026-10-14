@@ -259,11 +259,17 @@ export const job = coreSchema.table(
     code: text().notNull().unique(),
     name: text().notNull(),
     customerId: uuid().references(() => customer.id),
+    /** Where the job is done; workers know the job by "customer, site" (docs/design.md). */
+    siteId: uuid()
+      .notNull()
+      .references(() => site.id),
+    /** Colour override (#rrggbb); null = derived from the id (rules/job-display.ts). */
+    color: text(),
     status: jobStatus().notNull().default("active"),
     externalId: text(),
     ...archivable,
   },
-  (table) => [index().on(table.customerId)],
+  (table) => [index().on(table.customerId), index().on(table.siteId)],
 );
 
 export const site = coreSchema.table(

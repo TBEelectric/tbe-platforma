@@ -105,12 +105,48 @@ export const rolesFormSchema = z.object({
   timesheetsManager: checkbox,
 });
 
-export const jobFormSchema = z.object({
-  code: requiredText(20),
-  name: requiredText(200),
-  customerId: optionalUuid,
-  status: z.enum(["active", "closed"], { error: "validation.choose" }),
-});
+/** Value of the site select in the job form that creates a new site from siteName/siteAddress. */
+export const NEW_SITE = "new";
+
+const optionalText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max, "validation.maxLength")
+    .optional()
+    .transform((v) => (v ? v.replace(/\s+/g, " ") : null));
+
+export const jobFormSchema = z
+  .object({
+    code: requiredText(20),
+    name: requiredText(200),
+    customerId: optionalUuid,
+    status: z.enum(["active", "closed"], { error: "validation.choose" }),
+    /** An existing site's id, or NEW_SITE. */
+    siteId: z
+      .string({ error: "validation.choose" })
+      .refine((v) => v === NEW_SITE || z.uuid().safeParse(v).success, {
+        message: "validation.choose",
+      }),
+    siteName: optionalText(100),
+    siteAddress: optionalText(200),
+  })
+  .superRefine((value, ctx) => {
+    if (value.siteId === NEW_SITE && !value.siteName)
+      ctx.addIssue({
+        code: "custom",
+        path: ["siteName"],
+        message: "validation.required",
+      });
+  })
+  .transform(({ siteId, siteName, siteAddress, ...job }) => ({
+    ...job,
+    site:
+      siteId === NEW_SITE
+        ? { kind: "new" as const, name: siteName!, address: siteAddress }
+        : { kind: "existing" as const, id: siteId },
+  }));
+export type JobForm = z.infer<typeof jobFormSchema>;
 
 export const customerFormSchema = z.object({
   name: requiredText(200),

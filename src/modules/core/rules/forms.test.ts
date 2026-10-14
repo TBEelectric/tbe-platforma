@@ -5,6 +5,8 @@ import {
   employeeFormSchema,
   employmentFormSchema,
   fieldErrors,
+  jobFormSchema,
+  NEW_SITE,
 } from "./forms";
 
 describe("employeeFormSchema", () => {
@@ -107,5 +109,48 @@ describe("customerFormSchema", () => {
     expect(
       customerFormSchema.safeParse({ name: "X", ico: "1234" }).success,
     ).toBe(false);
+  });
+});
+
+describe("jobFormSchema", () => {
+  const job = {
+    code: "250147",
+    name: "Rozvaděče hala A",
+    customerId: "",
+    status: "active",
+  };
+  const siteId = "6f1c0a52-2f43-4f7b-9d0e-1a2b3c4d5e6f";
+  const errorsOf = (input: Record<string, unknown>) => {
+    const result = jobFormSchema.safeParse(input);
+    return result.success ? null : csAll(fieldErrors(result.error));
+  };
+
+  it("takes an existing site", () => {
+    expect(jobFormSchema.parse({ ...job, siteId })).toEqual({
+      code: "250147",
+      name: "Rozvaděče hala A",
+      customerId: null,
+      status: "active",
+      site: { kind: "existing", id: siteId },
+    });
+  });
+
+  it("creates a new site from its name and address", () => {
+    expect(
+      jobFormSchema.parse({
+        ...job,
+        siteId: NEW_SITE,
+        siteName: " Jihlava,  hala A ",
+        siteAddress: "",
+      }).site,
+    ).toEqual({ kind: "new", name: "Jihlava, hala A", address: null });
+  });
+
+  it("requires a site", () => {
+    expect(errorsOf(job)).toEqual({ siteId: "Vyberte" });
+    expect(errorsOf({ ...job, siteId: "x" })).toEqual({ siteId: "Vyberte" });
+    expect(errorsOf({ ...job, siteId: NEW_SITE })).toEqual({
+      siteName: "Povinné",
+    });
   });
 });

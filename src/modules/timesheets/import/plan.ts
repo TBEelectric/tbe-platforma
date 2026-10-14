@@ -2,7 +2,12 @@
 // or update. Pure; the same plan drives the preview and the save. Nothing is ever deleted.
 import { calendarDate } from "@/i18n/format";
 import { msg, type Msg } from "@/i18n/messages";
-import { periodOn, planFollowingPeriod, type RoleKey } from "../../core/shared";
+import {
+  periodOn,
+  planFollowingPeriod,
+  siteKey,
+  type RoleKey,
+} from "../../core/shared";
 import type { EmployeeImportRow, JobImportRow } from "./parse";
 
 // ── Snapshot of the current state ──
@@ -430,6 +435,7 @@ export type JobSnapshot = {
     code: string;
     name: string;
     customerId: string | null;
+    siteId: string;
     status: "active" | "closed";
     archived: boolean;
   }[];
@@ -437,6 +443,13 @@ export type JobSnapshot = {
     id: string;
     name: string;
     ico: string | null;
+    archived: boolean;
+  }[];
+  sites: {
+    id: string;
+    name: string;
+    address: string | null;
+    customerId: string | null;
     archived: boolean;
   }[];
 };
@@ -449,7 +462,11 @@ export type JobOps = {
     name?: string;
     status?: "active" | "closed";
     customerKey?: string | null;
+    /** Key of the job's site (siteKey), in siteIds or newSites. */
+    siteKey?: string;
   };
+  /** New address of an existing site. */
+  siteAddress?: { siteId: string; address: string };
 };
 
 export type JobPlan = {
@@ -459,6 +476,19 @@ export type JobPlan = {
   newCustomers: { key: string; name: string; ico: string | null }[];
   /** Existing customers by key, for resolving customerKey to an id. */
   customerIds: Record<string, string>;
+  /**
+   * Sites to create, by key. The owner is an existing customer (customerId) or one created by
+   * this import (customerKey); both null = no customer.
+   */
+  newSites: {
+    key: string;
+    name: string;
+    address: string | null;
+    customerId: string | null;
+    customerKey: string | null;
+  }[];
+  /** Existing sites by key, for resolving siteKey to an id. */
+  siteIds: Record<string, string>;
 };
 
 /** Customer key: IČO when known (exact match), otherwise the name (case-insensitive). */
@@ -498,6 +528,14 @@ export function planJobImport(
         })
       : msg("import.changes.newCustomer", { name: r.customerName! });
 
+  // Sites are matched by name within the job's customer (siteKey); new customers get new sites.
+  const siteIds: Record<string, string> = {};
+  for (const s of snapshot.sites.filter((x) => !x.archived))
+    siteIds[siteKey(s.customerId, s.name)] ??= s.id;
+  const siteById = new Map(snapshot.sites.map((s) => [s.id, s]));
+  const newSites = new Map<string, JobPlan["newSites"][number]>();
+  const addressChanged = new Set<string>();
+
   for (const r of rows) {
     const existing = jobsByCode.get(r.code);
     const errors: Msg[] = [];
@@ -509,12 +547,35 @@ export function planJobImport(
       newCustomers.set(key, { key, name: r.customerName!, ico: r.ico });
     }
 
+    // The job's customer after the import: the row's, or the current one when the column is empty.
+    const ownerKey = key && !customerIds[key] ? key : null;
+    const ownerId = ownerKey
+      ? null
+      : key
+        ? customerIds[key]
+        : (existing?.customerId ?? null);
+    const sKey = siteKey(ownerKey ?? ownerId, r.siteName);
+    const siteId = siteIds[sKey] as string | undefined;
+    const siteMsg = siteId
+      ? msg("import.changes.site", { name: siteById.get(siteId)!.name })
+      : msg("import.changes.newSite", { name: r.siteName });
+    // An address in the file updates the address of an existing site (once per site).
+    const currentAddress = siteId ? siteById.get(siteId)!.address : null;
+    const siteAddress: JobOps["siteAddress"] =
+      siteId &&
+      r.siteAddress &&
+      r.siteAddress !== currentAddress &&
+      !addressChanged.has(siteId)
+        ? { siteId, address: r.siteAddress }
+        : undefined;
+
     const values: JobOps["values"] = {};
     if (!existing) {
       Object.assign(values, {
         name: r.name,
         status: r.status,
         customerKey: key,
+        siteKey: sKey,
       });
       if (key && !customerIds[key]) changes.push(newCustomer(r));
       else if (key)
@@ -523,6 +584,7 @@ export function planJobImport(
             name: customerName(customerIds[key]) ?? "",
           }),
         );
+      changes.push(siteMsg);
       if (r.status === "closed")
         changes.push(
           msg("import.changes.closed", { status: status("closed") }),
@@ -556,14 +618,33 @@ export function planJobImport(
         );
         if (!customerIds[key]) changes.push(newCustomer(r));
       }
+      if (siteId !== existing.siteId) {
+        values.siteKey = sKey;
+        changes.push(
+          fieldChange(
+            msg("core.fields.site"),
+            siteById.get(existing.siteId)?.name ?? null,
+            r.siteName,
+          ),
+        );
+        if (!siteId) changes.push(siteMsg);
+      }
     }
+    if (siteAddress)
+      changes.push(
+        fieldChange(
+          msg("core.form.siteAddress"),
+          currentAddress,
+          siteAddress.address,
+        ),
+      );
 
     const rowStatus: RowStatus =
       errors.length > 0
         ? "error"
         : !existing
           ? "new"
-          : Object.keys(values).length > 0
+          : Object.keys(values).length > 0 || siteAddress
             ? "update"
             : "unchanged";
     previews.push({
@@ -574,13 +655,24 @@ export function planJobImport(
       changes,
       errors,
     });
-    if (rowStatus === "new" || rowStatus === "update")
+    if (rowStatus === "new" || rowStatus === "update") {
       ops.push({
         row: r.row,
         jobId: existing?.id ?? null,
         code: r.code,
         values,
+        ...(siteAddress ? { siteAddress } : {}),
       });
+      if (siteAddress) addressChanged.add(siteAddress.siteId);
+      if (values.siteKey && !siteId && !newSites.has(sKey))
+        newSites.set(sKey, {
+          key: sKey,
+          name: r.siteName,
+          address: r.siteAddress,
+          customerId: ownerId,
+          customerKey: ownerKey,
+        });
+    }
   }
 
   return {
@@ -588,5 +680,7 @@ export function planJobImport(
     ops,
     newCustomers: [...newCustomers.values()],
     customerIds,
+    newSites: [...newSites.values()],
+    siteIds,
   };
 }

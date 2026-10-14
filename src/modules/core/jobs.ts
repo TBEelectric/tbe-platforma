@@ -1,19 +1,16 @@
 import { asc, eq, isNull } from "drizzle-orm";
-import { db } from "@/lib/db";
+import { db, type DbOrTx } from "@/lib/db";
 import {
   insertAudited,
   rethrowAsUserError,
   updateAudited,
   type ChangeContext,
 } from "./audited";
-import { customer, job } from "./schema";
+import type { JobForm } from "./rules/forms";
+import { jobLabel, siteKey } from "./rules/job-display";
+import { customer, job, site } from "./schema";
 
-export type JobInput = {
-  code: string;
-  name: string;
-  customerId: string | null;
-  status: "active" | "closed";
-};
+export type JobInput = JobForm;
 export type CustomerInput = { name: string; ico: string | null };
 
 export async function listJobs() {
@@ -25,23 +22,94 @@ export async function listJobs() {
       status: job.status,
       archivedAt: job.archivedAt,
       customerName: customer.name,
+      siteName: site.name,
     })
     .from(job)
     .leftJoin(customer, eq(customer.id, job.customerId))
+    .innerJoin(site, eq(site.id, job.siteId))
     .orderBy(asc(job.code));
-  return rows.map(({ archivedAt, ...r }) => ({ ...r, archived: !!archivedAt }));
+  return rows.map(({ archivedAt, ...r }) => ({
+    ...r,
+    label: jobLabel(r),
+    archived: !!archivedAt,
+  }));
 }
 
 export async function getJob(id: string) {
-  const [row] = await db.select().from(job).where(eq(job.id, id));
-  return row ?? null;
+  const [row] = await db
+    .select({ job, customerName: customer.name, siteName: site.name })
+    .from(job)
+    .leftJoin(customer, eq(customer.id, job.customerId))
+    .innerJoin(site, eq(site.id, job.siteId))
+    .where(eq(job.id, id));
+  return row ? { ...row.job, label: jobLabel({ ...row.job, ...row }) } : null;
+}
+
+/** Sites for the job form; the form offers those of the chosen customer and those without one. */
+export async function listSiteOptions() {
+  const rows = await db
+    .select({
+      id: site.id,
+      name: site.name,
+      address: site.address,
+      customerId: site.customerId,
+    })
+    .from(site)
+    .where(isNull(site.archivedAt))
+    .orderBy(asc(site.name));
+  return rows.map((r) => ({
+    id: r.id,
+    customerId: r.customerId,
+    label: r.address ? `${r.name} (${r.address})` : r.name,
+  }));
+}
+
+/**
+ * Site of a job: an existing one, or a new one of the job's customer. A new site with the same
+ * name (siteKey) as an existing site of that customer reuses it.
+ */
+export async function resolveJobSite(
+  tx: DbOrTx,
+  ctx: ChangeContext,
+  customerId: string | null,
+  input: JobInput["site"],
+): Promise<string> {
+  if (input.kind === "existing") return input.id;
+  const key = siteKey(customerId, input.name);
+  const sites = await tx
+    .select()
+    .from(site)
+    .where(
+      customerId === null
+        ? isNull(site.customerId)
+        : eq(site.customerId, customerId),
+    );
+  const found = sites.find(
+    (s) => !s.archivedAt && siteKey(s.customerId, s.name) === key,
+  );
+  if (found) return found.id;
+  const created = await insertAudited(tx, ctx, "site", site, {
+    name: input.name,
+    address: input.address,
+    type: "construction",
+    customerId,
+  });
+  return created.id;
 }
 
 export async function createJob(ctx: ChangeContext, input: JobInput) {
+  const { site: siteInput, ...values } = input;
   try {
-    return await db.transaction(
-      async (tx) => (await insertAudited(tx, ctx, "job", job, input)).id,
-    );
+    return await db.transaction(async (tx) => {
+      const siteId = await resolveJobSite(
+        tx,
+        ctx,
+        values.customerId,
+        siteInput,
+      );
+      return (await insertAudited(tx, ctx, "job", job, { ...values, siteId }))
+        .id;
+    });
   } catch (error) {
     rethrowAsUserError(error);
   }
@@ -52,8 +120,17 @@ export async function updateJob(
   id: string,
   input: JobInput,
 ) {
+  const { site: siteInput, ...values } = input;
   try {
-    await db.transaction((tx) => updateAudited(tx, ctx, "job", job, id, input));
+    await db.transaction(async (tx) => {
+      const siteId = await resolveJobSite(
+        tx,
+        ctx,
+        values.customerId,
+        siteInput,
+      );
+      await updateAudited(tx, ctx, "job", job, id, { ...values, siteId });
+    });
   } catch (error) {
     rethrowAsUserError(error);
   }

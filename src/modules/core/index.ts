@@ -22,6 +22,7 @@ export {
   job,
   publicHoliday,
   roleAssignment,
+  site,
   team,
   teamMember,
 } from "./schema";

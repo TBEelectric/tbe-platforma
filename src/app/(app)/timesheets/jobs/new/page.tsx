@@ -3,7 +3,11 @@ import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/shell/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { requirePermission } from "@/lib/current-user";
-import { canManageJobs, listCustomerOptions } from "@/modules/core";
+import {
+  canManageJobs,
+  listCustomerOptions,
+  listSiteOptions,
+} from "@/modules/core";
 import { createJobAction } from "@/modules/core/actions";
 import { JobForm } from "@/modules/core/components/simple-forms";
 
@@ -12,7 +16,10 @@ export const instant = false;
 export default async function NewJobPage() {
   await requirePermission(canManageJobs);
   const t = await getTranslations();
-  const customers = await listCustomerOptions();
+  const [customers, sites] = await Promise.all([
+    listCustomerOptions(),
+    listSiteOptions(),
+  ]);
   return (
     <>
       <BackLink href="/timesheets/jobs">{t("core.tabs.jobs")}</BackLink>
@@ -25,6 +32,7 @@ export default async function NewJobPage() {
           <JobForm
             action={createJobAction}
             customers={customers}
+            sites={sites}
             submitLabel={t("core.pages.createJob")}
           />
         </CardContent>

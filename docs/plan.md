@@ -52,12 +52,18 @@ hotových krocích před ním. Značky: `[ručně]` = skript krok nespustí, ud�
 - [x] **3b.1 – Jazyky**
       next-intl, texty milníků 1–3 na klíčích v `messages/cs.json`, `user.locale` (výchozí `cs`). Bez překladu.
 
-- [ ] **3b.2 – Zakázka s místem**
+- [x] **3b.2 – Zakázka s místem**
       Migrace `job.site_id` (povinné; existující zakázky v DB a seedu dostanou místo), formulář zakázky s výběrem /
       založením místa, seed, import zakázek podle `docs/import/sablona-importu.xlsx` (sloupce Místo, Adresa místa –
       parser a testy). Funkce zobrazení „Firma, místo“ (bez s.r.o./a.s.) s testy a její použití v existujících obrazovkách
       (správa zakázek, dosavadní Můj den). Pozn.: krok byl rozpracovaný (migrace 0007, `job-display.ts`) – navázat.
       Hotovo, když: zakázky mají místo, import nové šablony projde včetně testů, všude je vidět „Firma, místo“.
+      Výsledek: Zakázky mají povinné místo (migrace dá existujícím zakázkám místo pojmenované po zakázce, opraví ho seed
+      nebo import šablony), formulář zakázky nabízí místa zvoleného zákazníka nebo „+ Nové místo…“, import zakládá/páruje
+      místa (podle názvu u zákazníka, bez ohledu na velikost písmen) a mění adresu; správa zakázek i Můj den ukazují
+      „Firma, místo“ a stálé barvy zakázek z `jobColor` (místo barev podle pořadí v dni). Vyzkoušet: založit zakázku
+      s novým místem, změnit místo, import šablony (náhled ukáže „Nové místo …“). Rozhodl jsem sám: nové místo má typ
+      „stavba“; ruční změna barvy zakázky (`job.color`) zatím nemá UI.
 
 - [ ] **3b.3 – Zakázky party a obvyklý den (data a server)**
       Tabulky `team_job` (unikátní team+job) a `day_template` (jedna na zaměstnance), výchozí šablona firmy

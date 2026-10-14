@@ -10,6 +10,8 @@ import {
   roleAssignment,
   ROLES,
   rolesFromAssignments,
+  site,
+  siteKey,
   team,
   teamMember,
   updateAudited,
@@ -91,9 +93,10 @@ export async function loadEmployeeSnapshot(
 }
 
 export async function loadJobSnapshot(tx: DbOrTx): Promise<JobSnapshot> {
-  const [jobs, customers] = await Promise.all([
+  const [jobs, customers, sites] = await Promise.all([
     tx.select().from(job),
     tx.select().from(customer),
+    tx.select().from(site),
   ]);
   return {
     jobs: jobs.map((j) => ({
@@ -101,6 +104,7 @@ export async function loadJobSnapshot(tx: DbOrTx): Promise<JobSnapshot> {
       code: j.code,
       name: j.name,
       customerId: j.customerId,
+      siteId: j.siteId,
       status: j.status,
       archived: !!j.archivedAt,
     })),
@@ -109,6 +113,13 @@ export async function loadJobSnapshot(tx: DbOrTx): Promise<JobSnapshot> {
       name: c.name,
       ico: c.ico,
       archived: !!c.archivedAt,
+    })),
+    sites: sites.map((s) => ({
+      id: s.id,
+      name: s.name,
+      address: s.address,
+      customerId: s.customerId,
+      archived: !!s.archivedAt,
     })),
   };
 }
@@ -296,17 +307,47 @@ export async function saveJobPlan(
     // A customer created by IČO may also be referenced by name later in the file.
     customerIds[customerKey(c.name, null)!] ??= created.id;
   }
+  const siteIds = { ...plan.siteIds };
+  for (const s of plan.newSites) {
+    const customerId = s.customerKey
+      ? customerIds[s.customerKey]
+      : s.customerId;
+    // The same new customer may be named by IČO and by name: one site per customer and name.
+    const byCustomer = siteKey(customerId, s.name);
+    siteIds[s.key] = siteIds[byCustomer] ??= (
+      await insertAudited(
+        tx,
+        ctx,
+        "site",
+        site,
+        { name: s.name, address: s.address, type: "construction", customerId },
+        "import",
+      )
+    ).id;
+  }
   for (const op of plan.ops) {
-    const { customerKey: key, ...rest } = op.values;
+    if (op.siteAddress)
+      await updateAudited(
+        tx,
+        ctx,
+        "site",
+        site,
+        op.siteAddress.siteId,
+        { address: op.siteAddress.address },
+        "import",
+      );
+    const { customerKey: key, siteKey: sKey, ...rest } = op.values;
     const values = {
       ...rest,
       ...(key !== undefined
         ? { customerId: key ? customerIds[key] : null }
         : {}),
+      ...(sKey !== undefined ? { siteId: siteIds[sKey] } : {}),
     };
-    if (op.jobId)
-      await updateAudited(tx, ctx, "job", job, op.jobId, values, "import");
-    else
+    if (op.jobId) {
+      if (Object.keys(values).length > 0)
+        await updateAudited(tx, ctx, "job", job, op.jobId, values, "import");
+    } else
       await insertAudited(
         tx,
         ctx,
@@ -317,6 +358,7 @@ export async function saveJobPlan(
           name: values.name!,
           status: values.status ?? "active",
           customerId: values.customerId ?? null,
+          siteId: values.siteId!,
         },
         "import",
       );

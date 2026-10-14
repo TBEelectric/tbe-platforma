@@ -18,6 +18,7 @@ import {
   employee,
   employment,
   job,
+  site,
   team,
   teamMember,
 } from "@/modules/core/schema";
@@ -147,18 +148,24 @@ const jobs = [
   {
     code: "250147",
     name: "Rozvaděče hala A",
+    site: "Jihlava, hala A",
+    siteAddress: "Průmyslová 12, Jihlava",
     customer: "Strojírny Vysočina s.r.o.",
     ico: "12345678",
   },
   {
     code: "250162",
     name: "Elektroinstalace kanceláře",
+    site: "Praha 1, Na Poříčí 12",
+    siteAddress: "Na Poříčí 12, Praha 1",
     customer: "Kancelářský dům Na Poříčí a.s.",
     ico: "23456789",
   },
   {
     code: "250201",
     name: "Servis technologie",
+    site: "Kolín, pekárna",
+    siteAddress: "Pražská 40, Kolín",
     customer: "Pekárna Zlatý klas s.r.o.",
     ico: "34567890",
   },
@@ -317,6 +324,27 @@ async function seedJobs(tx: DbOrTx) {
             .returning()
         )[0],
     );
+    const [foundSite] = await tx
+      .select()
+      .from(site)
+      .where(and(eq(site.customerId, customerId), eq(site.name, j.site)));
+    const siteId = await upsertAudited(
+      tx,
+      "site",
+      foundSite,
+      async () =>
+        (
+          await tx
+            .insert(site)
+            .values({
+              name: j.site,
+              address: j.siteAddress,
+              type: "construction",
+              customerId,
+            })
+            .returning()
+        )[0],
+    );
     const [foundJob] = await tx.select().from(job).where(eq(job.code, j.code));
     await upsertAudited(
       tx,
@@ -326,10 +354,26 @@ async function seedJobs(tx: DbOrTx) {
         (
           await tx
             .insert(job)
-            .values({ code: j.code, name: j.name, customerId })
+            .values({ code: j.code, name: j.name, customerId, siteId })
             .returning()
         )[0],
     );
+    // Jobs seeded before job.site_id got a placeholder site from the migration.
+    if (foundJob && foundJob.siteId !== siteId) {
+      const [after] = await tx
+        .update(job)
+        .set({ siteId })
+        .where(eq(job.id, foundJob.id))
+        .returning();
+      await writeAudit(tx, {
+        actorUserId: null,
+        entity: "job",
+        entityId: after.id,
+        action: "update",
+        before: foundJob,
+        after,
+      });
+    }
   }
 }
 

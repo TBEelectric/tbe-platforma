@@ -96,7 +96,8 @@ type JobRow = {
   code: string;
   name: string;
   status: "active" | "closed";
-  customerName: string | null;
+  /** "Firma, místo" (jobLabel). */
+  label: string;
   archived: boolean;
 };
 const jobCol = dataTableColumns<JobRow>();
@@ -113,12 +114,8 @@ const jobColumns = (t: T) =>
         </Link>
       ),
     }),
+    jobCol.accessor("label", { header: t("jobLabel") }),
     jobCol.accessor("name", { header: t("name") }),
-    jobCol.accessor((r) => r.customerName ?? "", {
-      id: "customer",
-      header: t("customer"),
-      cell: ({ getValue }) => getValue() || "–",
-    }),
     jobCol.accessor(
       (r) =>
         r.archived

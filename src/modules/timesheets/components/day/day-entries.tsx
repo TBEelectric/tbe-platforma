@@ -28,12 +28,13 @@ function workTypeBadge(e: DayEntryView) {
 
 function JobLabel({ e }: { e: DayEntryView }) {
   const t = useTranslations("timesheets.entries");
-  if (!e.jobCode)
+  if (!e.jobLabel)
     return <span className="text-muted-foreground">{t("noJob")}</span>;
   return (
-    <>
-      <span className="font-semibold">{e.jobCode}</span> {e.jobName}
-    </>
+    <span className="flex flex-col">
+      <span className="font-semibold">{e.jobLabel}</span>
+      <span className="text-sm text-muted-foreground">{e.jobName}</span>
+    </span>
   );
 }
 
@@ -65,7 +66,7 @@ export function DayEntries({ view, needsReason }: Props) {
     : undefined;
   const nextLabel = next
     ? [
-        view.jobs.find((j) => j.id === next.jobId)?.code,
+        view.jobs.find((j) => j.id === next.jobId)?.label,
         view.workTypes.find((w) => w.id === next.workTypeId)?.name,
       ]
         .filter(Boolean)
@@ -236,7 +237,7 @@ export function DayEntries({ view, needsReason }: Props) {
               </span>
               <span className="flex min-w-0 flex-1 flex-col gap-1.5">
                 <span className="text-base leading-snug font-semibold">
-                  {e.jobCode ? `${e.jobCode} ${e.jobName}` : t("noJob")}
+                  {e.jobLabel ?? t("noJob")}
                 </span>
                 <span className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                   {workTypeBadge(e)}

@@ -106,6 +106,7 @@ const CONSTRAINT_MESSAGES: Record<string, { field: string; key: MessageKey }> =
     },
     employee_email_unique: { field: "email", key: "core.errors.emailTaken" },
     job_code_unique: { field: "code", key: "core.errors.jobCodeTaken" },
+    job_site_id_site_id_fk: { field: "siteId", key: "validation.choose" },
     customer_ico_unique: { field: "ico", key: "core.errors.icoTaken" },
     team_name_unique: { field: "name", key: "core.errors.teamNameTaken" },
     employment_no_overlap: {

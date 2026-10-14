@@ -7,7 +7,18 @@ import {
   todayInPrague,
 } from "@/lib/dates";
 import { db } from "@/lib/db";
-import { employee, employment, job, periodOn, publicHoliday } from "../core";
+import {
+  customer,
+  employee,
+  employment,
+  job,
+  jobColor,
+  jobLabel,
+  NO_JOB_COLOR,
+  periodOn,
+  publicHoliday,
+  site,
+} from "../core";
 import { loadLeaveSummary } from "./leave";
 import { isPeriodClosed, weekStart } from "./rules/month";
 import { resolveSettings } from "./rules/settings";
@@ -35,9 +46,31 @@ import {
   workType,
 } from "./schema";
 
-/** Colours of jobs in the timeline and totals, in order of first use on the day (docs/design.md). */
-const JOB_COLORS = ["#0e7c72", "#3a68a8", "#8a5cb8", "#b7791f", "#c2410c"];
-const NO_JOB_COLOR = "#5b6877";
+/** A job as workers see it: "Firma, místo" (jobLabel); the job name only as a detail. */
+export type DayJob = { id: string; label: string; name: string };
+
+/** Job columns needed for jobLabel and jobColor; join customer and site. */
+const jobDisplay = {
+  id: job.id,
+  name: job.name,
+  color: job.color,
+  customerName: customer.name,
+  siteName: site.name,
+};
+
+type JobDisplayRow = {
+  id: string;
+  name: string;
+  color: string | null;
+  customerName: string | null;
+  siteName: string | null;
+};
+
+const dayJob = (j: JobDisplayRow): DayJob => ({
+  id: j.id,
+  label: jobLabel(j),
+  name: j.name,
+});
 
 export type DayEntryView = {
   id: string;
@@ -50,7 +83,8 @@ export type DayEntryView = {
   endMs: number;
   minutes: number;
   jobId: string | null;
-  jobCode: string | null;
+  /** "Firma, místo"; null = no job. */
+  jobLabel: string | null;
   jobName: string | null;
   workTypeId: string | null;
   workTypeName: string | null;
@@ -105,7 +139,8 @@ export type DayView = {
     jobId: string | null;
     workTypeId: string | null;
   } | null;
-  jobs: Array<{ id: string; code: string; name: string }>;
+  /** Active jobs (and closed ones used on the day), sorted by label (company first). */
+  jobs: DayJob[];
   workTypes: Array<{ id: string; name: string; requiresJob: boolean }>;
 };
 
@@ -151,13 +186,17 @@ export async function loadDay(
     db
       .select({
         entry: timeEntry,
-        jobCode: job.code,
         jobName: job.name,
+        jobColor: job.color,
+        customerName: customer.name,
+        siteName: site.name,
         workTypeName: workType.name,
         workTypeCode: workType.code,
       })
       .from(timeEntry)
       .leftJoin(job, eq(job.id, timeEntry.jobId))
+      .leftJoin(customer, eq(customer.id, job.customerId))
+      .leftJoin(site, eq(site.id, job.siteId))
       .leftJoin(workType, eq(workType.id, timeEntry.workTypeId))
       .where(
         and(
@@ -202,38 +241,34 @@ export async function loadDay(
       .where(isNull(workType.archivedAt))
       .orderBy(asc(workType.sortOrder)),
     db
-      .select({ id: job.id, code: job.code, name: job.name })
+      .select(jobDisplay)
       .from(job)
-      .where(and(eq(job.status, "active"), isNull(job.archivedAt)))
-      .orderBy(asc(job.code)),
+      .leftJoin(customer, eq(customer.id, job.customerId))
+      .innerJoin(site, eq(site.id, job.siteId))
+      .where(and(eq(job.status, "active"), isNull(job.archivedAt))),
   ]);
 
   const settings = resolveSettings(settingRows, date);
   const holidayDates = holidays.map((h) => h.date);
   const entries = entryRows.map((r) => ({
     ...r.entry,
-    jobCode: r.jobCode,
+    jobLabel: r.entry.jobId
+      ? jobLabel({
+          name: r.jobName ?? "",
+          customerName: r.customerName,
+          siteName: r.siteName,
+        })
+      : null,
     jobName: r.jobName,
     workTypeName: r.workTypeName,
     workTypeCode: r.workTypeCode,
+    // Each job keeps its colour on every day and screen (docs/design.md, Zobrazení zakázky).
+    color: r.entry.jobId
+      ? jobColor({ id: r.entry.jobId, color: r.jobColor })
+      : NO_JOB_COLOR,
   }));
   const ofDay = (d: string) => entries.filter((e) => e.workDate === d);
   const day = ofDay(date);
-
-  // Colours by first use on the day.
-  const colorOf = new Map<string | null, string>();
-  for (const e of day) {
-    if (e.kind !== "work" || colorOf.has(e.jobId)) continue;
-    colorOf.set(
-      e.jobId,
-      e.jobId === null
-        ? NO_JOB_COLOR
-        : JOB_COLORS[
-            [...colorOf.keys()].filter((k) => k !== null).length %
-              JOB_COLORS.length
-          ],
-    );
-  }
 
   const status: TimesheetStatus = sheet[0]?.status ?? "open";
   const periodClosed = isPeriodClosed(close[0] ?? null);
@@ -282,10 +317,19 @@ export async function loadDay(
     .filter((id): id is string => !!id && !activeJobs.some((j) => j.id === id));
   const usedJobs = usedJobIds.length
     ? await db
-        .select({ id: job.id, code: job.code, name: job.name })
+        .select(jobDisplay)
         .from(job)
+        .leftJoin(customer, eq(customer.id, job.customerId))
+        .innerJoin(site, eq(site.id, job.siteId))
         .where(inArray(job.id, usedJobIds))
     : [];
+  const jobs = [...activeJobs, ...usedJobs]
+    .map(dayJob)
+    .sort(
+      (a, b) =>
+        a.label.localeCompare(b.label, "cs") ||
+        a.name.localeCompare(b.name, "cs"),
+    );
 
   return {
     date,
@@ -309,14 +353,14 @@ export async function loadDay(
       endMs: e.endAt.getTime(),
       minutes: entryDurationMinutes(e),
       jobId: e.jobId,
-      jobCode: e.jobCode,
+      jobLabel: e.jobLabel,
       jobName: e.jobName,
       workTypeId: e.workTypeId,
       workTypeName: e.workTypeName,
       workTypeCode: e.workTypeCode,
       note: e.note,
       source: e.source,
-      color: e.kind === "work" ? (colorOf.get(e.jobId) ?? NO_JOB_COLOR) : "",
+      color: e.kind === "work" ? e.color : "",
     })),
     totals: {
       workMinutes: totals.workMinutes,
@@ -330,9 +374,9 @@ export async function loadDay(
       return {
         jobId: t.jobId,
         /** null = work without a job (overhead). */
-        label: sample?.jobCode ? `${sample.jobCode} ${sample.jobName}` : null,
+        label: sample?.jobLabel ?? null,
         minutes: t.minutes,
-        color: colorOf.get(t.jobId) ?? NO_JOB_COLOR,
+        color: sample?.color ?? NO_JOB_COLOR,
       };
     }),
     warnings,
@@ -350,7 +394,7 @@ export async function loadDay(
       totalHours: leave.entitled + leave.carriedOver,
     },
     continueFrom: continueFrom(day, date),
-    jobs: [...activeJobs, ...usedJobs],
+    jobs,
     workTypes: workTypes.map((w) => ({
       id: w.id,
       name: w.name,

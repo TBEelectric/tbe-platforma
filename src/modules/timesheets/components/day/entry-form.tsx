@@ -146,7 +146,7 @@ export function EntryForm({
               </option>
               {view.jobs.map((j) => (
                 <option key={j.id} value={j.id}>
-                  {j.code} – {j.name}
+                  {j.label} – {j.name}
                 </option>
               ))}
             </NativeSelect>

@@ -13,6 +13,7 @@ import {
   type Cell,
   type RowIssue,
 } from "./parse";
+import { planJobImport } from "./plan";
 
 // The template's made-up data is the test input (docs/import/sablona-importu.xlsx).
 let template: { sheet: string; data: Cell[][] }[];
@@ -86,6 +87,30 @@ describe("template", () => {
       status: "closed",
     });
     expect(result.rows.find((r) => r.code === "250230")?.ico).toBeNull();
+  });
+
+  it("plans all jobs into an empty database with their customers and sites", () => {
+    const plan = planJobImport(parseJobSheet(sheet(JOB_SHEET)).rows, {
+      jobs: [],
+      customers: [],
+      sites: [],
+    });
+    expect(plan.previews.map((p) => p.status)).toEqual(Array(7).fill("new"));
+    expect(plan.newCustomers).toHaveLength(6);
+    // Strojírny Vysočina has two sites (hala A, dílna).
+    expect(plan.newSites.map((s) => s.name)).toEqual([
+      "Jihlava, hala A",
+      "Praha 1, Na Poříčí 12",
+      "Kolín, pekárna",
+      "Český Brod, sklad 3",
+      "Kolín, Polepská 8",
+      "Úvaly, parkoviště u nádraží",
+      "Jihlava, dílna",
+    ]);
+    expect(plan.newSites[0]).toMatchObject({
+      address: "Průmyslová 12, Jihlava",
+      customerKey: "ico:12345678",
+    });
   });
 });
 

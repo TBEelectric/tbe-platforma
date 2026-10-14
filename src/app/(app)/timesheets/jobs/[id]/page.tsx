@@ -5,7 +5,12 @@ import { ConfirmButton } from "@/components/form/confirm-button";
 import { PageHeader } from "@/components/shell/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { requirePermission } from "@/lib/current-user";
-import { canManageJobs, getJob, listCustomerOptions } from "@/modules/core";
+import {
+  canManageJobs,
+  getJob,
+  listCustomerOptions,
+  listSiteOptions,
+} from "@/modules/core";
 import { setJobArchivedAction, updateJobAction } from "@/modules/core/actions";
 import { JobForm } from "@/modules/core/components/simple-forms";
 
@@ -17,9 +22,10 @@ export default async function JobDetailPage({
   await requirePermission(canManageJobs);
   const t = await getTranslations();
   const { id } = await params;
-  const [job, customers] = await Promise.all([
+  const [job, customers, sites] = await Promise.all([
     getJob(id),
     listCustomerOptions(),
+    listSiteOptions(),
   ]);
   if (!job) notFound();
   const archived = !!job.archivedAt;
@@ -28,7 +34,9 @@ export default async function JobDetailPage({
       <BackLink href="/timesheets/jobs">{t("core.tabs.jobs")}</BackLink>
       <PageHeader
         title={`${job.code} ${job.name}`}
-        subtitle={archived ? t("core.pages.archivedJob") : undefined}
+        subtitle={
+          archived ? `${job.label} · ${t("core.pages.archivedJob")}` : job.label
+        }
         actions={
           <form action={setJobArchivedAction.bind(null, job.id, !archived)}>
             <ConfirmButton
@@ -48,6 +56,7 @@ export default async function JobDetailPage({
           <JobForm
             action={updateJobAction.bind(null, job.id)}
             customers={customers}
+            sites={sites}
             initial={job}
             submitLabel={t("core.form.save")}
           />

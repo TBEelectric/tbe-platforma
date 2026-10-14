@@ -263,6 +263,7 @@ describe("planJobImport", () => {
         code: "250147",
         name: "Rozvaděče hala A",
         customerId: "c1",
+        siteId: "s1",
         status: "active" as const,
         archived: false,
       },
@@ -272,6 +273,15 @@ describe("planJobImport", () => {
         id: "c1",
         name: "Strojírny Vysočina s.r.o.",
         ico: "12345678",
+        archived: false,
+      },
+    ],
+    sites: [
+      {
+        id: "s1",
+        name: "Jihlava, hala A",
+        address: "Průmyslová 12, Jihlava",
+        customerId: "c1",
         archived: false,
       },
     ],
@@ -311,6 +321,90 @@ describe("planJobImport", () => {
     expect(plan.newCustomers).toEqual([
       { key: "name:novotný josef", name: "Novotný Josef", ico: null },
     ]);
+    // The existing customer's site is reused; the new customer gets one new site for both jobs.
+    expect(plan.siteIds[plan.ops[0].values.siteKey!]).toBe("s1");
+    expect(plan.ops[1].values.siteKey).toBe(plan.ops[2].values.siteKey);
+    expect(plan.newSites).toEqual([
+      {
+        key: "name:novotný josef|jihlava, hala a",
+        name: "Jihlava, hala A",
+        address: "Průmyslová 12, Jihlava",
+        customerId: null,
+        customerKey: "name:novotný josef",
+      },
+    ]);
+    expect(textOf(plan.previews[0]).changes).toEqual([
+      "Zákazník Strojírny Vysočina s.r.o.",
+      "Místo Jihlava, hala A",
+    ]);
+    expect(textOf(plan.previews[1]).changes).toEqual([
+      "Nový zákazník Novotný Josef",
+      "Nové místo Jihlava, hala A",
+    ]);
+  });
+
+  it("matches sites by name regardless of case and spacing", () => {
+    const plan = planJobImport([job({ siteName: "jihlava,  HALA a" })], jobs);
+    expect(plan.previews[0].status).toBe("unchanged");
+    expect(plan.newSites).toEqual([]);
+  });
+
+  it("moves a job to a new site of its current customer", () => {
+    const plan = planJobImport(
+      [
+        job({
+          siteName: "Jihlava, dílna",
+          siteAddress: null,
+          customerName: null,
+          ico: null,
+        }),
+      ],
+      jobs,
+    );
+    expect(plan.ops[0].values).toEqual({ siteKey: "c1|jihlava, dílna" });
+    expect(plan.newSites).toEqual([
+      {
+        key: "c1|jihlava, dílna",
+        name: "Jihlava, dílna",
+        address: null,
+        customerId: "c1",
+        customerKey: null,
+      },
+    ]);
+    expect(textOf(plan.previews[0]).changes).toEqual([
+      "Místo: Jihlava, hala A → Jihlava, dílna",
+      "Nové místo Jihlava, dílna",
+    ]);
+  });
+
+  it("updates the address of an existing site once, keeps it when empty", () => {
+    const plan = planJobImport(
+      [
+        job({ siteAddress: "Průmyslová 14, Jihlava" }),
+        job({ row: 3, code: "250244", siteAddress: "Průmyslová 14, Jihlava" }),
+        job({ row: 4, code: "250245", siteAddress: null }),
+      ],
+      jobs,
+    );
+    expect(plan.previews[0].status).toBe("update");
+    expect(plan.ops[0]).toMatchObject({
+      values: {},
+      siteAddress: { siteId: "s1", address: "Průmyslová 14, Jihlava" },
+    });
+    expect(textOf(plan.previews[0]).changes).toEqual([
+      "Adresa místa: Průmyslová 12, Jihlava → Průmyslová 14, Jihlava",
+    ]);
+    expect(plan.ops[1].siteAddress).toBeUndefined();
+    expect(plan.ops[2].siteAddress).toBeUndefined();
+  });
+
+  it("creates no site for a row with an error", () => {
+    const plan = planJobImport([job({ siteName: "Jinde" })], {
+      ...jobs,
+      jobs: [{ ...jobs.jobs[0], archived: true }],
+    });
+    expect(plan.previews[0].status).toBe("error");
+    expect(plan.newSites).toEqual([]);
   });
 
   it("updates name and status, keeps the customer when the column is empty", () => {

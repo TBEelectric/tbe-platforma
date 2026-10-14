@@ -323,7 +323,8 @@
       "email": "E-mail",
       "name": "Název",
       "status": "Stav",
-      "customer": "Zákazník"
+      "customer": "Zákazník",
+      "site": "Místo"
     },
     "tabs": {
       "jobs": "Zakázky",
@@ -350,7 +351,8 @@
       "archivedJob": "Archivovaná",
       "activeJob": "Aktivní",
       "closedJob": "Uzavřená",
-      "searchJobs": "Hledat číslo, název, zákazníka…",
+      "searchJobs": "Hledat číslo, název, zákazníka, místo…",
+      "jobLabel": "Firma, místo",
       "ico": "IČO",
       "archivedCustomer": "Archivovaný",
       "searchCustomers": "Hledat zákazníka nebo IČO…"
@@ -406,6 +408,12 @@
       "jobCode": "Číslo zakázky",
       "noCustomer": "Bez zákazníka",
       "jobStatusHint": "Na uzavřenou zakázku nejde zapisovat hodiny.",
+      "siteHint": "Podle firmy a místa montéři zakázku poznají („Firma, místo“).",
+      "chooseSite": "Vyberte místo…",
+      "newSite": "+ Nové místo…",
+      "siteName": "Název místa",
+      "siteNameHint": "Krátce, jak ho znají montéři, např. „Jihlava, hala A“.",
+      "siteAddress": "Adresa místa",
       "customerName": "Název zákazníka",
       "ico": "IČO",
       "icoHint": "8 číslic, nepovinné"
@@ -513,6 +521,8 @@
       "newCustomer": "Nový zákazník {name}",
       "newCustomerIco": "Nový zákazník {name} (IČO {ico})",
       "customer": "Zákazník {name}",
+      "newSite": "Nové místo {name}",
+      "site": "Místo {name}",
       "closed": "Stav: {status}"
     },
     "fileErrors": {
