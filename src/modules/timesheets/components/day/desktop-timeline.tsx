@@ -775,7 +775,7 @@ function IntervalPanel({
         <span className="text-xs font-bold tracking-wide text-muted-foreground uppercase">
           {t("desktop.jobOrBreak")}
         </span>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col gap-2">
           <Chip
             brk
             active={isBreak}
@@ -784,10 +784,10 @@ function IntervalPanel({
             <Coffee className="size-[18px]" aria-hidden />
             {t("break")}
           </Chip>
-          <span aria-hidden className="my-1 w-px bg-border" />
           {chips.map((j) => (
             <Chip
               key={j.id}
+              wide
               active={!isBreak && entry.jobId === j.id}
               onClick={() => onJob(j.id)}
               title={`${jobLabel(j)} · ${j.name}`}
@@ -797,7 +797,7 @@ function IntervalPanel({
                 className="size-2.5 shrink-0 rounded-[3px]"
                 style={{ background: j.color }}
               />
-              <span className="max-w-[12rem] truncate">{jobLabel(j)}</span>
+              <span className="truncate">{jobLabel(j)}</span>
             </Chip>
           ))}
         </div>
@@ -873,12 +873,15 @@ function StepButton({
 function Chip({
   active,
   brk,
+  wide,
   title,
   onClick,
   children,
 }: {
   active: boolean;
   brk?: boolean;
+  /** Stretches over the whole row (jobs). */
+  wide?: boolean;
   title?: string;
   onClick: () => void;
   children: React.ReactNode;
@@ -891,6 +894,7 @@ function Chip({
       onClick={onClick}
       className={cn(
         "flex min-h-11 items-center gap-2 rounded-[10px] border px-3 text-sm font-semibold",
+        wide ? "w-full" : "self-start",
         brk
           ? active
             ? "border-[#8a4205] bg-[#8a4205] text-white"
