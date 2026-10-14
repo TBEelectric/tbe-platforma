@@ -134,7 +134,7 @@ export function DesktopTimeline({
     );
   }, []);
 
-  // Keyboard: ←/→ move the end of the selected interval by 5 min (Shift: the start), Esc deselects.
+  // Keyboard: Backspace/Delete delete the selected interval, ←/→ move the end of the selected interval by 5 min (Shift: the start), Esc deselects.
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       const { tl: line, readOnly: locked } = live.current;
@@ -143,6 +143,12 @@ export function DesktopTimeline({
       if (target?.closest("input, textarea, select, [contenteditable]")) return;
       if (event.key === "Escape") {
         line.select(null);
+      } else if (
+        !locked &&
+        (event.key === "Backspace" || event.key === "Delete")
+      ) {
+        event.preventDefault();
+        line.remove();
       } else if (
         !locked &&
         (event.key === "ArrowLeft" || event.key === "ArrowRight")

@@ -305,7 +305,7 @@
       },
       "desktop": {
         "title": "Intervaly dne",
-        "hint": "Táhnutím po ose nakreslete interval · klik do mezery ji vyplní · tažením okrajů upravíte · šipky ±5 min (Shift = začátek)",
+        "hint": "Táhnutím po ose nakreslete interval · klik do mezery ji vyplní · tažením okrajů upravíte · šipky ±5 min (Shift = začátek) · Delete smaže",
         "emptyHint": "Den je prázdný. Nakreslete interval na ose, nebo:",
         "jobOrBreak": "Zakázka nebo přestávka",
         "workType": "Druh práce",
