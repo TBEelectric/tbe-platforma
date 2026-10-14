@@ -514,20 +514,24 @@ export function MobileTimeline({
                 </span>
               </div>
             ))}
-            {day.blocked.map((b, i) => (
-              <div
-                key={i}
-                role="img"
-                aria-label={t("timesheets.timeline.blockedLabel")}
-                className="pointer-events-none absolute inset-x-0 rounded-lg bg-neutral"
-                style={{
-                  top: minuteTop(b.start),
-                  height: minuteTop(b.end) - minuteTop(b.start),
-                  backgroundImage:
-                    "repeating-linear-gradient(135deg, rgba(20,36,51,.08) 0 6px, transparent 6px 12px)",
-                }}
-              />
-            ))}
+            {day.blocked
+              .filter((b) => b.end > range.start && b.start < range.end)
+              .map((b, i) => (
+                <div
+                  key={i}
+                  role="img"
+                  aria-label={t("timesheets.timeline.blockedLabel")}
+                  className="pointer-events-none absolute inset-x-0 rounded-lg bg-neutral"
+                  style={{
+                    top: minuteTop(Math.max(b.start, range.start)),
+                    height:
+                      minuteTop(Math.min(b.end, range.end)) -
+                      minuteTop(Math.max(b.start, range.start)),
+                    backgroundImage:
+                      "repeating-linear-gradient(135deg, rgba(20,36,51,.08) 0 6px, transparent 6px 12px)",
+                  }}
+                />
+              ))}
 
             {entries.map((e) => {
               const isBreak = e.kind === "break";

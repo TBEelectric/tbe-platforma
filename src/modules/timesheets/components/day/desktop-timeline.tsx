@@ -408,20 +408,22 @@ export function DesktopTimeline({
                 style={{ left: pct(m.minute) }}
               />
             ))}
-            {day.blocked.map((b, i) => (
-              <div
-                key={i}
-                role="img"
-                aria-label={t("blockedLabel")}
-                className="pointer-events-none absolute inset-y-1.5 rounded-lg bg-neutral"
-                style={{
-                  left: pct(Math.max(b.start, range.start)),
-                  width: `${(minuteFraction(Math.min(b.end, range.end), range) - minuteFraction(Math.max(b.start, range.start), range)) * 100}%`,
-                  backgroundImage:
-                    "repeating-linear-gradient(135deg, rgba(20,36,51,.08) 0 6px, transparent 6px 12px)",
-                }}
-              />
-            ))}
+            {day.blocked
+              .filter((b) => b.end > range.start && b.start < range.end)
+              .map((b, i) => (
+                <div
+                  key={i}
+                  role="img"
+                  aria-label={t("blockedLabel")}
+                  className="pointer-events-none absolute inset-y-1.5 rounded-lg bg-neutral"
+                  style={{
+                    left: pct(Math.max(b.start, range.start)),
+                    width: `${(minuteFraction(Math.min(b.end, range.end), range) - minuteFraction(Math.max(b.start, range.start), range)) * 100}%`,
+                    backgroundImage:
+                      "repeating-linear-gradient(135deg, rgba(20,36,51,.08) 0 6px, transparent 6px 12px)",
+                  }}
+                />
+              ))}
 
             {entries.map((e) => {
               const isBreak = e.kind === "break";
