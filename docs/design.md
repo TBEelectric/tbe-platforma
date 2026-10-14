@@ -81,8 +81,9 @@ Osa na obrazovce Můj den slouží i k zápisu. Docházka se zapisuje hlavně **
 osa je stavěná na rychlé poskládání dne. Prototyp je v návrhu obrazovek (artboard „Můj den – interaktivní osa“).
 
 **Nahrazuje stávající statický pruh** na obrazovce Můj den (02-muj-den), nevzniká druhá osa. Zbytek obrazovky zůstává:
-pod osou tabulka intervalů (výběr na ose a v tabulce je propojený) a vedle ní panel vybraného intervalu
-(viz „Klik na interval“ níže), který nahrazuje dosavadní formulář „Přidat interval“. Úprava je jen na tomto jednom místě.
+pod osou kartičky intervalů (výběr na ose a na kartičce je propojený) a vedle nich (od šířky 1280 px, v užším okně nad
+nimi) panel vybraného intervalu (viz „Klik na interval“ níže). Starý formulář „Přidat interval“ a tabulka jsou
+odstraněné, úprava je jen na tomto jednom místě. Důvod zápisu za jiného zaměstnance je pole nad osou (ne dialog).
 Pravý sloupec (součty, kontroly, stav měsíce) beze změny.
 
 **Mobil je primární zařízení** (montéři nemají počítač). Na mobilu je osa **svislá jako denní pohled kalendáře** –
@@ -96,8 +97,9 @@ viz níže „Mobil – zápis dne na ose“. Desktopová vodorovná osa je pro 
   po rozbalení noci nahoře se **zachová pozice** (5:00 zůstane na stejném místě displeje), prázdná noc se při přechodu
   na jiný den sama sbalí. **Když den v noci něco má, je noc rozbalená automaticky a šipka se neukazuje.**
   Na desktopu (vodorovná osa) stejně: šipka vlevo od osy (před 5:00, ←) a vpravo od osy (za 24:00, →), svisle
-  uprostřed osy, v okraji mimo plochu pro kreslení; po rozbalení se otočí.
-  Krok přichytávání 5 min (tažení na mobilu 15 min).
+  uprostřed osy, v okraji mimo plochu pro kreslení; po rozbalení se otočí. Stav sdílí oba rozvrhy (`useNight`).
+  Krok přichytávání na desktopu 5 min (tažení na mobilu 15 min). Jediná hranice mezi mobilní a desktopovou osou je
+  1024 px (viz „Responzivita“).
 - **Noc a půlnoc:** rozbalená osa končí v 6:00 dalšího dne (popisky „0:00 +1“); interval přes půlnoc se kreslí jedním
   tahem a patří ke dni, kdy začal. Noční pásma 22:00–6:00 jsou jemně podbarvená; v panelu vybraného nočního intervalu
   nenápadná poznámka „Noční práce – zkontrolujte čas“ (nic neblokuje).
@@ -120,14 +122,19 @@ viz níže „Mobil – zápis dne na ose“. Desktopová vodorovná osa je pro 
   ukáže posuvný seznam se sekcemi Naposledy použité / Zakázky party / Všechny aktivní); **druh práce jako tlačítka**
   (ne rozbalovací seznam); Smazat interval / Hotovo. Na desktopu se tento panel použije místo dosavadního
   formuláře „Přidat interval“ s rozbalovacími seznamy.
-- Přestávky na ose i v tabulce: béžová, jemné šrafování, ikona kávy – stejně jako na mobilu.
+- Přestávky na ose i na kartičkách: béžová, jemné šrafování, ikona kávy – stejně jako na mobilu.
 - Každá změna se ukládá hned (server action, optimistická aktualizace, při chybě návrat a hláška) a zapisuje se do auditu.
-- Zamčený měsíc (potvrzený, schválený, uzavřený): osa jen pro čtení.
-- **Přístupnost:** všechno jde udělat i bez myši přes tabulku a formulář; vybraný interval jde posouvat šipkami (±5 min).
+- Zamčený měsíc (potvrzený, schválený, uzavřený) a den s celodenní absencí: osa **jen pro čtení** na mobilu i desktopu
+  (nejde kreslit, táhnout, vyplnit mezeru ani otevřít panel, klávesy nic nemění, nejsou šablony ani „Uložit jako můj
+  obvyklý den“); nahoře hláška „Měsíc je uzavřený“ (nebo o absenci). Pravidlo je čistá funkce `dayEditability`.
+- **Přístupnost a klávesnice:** bloky jsou `option` (`aria-selected`) v `listbox` osy, Tab přechází po blocích, Enter /
+  mezerník = výběr; vybraný interval: ←/→ = konec ±5 min, Shift+←/→ = začátek, Backspace/Delete = smazat, Esc = zrušit
+  výběr. Úchyty, šipka noci, špendlík a −/+ mají `aria-label`; fokus je viditelný (3px obrys v barvě `ring`).
+  Barva textu na bloku se volí podle jasu zakázky (`readableTextColor`, kontrast ≥ 4,5 : 1).
 
 ## Mobil – zápis dne na ose (primární)
 
-Prototyp: artboard „Mobil – zápis dne na ose“. Nahrazuje dosavadní mobilní obrazovku 06-mobil-den (seznam intervalů).
+Prototyp: `MobilOsa.dc.html`. Nahrazuje dosavadní mobilní obrazovku 06-mobil-den (seznam intervalů); platí pro šířky pod 1024 px.
 
 - **Svislá osa** 5:00–24:00 se sbalenou nocí (viz „Rozsah osy a sbalená noc“ výše), hodina ≈ 56 px, den se posouvá
   prstem. Po otevření dne se osa posune na první zapsaný interval, u prázdného dne na 6:00. Vlevo popisky hodin,
@@ -137,8 +144,8 @@ Prototyp: artboard „Mobil – zápis dne na ose“. Nahrazuje dosavadní mobil
   klepnutí do mezery mezi intervaly ji **celou vyplní**, jinde vloží 1 h. Bez podržení se den normálně posouvá –
   tažení nesmí kolidovat se scrollem.
 - **Přichytávání při tažení 15 min**, jemné doladění tlačítky −/+ po **5 min** ve spodním panelu.
-- **Úprava:** úchyty nahoře a dole na bloku (dotyková plocha ≥ 44 px, i když je úchyt vizuálně menší),
-  podržet a táhnout střed = posun. Tažený blok se vybere a kompaktní panel ukazuje jeho čas živě během tažení.
+- **Úprava:** klepnutím se blok vybere; úchyty nahoře a dole jsou jen na vybraném bloku (dotyková plocha ≥ 44 px,
+  přesahuje přes okraj), podržet (300 ms) a táhnout střed = posun. Tažený blok se vybere a kompaktní panel ukazuje jeho čas živě během tažení.
   Navazující bloky sdílejí hranici (viz výše).
 - **Spodní panel (bottom sheet), kompaktní – max. ~⅓ výšky displeje:** řádek začátek −/+ – konec −/+ a zavřít (×);
   vodorovně posuvný řádek: **Přestávka** (ikona hrnku kávy, teplá oranžová barva, oddělená svislou čárou)
@@ -159,8 +166,7 @@ Prototyp: artboard „Mobil – zápis dne na ose“. Nahrazuje dosavadní mobil
 - **Prázdný den:** tlačítka **„Obvyklý den“** (šablona zaměstnance, jinak výchozí šablona firmy 7:00–11:30, přestávka
   11:30–12:00, 12:00–15:30; bloky práce dostanou naposledy použitou zakázku a druh „Montáž“) a **„Jako včera“** (kopie
   posledního vyplněného pracovního dne). Pak se jen opraví rozdíly.
-- **Vlastní obvyklý den** si zaměstnanec nastaví sám: na vyplněném dni (mobil pod osou, desktop pod seznamem
-  intervalů) tlačítko **„Uložit jako můj obvyklý den“** → potvrzení se shrnutím („7:00–15:30 · 2× práce, 1× přestávka“,
+- **Vlastní obvyklý den** si zaměstnanec nastaví sám: na vyplněném dni pod osou (jen v otevřeném měsíci) tlačítko **„Uložit jako můj obvyklý den“** → potvrzení se shrnutím („7:00–15:30 · 2× práce, 1× přestávka“,
   případně „dosavadní se přepíše“). Ukládají se jen časy a typ bloku (práce / přestávka), ne zakázky ani druh práce.
   Tlačítko „Obvyklý den“ pak zní „Můj obvyklý den“. **Správce docházky** vidí šablonu v detailu zaměstnance a může ji
   smazat (vrátí se výchozí šablona firmy); výchozí šablonu firmy nastavuje v nastavení modulu. Vedoucí do šablon nezasahuje.
