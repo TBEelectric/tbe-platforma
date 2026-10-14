@@ -696,7 +696,7 @@ function Handle({
       data-handle={edge}
       data-id={id}
       aria-label={label}
-      className="h-full w-2.5 shrink-0 cursor-ew-resize bg-white/25 hover:bg-white/55"
+      className="h-full w-1.5 shrink-0 cursor-ew-resize bg-white/25 hover:bg-white/55"
     />
   );
 }
