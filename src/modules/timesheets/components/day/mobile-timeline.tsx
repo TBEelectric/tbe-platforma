@@ -44,7 +44,9 @@ import {
   type AdjustAction,
   type CreateStart,
   type TimelineEntry,
+  BREAK_TEXT_COLOR,
   dayEditability,
+  readableTextColor,
 } from "../../shared";
 import { JobPickerScreen } from "./job-picker-screen";
 import { NightToggle } from "./night-toggle";
@@ -473,6 +475,8 @@ export function MobileTimeline({
         />
         <div
           ref={colRef}
+          role="listbox"
+          aria-label={t("timesheets.timeline.axisLabel")}
           onPointerDown={onPointerDown}
           onContextMenu={(e) => e.preventDefault()}
           className="relative mr-1 ml-[52px] touch-pan-y select-none [-webkit-touch-callout:none]"
@@ -554,9 +558,9 @@ export function MobileTimeline({
                   key={e.id}
                   data-block
                   data-id={e.id}
-                  role="button"
+                  role="option"
                   tabIndex={0}
-                  aria-pressed={active}
+                  aria-selected={active}
                   aria-label={t("timesheets.timeline.entryLabel", {
                     from: timeText(e.start),
                     to: timeText(e.end),
@@ -579,7 +583,7 @@ export function MobileTimeline({
                     backgroundColor: fill,
                     borderColor: `color-mix(in srgb, ${fill} 78%, black)`,
                     backgroundImage: isBreak ? BREAK_HATCH : undefined,
-                    color: isBreak ? "#6e3604" : "#fff",
+                    color: isBreak ? BREAK_TEXT_COLOR : readableTextColor(fill),
                   }}
                 >
                   {lines >= 1 && (
@@ -715,6 +719,7 @@ function Handle({
     <div
       data-handle={edge}
       data-id={id}
+      role="img"
       aria-label={label}
       className="absolute inset-x-0 z-10 flex cursor-ns-resize touch-none items-center justify-center"
       style={{

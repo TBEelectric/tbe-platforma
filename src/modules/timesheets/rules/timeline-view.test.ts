@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { AXIS_END } from "./timeline";
 import {
   AXIS_HEIGHT_PX,
+  readableTextColor,
   isNightEntry,
   minuteFraction,
   nightBands,
@@ -127,5 +128,19 @@ describe("folded night", () => {
       { start: 300, end: 360 },
       { start: 1320, end: 1440 },
     ]);
+  });
+});
+
+describe("readableTextColor", () => {
+  it("uses white on dark and mid-tone fills", () => {
+    expect(readableTextColor("#5b6877")).toBe("#fff");
+    expect(readableTextColor("#0e7c72")).toBe("#fff");
+  });
+  it("uses dark text on pale fills", () => {
+    expect(readableTextColor("#f6e6d2")).toBe("#1b1f23");
+    expect(readableTextColor("#ffd54a")).toBe("#1b1f23");
+  });
+  it("falls back to white for unknown formats", () => {
+    expect(readableTextColor("red")).toBe("#fff");
   });
 });

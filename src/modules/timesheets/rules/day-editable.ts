@@ -1,6 +1,5 @@
 export type DayEditability =
-  | { editable: true }
-  | { editable: false; reason: "monthLocked" | "absence" };
+  { editable: true } | { editable: false; reason: "monthLocked" | "absence" };
 
 /** Whether the day screen lets the user change intervals (the server enforces the same). */
 export function dayEditability(day: {

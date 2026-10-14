@@ -34,7 +34,9 @@ import {
   type AdjustAction,
   type CreateStart,
   type TimelineEntry,
+  BREAK_TEXT_COLOR,
   dayEditability,
+  readableTextColor,
 } from "../../shared";
 import { JobCombobox } from "./job-combobox";
 import { NightToggle } from "./night-toggle";
@@ -375,6 +377,8 @@ export function DesktopTimeline({
         <div className="min-w-0 flex-1">
           <div
             ref={trackRef}
+            role="listbox"
+            aria-label={t("axisLabel")}
             data-track
             onPointerDown={onTrackDown}
             onPointerMove={(e) => {
@@ -445,9 +449,9 @@ export function DesktopTimeline({
                   key={e.id}
                   data-block
                   data-id={e.id}
-                  role="button"
+                  role="option"
                   tabIndex={0}
-                  aria-pressed={active}
+                  aria-selected={active}
                   aria-label={t("entryLabel", {
                     from: timeText(e.start),
                     to: timeText(e.end),
@@ -471,7 +475,7 @@ export function DesktopTimeline({
                     backgroundColor: fill,
                     borderColor: `color-mix(in srgb, ${fill} 78%, black)`,
                     backgroundImage: isBreak ? BREAK_HATCH : undefined,
-                    color: isBreak ? "#6e3604" : "#fff",
+                    color: isBreak ? BREAK_TEXT_COLOR : readableTextColor(fill),
                   }}
                 >
                   {!readOnly && (
@@ -700,6 +704,7 @@ function Handle({
     <div
       data-handle={edge}
       data-id={id}
+      role="img"
       aria-label={label}
       className="h-full w-1.5 shrink-0 cursor-ew-resize bg-white/25 hover:bg-white/55"
     />
