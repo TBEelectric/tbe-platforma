@@ -289,7 +289,6 @@
       "break": "Přestávka",
       "duration": "Délka {duration}",
       "delete": "Smazat interval",
-      "readOnly": "Jen pro čtení",
       "handleStart": "Táhnutím změníte začátek",
       "handleEnd": "Táhnutím změníte konec",
       "moreJobs": "Další zakázky…",

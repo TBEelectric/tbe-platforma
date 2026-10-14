@@ -8,16 +8,8 @@ import type { FormState } from "@/lib/form-state";
 import { canManageEmployees, leaveFormSchema } from "../core/shared";
 import { cancelAbsence, createAbsence, decideAbsence } from "./absences";
 import { setLeaveEntitlement } from "./leave";
-import {
-  deleteDayTemplate,
-  saveDayTemplate,
-  setDefaultDayTemplate,
-} from "./day-template";
-import {
-  canManageDayTemplates,
-  canOpenAbsences,
-  canSaveOwnDayTemplate,
-} from "./permissions";
+import { deleteDayTemplate, setDefaultDayTemplate } from "./day-template";
+import { canManageDayTemplates, canOpenAbsences } from "./permissions";
 import { absenceFormSchema, type AbsenceDecision } from "./rules/absence";
 import { dayTemplateFormSchema } from "./rules/day-template";
 
@@ -44,27 +36,6 @@ export async function setLeaveAction(
 }
 
 // ── Day template ("Obvyklý den") ──
-
-/** The employee saves their own template; never anybody else's. */
-export async function saveOwnDayTemplateAction(
-  _prev: FormState,
-  formData: FormData,
-): Promise<FormState> {
-  return handleFormAction(
-    canSaveOwnDayTemplate,
-    dayTemplateFormSchema,
-    formData,
-    async (user, data) => {
-      await saveDayTemplate(
-        { userId: user.userId },
-        user.actor.employeeId,
-        data.items,
-      );
-      return msg("timesheets.messages.templateSaved");
-    },
-    DAY,
-  );
-}
 
 export async function deleteDayTemplateAction(
   employeeId: string,
