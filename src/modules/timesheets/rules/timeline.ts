@@ -27,7 +27,11 @@ export const snapMinutes = (minutes: number, step: number): number =>
   Math.round(minutes / step) * step;
 
 /** Minute under a pointer at `ratio` (0–1) of the visible range, snapped and kept inside it. */
-export function minuteAt(ratio: number, visible: AxisRange, step: number): number {
+export function minuteAt(
+  ratio: number,
+  visible: AxisRange,
+  step: number,
+): number {
   const minute = visible.start + ratio * (visible.end - visible.start);
   return clamp(snapMinutes(minute, step), visible.start, visible.end);
 }
@@ -92,7 +96,13 @@ export function startCreate(
     entries.some((x) => x.start >= minute && x.start <= opts.maxEnd);
   return {
     ok: true,
-    create: { anchor: minute, prevEnd, limit: nextStart, inGap, step: opts.step },
+    create: {
+      anchor: minute,
+      prevEnd,
+      limit: nextStart,
+      inGap,
+      step: opts.step,
+    },
   };
 }
 

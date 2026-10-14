@@ -39,26 +39,27 @@ export function jobChipIds(input: {
   activeJobIds: string[];
 }): string[] {
   const active = new Set(input.activeJobIds);
-  const chips = input.recentIds.filter((id) => active.has(id)).slice(0, JOB_CHIPS_MAX);
+  const chips = input.recentIds
+    .filter((id) => active.has(id))
+    .slice(0, JOB_CHIPS_MAX);
   if (input.currentJobId && !chips.includes(input.currentJobId))
     chips.unshift(input.currentJobId);
-  if (chips.length === 0) return input.teamJobIds.filter((id) => active.has(id));
+  if (chips.length === 0)
+    return input.teamJobIds.filter((id) => active.has(id));
   return chips;
 }
 
 /** Lower case without diacritics: "Úvaly" and "uvaly" match. */
 export function normalizeSearch(text: string): string {
-  return text
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .trim();
+  return text.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
 }
 
 /** Every word of the query is found in the number, name, customer or site. */
 export function matchesJob(job: PickerJob, query: string): boolean {
   const haystack = normalizeSearch(
-    [job.number, job.name, job.customerName ?? "", job.siteName ?? ""].join(" "),
+    [job.number, job.name, job.customerName ?? "", job.siteName ?? ""].join(
+      " ",
+    ),
   );
   return normalizeSearch(query)
     .split(/\s+/)
@@ -87,12 +88,16 @@ export function jobSections(
   input: { recentIds: string[]; teamJobIds: string[]; query: string },
 ): JobSection[] {
   if (input.query.trim()) {
-    const hits = jobs.filter((j) => matchesJob(j, input.query)).sort(byCustomer);
+    const hits = jobs
+      .filter((j) => matchesJob(j, input.query))
+      .sort(byCustomer);
     return hits.length ? [{ key: "results", jobs: hits }] : [];
   }
   const byId = new Map(jobs.map((j) => [j.id, j]));
   const pick = (ids: string[]) =>
-    ids.map((id) => byId.get(id)).filter((j): j is PickerJob => j !== undefined);
+    ids
+      .map((id) => byId.get(id))
+      .filter((j): j is PickerJob => j !== undefined);
   const recent = pick(input.recentIds).slice(0, RECENT_SECTION_MAX);
   const team = pick(input.teamJobIds).sort(byCustomer);
   const teamIds = new Set(team.map((j) => j.id));

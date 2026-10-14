@@ -79,13 +79,21 @@ hotových krocích před ním. Značky: `[ručně]` = skript krok nespustí, ud�
       nese jen časy a typ (bez zakázek); akce pro výchozí šablonu firmy zatím nemá formulář (přijde s osou); vedoucí
       zatím nemá vlastní obrazovku pro připínání (jen akce, UI v 3b.8).
 
-- [ ] **3b.4 – Logika osy (čisté funkce)** [opus]
+- [x] **3b.4 – Logika osy (čisté funkce)** [opus]
       Jen `src/modules/timesheets/rules` + testy, převzato z výpočtů v prototypech: přichytávání (15 min tažení na mobilu,
       5 min jinak), zarážky o sousedy, společná hranice navazujících intervalů (soused min. 5 min, nezmizí), kreslení
       tažením, klik do mezery = celá mezera / jinde 1 h, ne do budoucna, rozsah osy 0:00 až 6:00 +1 a interval přes půlnoc,
       použití šablon „Obvyklý den“ a „Jako včera“ (vynechá kolize), řazení naposledy použitých zakázek (max 4 + aktuální),
       sekce výběru zakázky, hledání bez diakritiky (číslo, název, firma, místo), výchozí den = nejstarší nevyplněný pracovní den.
       Hotovo, když: testy pokrývají všechna pravidla a prochází; žádné UI.
+      Výsledek: Tři moduly v `rules/` s testy (44 testů): `timeline.ts` (osa v minutách od 0:00 dne do 6:00 +1,
+      přichytávání 15/5 min, zarážky, společná hranice se sousedem min. 5 min, kreslení nahoru/dolů, klepnutí = celá mezera
+      nebo 1 h, `maxEnd` = „teď“ pro dnešek, max. 24 h, kontrola rozsahu, převod osa ↔ okamžik včetně DST), `day-fill.ts`
+      (šablona → bloky se zakázkou a druhem práce, vynechání kolizí a budoucnosti, poslední vyplněný pracovní den pro
+      „Jako včera“, výchozí den přes `missingWorkdays`), `job-picker.ts` (naposledy použité, tlačítka max. 4 + aktuální,
+      bez historie zakázky party, sekce, hledání bez diakritiky po slovech). Rozhodl jsem sám: kolidující nebo budoucí
+      bloky šablony se vynechají celé (nezkracují se); tažení přichytává posun, ne polohu (jako prototyp); „Všechny
+      aktivní“ vynechá jen zakázky party (jako mobilní prototyp); nové funkce zatím nejsou v `shared.ts` (přidá 3b.5).
 
 - [ ] **3b.5 – Server pro osu** [opus]
       Jedno načtení dat dne (intervaly, naposledy použité zakázky, zakázky party, šablona, stav měsíce). Server akce

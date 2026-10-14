@@ -45,7 +45,8 @@ export function withoutCollisions<T extends AxisRange>(
   const taken: AxisRange[] = [...existing];
   const kept: T[] = [];
   for (const draft of [...drafts].sort((a, b) => a.start - b.start)) {
-    if (draft.start < AXIS_START || draft.end > Math.min(maxEnd, AXIS_END)) continue;
+    if (draft.start < AXIS_START || draft.end > Math.min(maxEnd, AXIS_END))
+      continue;
     if (draft.end <= draft.start) continue;
     if (taken.some((t) => t.start < draft.end && draft.start < t.end)) continue;
     taken.push(draft);

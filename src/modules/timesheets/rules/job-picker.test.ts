@@ -8,7 +8,12 @@ import {
   type PickerJob,
 } from "./job-picker";
 
-const job = (id: string, name: string, customerName: string, siteName: string): PickerJob => ({
+const job = (
+  id: string,
+  name: string,
+  customerName: string,
+  siteName: string,
+): PickerJob => ({
   id,
   number: id,
   name,
@@ -17,12 +22,32 @@ const job = (id: string, name: string, customerName: string, siteName: string): 
 });
 
 const jobs = [
-  job("250147", "Rozvaděče hala A", "Strojírny Vysočina s.r.o.", "Jihlava, hala A"),
-  job("250162", "Elektroinstalace kanceláře", "Kancelářský dům Na Poříčí a.s.", "Praha 1, Na Poříčí 12"),
-  job("250201", "Servis technologie", "Pekárna Zlatý klas s.r.o.", "Kolín, pekárna"),
+  job(
+    "250147",
+    "Rozvaděče hala A",
+    "Strojírny Vysočina s.r.o.",
+    "Jihlava, hala A",
+  ),
+  job(
+    "250162",
+    "Elektroinstalace kanceláře",
+    "Kancelářský dům Na Poříčí a.s.",
+    "Praha 1, Na Poříčí 12",
+  ),
+  job(
+    "250201",
+    "Servis technologie",
+    "Pekárna Zlatý klas s.r.o.",
+    "Kolín, pekárna",
+  ),
   job("250258", "Rekonstrukce rozvodny", "Město Úvaly", "Úvaly, náměstí"),
   job("250270", "Revize elektro", "MŠ Sluníčko", "Říčany, MŠ Sluníčko"),
-  job("250251", "Osvětlení haly B", "Strojírny Vysočina s.r.o.", "Jihlava, hala B"),
+  job(
+    "250251",
+    "Osvětlení haly B",
+    "Strojírny Vysočina s.r.o.",
+    "Jihlava, hala B",
+  ),
 ];
 const active = jobs.map((j) => j.id);
 const at = (day: number) => new Date(Date.UTC(2026, 9, day, 8));
@@ -46,13 +71,23 @@ describe("job buttons in the panel", () => {
 
   it("shows at most 4 recent jobs", () => {
     expect(
-      jobChipIds({ recentIds, currentJobId: "250201", teamJobIds: [], activeJobIds: active }),
+      jobChipIds({
+        recentIds,
+        currentJobId: "250201",
+        teamJobIds: [],
+        activeJobIds: active,
+      }),
     ).toEqual(["250147", "250201", "250162", "250258"]);
   });
 
   it("always includes the job of the selected entry, first", () => {
     expect(
-      jobChipIds({ recentIds, currentJobId: "250270", teamJobIds: [], activeJobIds: active }),
+      jobChipIds({
+        recentIds,
+        currentJobId: "250270",
+        teamJobIds: [],
+        activeJobIds: active,
+      }),
     ).toEqual(["250270", "250147", "250201", "250162", "250258"]);
   });
 
@@ -85,7 +120,8 @@ describe("search", () => {
   });
 
   it("finds by number, name, customer and site", () => {
-    const find = (q: string) => jobs.filter((j) => matchesJob(j, q)).map((j) => j.id);
+    const find = (q: string) =>
+      jobs.filter((j) => matchesJob(j, q)).map((j) => j.id);
     expect(find("250162")).toEqual(["250162"]);
     expect(find("rozvadece")).toEqual(["250147"]);
     expect(find("pekarna")).toEqual(["250201"]);
@@ -103,7 +139,15 @@ describe("picker sections", () => {
     expect(
       ids(
         jobSections(jobs, {
-          recentIds: ["250270", "250147", "250201", "closed", "250162", "250258", "250251"],
+          recentIds: [
+            "250270",
+            "250147",
+            "250201",
+            "closed",
+            "250162",
+            "250258",
+            "250251",
+          ],
           teamJobIds: ["250251", "250201"],
           query: " ",
         }),
@@ -116,15 +160,25 @@ describe("picker sections", () => {
   });
 
   it("leaves out empty sections", () => {
-    expect(ids(jobSections(jobs, { recentIds: [], teamJobIds: [], query: "" }))).toEqual([
+    expect(
+      ids(jobSections(jobs, { recentIds: [], teamJobIds: [], query: "" })),
+    ).toEqual([
       ["all", ["250162", "250258", "250270", "250201", "250147", "250251"]],
     ]);
   });
 
   it("with a query: one result section, or none", () => {
-    expect(ids(jobSections(jobs, { recentIds: [], teamJobIds: [], query: "Strojirny" }))).toEqual([
-      ["results", ["250147", "250251"]],
-    ]);
-    expect(jobSections(jobs, { recentIds: [], teamJobIds: [], query: "xyz" })).toEqual([]);
+    expect(
+      ids(
+        jobSections(jobs, {
+          recentIds: [],
+          teamJobIds: [],
+          query: "Strojirny",
+        }),
+      ),
+    ).toEqual([["results", ["250147", "250251"]]]);
+    expect(
+      jobSections(jobs, { recentIds: [], teamJobIds: [], query: "xyz" }),
+    ).toEqual([]);
   });
 });

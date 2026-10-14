@@ -20,7 +20,11 @@ import {
 } from "./timeline";
 
 const h = (hours: number, minutes = 0) => hours * 60 + minutes;
-const e = (id: string, start: number, end: number): AxisEntry => ({ id, start, end });
+const e = (id: string, start: number, end: number): AxisEntry => ({
+  id,
+  start,
+  end,
+});
 
 // Mobile prototype day: 7:00–10:00 work, 10:00–10:30 break, 10:30–14:30 work, 14:30–15:15 travel.
 const day = [
@@ -58,21 +62,29 @@ describe("axis range and the future", () => {
       prevEnd: h(15, 15),
       nextStart: h(17),
     });
-    expect(freeBounds(day, null, { start: h(5), end: h(5) }, AXIS_END)).toEqual({
-      prevEnd: 0,
-      nextStart: h(7),
-    });
+    expect(freeBounds(day, null, { start: h(5), end: h(5) }, AXIS_END)).toEqual(
+      {
+        prevEnd: 0,
+        nextStart: h(7),
+      },
+    );
   });
 });
 
 describe("drawing a new entry", () => {
   it("refuses inside an entry, in the future and where 15 min do not fit", () => {
-    expect(startCreate(day, h(8), past)).toEqual({ ok: false, reason: "occupied" });
+    expect(startCreate(day, h(8), past)).toEqual({
+      ok: false,
+      reason: "occupied",
+    });
     expect(startCreate(day, h(16), { maxEnd: h(16), step: 15 })).toEqual({
       ok: false,
       reason: "future",
     });
-    expect(startCreate(day, h(6, 50), past)).toEqual({ ok: false, reason: "noRoom" });
+    expect(startCreate(day, h(6, 50), past)).toEqual({
+      ok: false,
+      reason: "noRoom",
+    });
     expect(startCreate(day, h(6, 50), fine).ok).toBe(true);
   });
 
@@ -81,27 +93,42 @@ describe("drawing a new entry", () => {
     if (!res.ok) throw new Error();
     expect(dragCreate(res.create, h(6))).toEqual({ start: h(5), end: h(6) });
     expect(dragCreate(res.create, h(9))).toEqual({ start: h(5), end: h(7) });
-    expect(dragCreate(res.create, h(5))).toEqual({ start: h(5), end: h(5, 15) });
+    expect(dragCreate(res.create, h(5))).toEqual({
+      start: h(5),
+      end: h(5, 15),
+    });
   });
 
   it("draws up from the anchor and stops at the previous entry", () => {
     const res = startCreate(day, h(17), past);
     if (!res.ok) throw new Error();
     expect(dragCreate(res.create, h(16))).toEqual({ start: h(16), end: h(17) });
-    expect(dragCreate(res.create, h(12))).toEqual({ start: h(15, 15), end: h(17) });
+    expect(dragCreate(res.create, h(12))).toEqual({
+      start: h(15, 15),
+      end: h(17),
+    });
   });
 
   it("draws one stroke across midnight up to 6:00 +1", () => {
     const res = startCreate([], h(22), past);
     if (!res.ok) throw new Error();
     expect(dragCreate(res.create, h(26))).toEqual({ start: h(22), end: h(26) });
-    expect(dragCreate(res.create, h(40))).toEqual({ start: h(22), end: AXIS_END });
+    expect(dragCreate(res.create, h(40))).toEqual({
+      start: h(22),
+      end: AXIS_END,
+    });
   });
 
   it("stops at now on today", () => {
-    const res = startCreate(day, h(16), { maxEnd: h(17, 10), step: SNAP_TOUCH });
+    const res = startCreate(day, h(16), {
+      maxEnd: h(17, 10),
+      step: SNAP_TOUCH,
+    });
     if (!res.ok) throw new Error();
-    expect(dragCreate(res.create, h(18))).toEqual({ start: h(16), end: h(17, 10) });
+    expect(dragCreate(res.create, h(18))).toEqual({
+      start: h(16),
+      end: h(17, 10),
+    });
   });
 
   it("a tap into a gap fills the whole gap", () => {
@@ -114,7 +141,10 @@ describe("drawing a new entry", () => {
   it("a tap elsewhere inserts 1 h, shortened to fit", () => {
     const after = startCreate(day, h(16), past);
     const before = startCreate(day, h(6, 30), past);
-    const today = startCreate(day, h(16), { maxEnd: h(16, 20), step: SNAP_TOUCH });
+    const today = startCreate(day, h(16), {
+      maxEnd: h(16, 20),
+      step: SNAP_TOUCH,
+    });
     if (!after.ok || !before.ok || !today.ok) throw new Error();
     expect(tapCreate(after.create)).toEqual({ start: h(16), end: h(17) });
     expect(tapCreate(before.create)).toEqual({ start: h(6, 30), end: h(7) });
@@ -144,8 +174,13 @@ describe("adjusting an entry", () => {
       e("a", h(7), h(10, 25)),
       e("b", h(10, 25), h(10, 30)),
     ]);
-    const squeezed = applyUpdates(day, only(adjustEntry(day, "a", "end", 60, past)));
-    expect(adjustEntry(squeezed, "a", "end", SNAP_FINE, fine)).toEqual({ ok: false });
+    const squeezed = applyUpdates(
+      day,
+      only(adjustEntry(day, "a", "end", 60, past)),
+    );
+    expect(adjustEntry(squeezed, "a", "end", SNAP_FINE, fine)).toEqual({
+      ok: false,
+    });
   });
 
   it("the entry itself keeps at least 5 min", () => {
@@ -175,7 +210,11 @@ describe("adjusting an entry", () => {
   });
 
   it("moving stops at both neighbours (no swapping)", () => {
-    const withGap = [e("a", h(7), h(10)), e("c", h(11), h(14)), e("x", h(15), h(16))];
+    const withGap = [
+      e("a", h(7), h(10)),
+      e("c", h(11), h(14)),
+      e("x", h(15), h(16)),
+    ];
     expect(only(adjustEntry(withGap, "c", "move", -180, past))).toEqual([
       e("c", h(10), h(13)),
     ]);
@@ -208,14 +247,24 @@ describe("range checks", () => {
   it("accepts a valid range and reports each problem", () => {
     const opts = { maxEnd: AXIS_END };
     expect(axisRangeError({ start: h(16), end: h(17) }, day, opts)).toBeNull();
-    expect(axisRangeError({ start: h(22), end: h(31) }, day, opts)).toBe("outOfAxis");
-    expect(axisRangeError({ start: h(16), end: h(16, 3) }, day, opts)).toBe("tooShort");
-    expect(axisRangeError({ start: h(0), end: h(25) }, [], opts)).toBe("tooLong");
-    expect(axisRangeError({ start: h(16), end: h(17) }, day, { maxEnd: h(16, 30) })).toBe(
-      "future",
+    expect(axisRangeError({ start: h(22), end: h(31) }, day, opts)).toBe(
+      "outOfAxis",
     );
-    expect(axisRangeError({ start: h(9), end: h(17) }, day, opts)).toBe("overlap");
-    expect(axisRangeError({ start: h(9), end: h(10) }, day, { ...opts, id: "a" })).toBeNull();
+    expect(axisRangeError({ start: h(16), end: h(16, 3) }, day, opts)).toBe(
+      "tooShort",
+    );
+    expect(axisRangeError({ start: h(0), end: h(25) }, [], opts)).toBe(
+      "tooLong",
+    );
+    expect(
+      axisRangeError({ start: h(16), end: h(17) }, day, { maxEnd: h(16, 30) }),
+    ).toBe("future");
+    expect(axisRangeError({ start: h(9), end: h(17) }, day, opts)).toBe(
+      "overlap",
+    );
+    expect(
+      axisRangeError({ start: h(9), end: h(10) }, day, { ...opts, id: "a" }),
+    ).toBeNull();
   });
 });
 
@@ -233,9 +282,15 @@ describe("axis and instants", () => {
     expect(axisToInstant("2026-10-14", h(25))?.toISOString()).toBe(
       "2026-10-14T23:00:00.000Z",
     );
-    expect(instantToAxis("2026-10-14", new Date("2026-10-14T23:00:00Z"))).toBe(h(25));
-    expect(instantToAxis("2026-10-14", new Date("2026-10-15T05:00:00Z"))).toBeNull();
-    expect(instantToAxis("2026-10-14", new Date("2026-10-13T20:00:00Z"))).toBeNull();
+    expect(instantToAxis("2026-10-14", new Date("2026-10-14T23:00:00Z"))).toBe(
+      h(25),
+    );
+    expect(
+      instantToAxis("2026-10-14", new Date("2026-10-15T05:00:00Z")),
+    ).toBeNull();
+    expect(
+      instantToAxis("2026-10-14", new Date("2026-10-13T20:00:00Z")),
+    ).toBeNull();
   });
 
   it("handles DST: the skipped hour has no instant, winter time shifts the offset", () => {
@@ -246,6 +301,8 @@ describe("axis and instants", () => {
     expect(axisToInstant("2026-10-24", h(27))?.toISOString()).toBe(
       "2026-10-25T02:00:00.000Z",
     );
-    expect(instantToAxis("2026-10-24", new Date("2026-10-25T02:00:00Z"))).toBe(h(27));
+    expect(instantToAxis("2026-10-24", new Date("2026-10-25T02:00:00Z"))).toBe(
+      h(27),
+    );
   });
 });
