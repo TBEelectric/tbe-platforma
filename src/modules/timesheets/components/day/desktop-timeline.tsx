@@ -419,8 +419,6 @@ export function DesktopTimeline({
                   style={{
                     left: pct(Math.max(b.start, range.start)),
                     width: `${(minuteFraction(Math.min(b.end, range.end), range) - minuteFraction(Math.max(b.start, range.start), range)) * 100}%`,
-                    backgroundImage:
-                      "repeating-linear-gradient(135deg, rgba(20,36,51,.08) 0 6px, transparent 6px 12px)",
                   }}
                 />
               ))}

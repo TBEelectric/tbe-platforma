@@ -527,8 +527,6 @@ export function MobileTimeline({
                     height:
                       minuteTop(Math.min(b.end, range.end)) -
                       minuteTop(Math.max(b.start, range.start)),
-                    backgroundImage:
-                      "repeating-linear-gradient(135deg, rgba(20,36,51,.08) 0 6px, transparent 6px 12px)",
                   }}
                 />
               ))}
