@@ -15,6 +15,8 @@ export {
   canManageAccess,
   canManageEmployees,
   canManageJobs,
+  canPinAnyTeamJobs,
+  canPinTeamJobs,
   isTeamLead,
   roleKey,
   rolesFromAssignments,

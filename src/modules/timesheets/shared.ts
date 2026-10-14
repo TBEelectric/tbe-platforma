@@ -12,6 +12,7 @@ export * from "./rules/settings";
 export * from "./rules/month";
 export * from "./rules/forms";
 export * from "./rules/absence";
+export * from "./rules/day-template";
 
 export const timesheetsModule: ModuleInfo = {
   id: "timesheets",

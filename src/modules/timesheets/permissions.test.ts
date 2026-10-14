@@ -4,8 +4,10 @@ import {
   canApproveTimesheets,
   canCloseTimesheetPeriod,
   canDecideAbsence,
+  canManageDayTemplates,
   canOpenAbsences,
   canRecordOwnTime,
+  canSaveOwnDayTemplate,
   canWriteForSomeoneElse,
   canWriteTimeFor,
 } from "./permissions";
@@ -113,6 +115,23 @@ describe("deciding absences", () => {
         { employeeId: "y", teamId: null },
       ),
     ).toBe(false);
+  });
+});
+
+describe("day templates", () => {
+  it("lets everyone with attendance save their own template", () => {
+    expect(canSaveOwnDayTemplate(base)).toBe(true);
+    expect(canSaveOwnDayTemplate({ ...base, ledTeamIds: ["t"] })).toBe(true);
+    expect(canSaveOwnDayTemplate({ ...base, tracksTime: false })).toBe(false);
+  });
+
+  it("lets only the manager and administrator delete templates or set the default", () => {
+    expect(canManageDayTemplates(base)).toBe(false);
+    expect(canManageDayTemplates({ ...base, ledTeamIds: ["t"] })).toBe(false);
+    expect(canManageDayTemplates({ ...base, isTimesheetsManager: true })).toBe(
+      true,
+    );
+    expect(canManageDayTemplates({ ...base, isAdmin: true })).toBe(true);
   });
 });
 

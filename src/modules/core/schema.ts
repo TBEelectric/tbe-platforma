@@ -272,6 +272,29 @@ export const job = coreSchema.table(
   (table) => [index().on(table.customerId), index().on(table.siteId)],
 );
 
+/**
+ * "Zakázky party": jobs a team lead pinned for quick choice. Unpinning deletes the row (it is a
+ * link, not a business record); the audit log keeps it.
+ */
+export const teamJob = coreSchema.table(
+  "team_job",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    teamId: uuid()
+      .notNull()
+      .references(() => team.id),
+    jobId: uuid()
+      .notNull()
+      .references(() => job.id),
+    pinnedBy: uuid().references(() => user.id),
+    pinnedAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("team_job_unique").on(table.teamId, table.jobId),
+    index().on(table.jobId),
+  ],
+);
+
 export const site = coreSchema.table(
   "site",
   {

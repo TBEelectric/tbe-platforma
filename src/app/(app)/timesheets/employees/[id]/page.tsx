@@ -31,8 +31,17 @@ import {
   RolesForm,
   TeamChangeForm,
 } from "@/modules/core/components/employee-forms";
-import { listLeaveEntitlements } from "@/modules/timesheets";
-import { setLeaveAction } from "@/modules/timesheets/actions";
+import {
+  canManageDayTemplates,
+  effectiveDayTemplate,
+  getDefaultDayTemplate,
+  getOwnDayTemplate,
+  listLeaveEntitlements,
+} from "@/modules/timesheets";
+import {
+  deleteDayTemplateAction,
+  setLeaveAction,
+} from "@/modules/timesheets/actions";
 
 export const instant = false;
 
@@ -52,11 +61,15 @@ export default async function EmployeeDetailPage({
 }: PageProps<"/timesheets/employees/[id]">) {
   const user = await requirePermission(canManageEmployees);
   const { id } = await params;
-  const [detail, teams, leave] = await Promise.all([
-    getEmployeeDetail(id),
-    listTeamOptions(),
-    listLeaveEntitlements(id),
-  ]);
+  const [detail, teams, leave, ownTemplate, defaultTemplate] =
+    await Promise.all([
+      getEmployeeDetail(id),
+      listTeamOptions(),
+      listLeaveEntitlements(id),
+      getOwnDayTemplate(id),
+      getDefaultDayTemplate(),
+    ]);
+  const template = effectiveDayTemplate(ownTemplate, defaultTemplate);
   if (!detail) notFound();
   const t = await getTranslations();
   const format = await getFormatter();
@@ -275,6 +288,38 @@ export default async function EmployeeDetailPage({
                   </li>
                 ))}
             </ul>
+          )}
+        </Section>
+
+        <Section title={t("timesheets.dayTemplate.title")}>
+          <p className="text-[15px]">
+            {!template
+              ? t("timesheets.dayTemplate.none")
+              : template.source === "own"
+                ? t("timesheets.dayTemplate.own")
+                : t("timesheets.dayTemplate.usesDefault")}
+          </p>
+          {template && (
+            <ul className="text-sm text-muted-foreground">
+              {template.items.map((item) => (
+                <li key={`${item.from}-${item.to}`}>
+                  {t("timesheets.dayTemplate.item", {
+                    from: item.from,
+                    to: item.to,
+                    kind: t(`timesheets.dayTemplate.${item.kind}`),
+                  })}
+                </li>
+              ))}
+            </ul>
+          )}
+          {ownTemplate && canManageDayTemplates(user.actor) && (
+            <form action={deleteDayTemplateAction.bind(null, emp.id)}>
+              <ConfirmButton
+                confirm={t("timesheets.dayTemplate.confirmDelete")}
+              >
+                {t("timesheets.dayTemplate.delete")}
+              </ConfirmButton>
+            </form>
           )}
         </Section>
       </div>

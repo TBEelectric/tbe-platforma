@@ -44,6 +44,20 @@ export function canManageAccess(actor: Actor): boolean {
   return actor.isAdmin;
 }
 
+/** Pinning jobs to teams: the team's lead for their team; the timesheets manager and administrator for all. */
+export function canPinTeamJobs(actor: Actor, teamId: string): boolean {
+  return (
+    actor.isAdmin ||
+    actor.isTimesheetsManager ||
+    actor.ledTeamIds.includes(teamId)
+  );
+}
+
+/** Coarse check before the team is known: may this person pin jobs for any team? */
+export function canPinAnyTeamJobs(actor: Actor): boolean {
+  return actor.isAdmin || actor.isTimesheetsManager || isTeamLead(actor);
+}
+
 export function isTeamLead(actor: Actor): boolean {
   return actor.ledTeamIds.length > 0;
 }

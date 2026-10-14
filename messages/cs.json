@@ -132,7 +132,20 @@
       "absenceRecorded": "Absence zapsána a schválena.",
       "approved": "Schváleno.",
       "rejected": "Zamítnuto.",
-      "absenceCancelled": "Absence zrušena."
+      "absenceCancelled": "Absence zrušena.",
+      "templateSaved": "Obvyklý den uložen.",
+      "defaultTemplateSaved": "Výchozí obvyklý den firmy uložen."
+    },
+    "dayTemplate": {
+      "title": "Obvyklý den",
+      "own": "Vlastní obvyklý den zaměstnance:",
+      "usesDefault": "Zaměstnanec nemá vlastní obvyklý den; platí výchozí den firmy:",
+      "none": "Zaměstnanec nemá vlastní obvyklý den a firma nemá výchozí.",
+      "item": "{from}–{to} {kind}",
+      "work": "práce",
+      "break": "přestávka",
+      "delete": "Smazat obvyklý den",
+      "confirmDelete": "Smazat obvyklý den zaměstnance? Bude platit výchozí den firmy."
     },
     "absenceType": {
       "vacation": "dovolená",
@@ -296,10 +309,21 @@
       "startAfterLatest": "Začátek musí být po začátku posledního záznamu.",
       "membershipStartsToday": "Členství začíná tento den; zvolte pozdější datum nebo jinou partu.",
       "ownAdminRole": "Vlastní roli administrátora nelze odebrat.",
-      "lastAdmin": "Musí zůstat alespoň jeden administrátor."
+      "lastAdmin": "Musí zůstat alespoň jeden administrátor.",
+      "jobAlreadyPinned": "Zakázka je u party už připnutá."
     },
     "messages": {
       "teamCreated": "Parta {name} založena."
+    },
+    "teamJobs": {
+      "title": "Zakázky party",
+      "hint": "Připnuté zakázky vidí členové party jako tlačítka při zápisu dne.",
+      "empty": "Žádná připnutá zakázka.",
+      "choose": "Vyberte zakázku",
+      "pin": "Připnout",
+      "unpin": "Odepnout",
+      "confirmUnpin": "Odepnout zakázku od party?",
+      "closed": "uzavřená"
     },
     "employmentType": {
       "hpp": "HPP",

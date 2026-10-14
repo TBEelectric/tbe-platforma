@@ -65,12 +65,19 @@ hotových krocích před ním. Značky: `[ručně]` = skript krok nespustí, ud�
       s novým místem, změnit místo, import šablony (náhled ukáže „Nové místo …“). Rozhodl jsem sám: nové místo má typ
       „stavba“; ruční změna barvy zakázky (`job.color`) zatím nemá UI.
 
-- [ ] **3b.3 – Zakázky party a obvyklý den (data a server)**
+- [x] **3b.3 – Zakázky party a obvyklý den (data a server)**
       Tabulky `team_job` (unikátní team+job) a `day_template` (jedna na zaměstnance), výchozí šablona firmy
       v `timesheet_settings`. Server akce s oprávněními, auditem a testy: připnout/odepnout zakázku party (vedoucí, správce,
       admin), uložit vlastní obvyklý den (zaměstnanec), smazat šablonu zaměstnance a nastavit výchozí šablonu firmy (správce).
       Jednoduché UI ve správě: přehled připnutých zakázek v detailu party, šablona v detailu zaměstnance (zobrazit, smazat).
       Hotovo, když: akce a oprávnění jsou otestované, správa funguje; nová osa zatím není.
+      Výsledek: Migrace 0008 (`core.team_job`, `timesheets.day_template`), akce připnout/odepnout (vedoucí jen svou partu),
+      uložit vlastní obvyklý den, smazat šablonu zaměstnance a nastavit výchozí šablonu firmy (klíč `default_day_template`
+      v `timesheet_settings`), vše auditované; pravidla šablony a oprávnění mají testy. UI: Zakázky party v detailu party,
+      Obvyklý den (zobrazení, smazání) v detailu zaměstnance. Vyzkoušet: připnout/odepnout zakázku u party, smazat šablonu.
+      Rozhodl jsem sám: odepnutí a smazání šablony jsou skutečné DELETE s auditem (vazby, ne obchodní záznamy); šablona
+      nese jen časy a typ (bez zakázek); akce pro výchozí šablonu firmy zatím nemá formulář (přijde s osou); vedoucí
+      zatím nemá vlastní obrazovku pro připínání (jen akce, UI v 3b.8).
 
 - [ ] **3b.4 – Logika osy (čisté funkce)** [opus]
       Jen `src/modules/timesheets/rules` + testy, převzato z výpočtů v prototypech: přichytávání (15 min tažení na mobilu,

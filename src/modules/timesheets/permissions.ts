@@ -19,6 +19,16 @@ export function canCloseTimesheetPeriod(actor: Actor): boolean {
   return actor.isTimesheetsManager;
 }
 
+/** Saving one's own "obvyklý den": everyone who records attendance. */
+export function canSaveOwnDayTemplate(actor: Actor): boolean {
+  return actor.tracksTime;
+}
+
+/** Deleting an employee's template and setting the company default template. */
+export function canManageDayTemplates(actor: Actor): boolean {
+  return actor.isAdmin || actor.isTimesheetsManager;
+}
+
 /** Whose time entries and absences someone else may write: the employee and their team (on the date). */
 export type TimeOwner = { employeeId: string; teamId: string | null };
 

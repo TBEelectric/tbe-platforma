@@ -1,7 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { z } from "zod";
 import { msg } from "@/i18n/messages";
 import { handleFormAction } from "@/lib/form-action";
 import { requirePermission, type CurrentUser } from "@/lib/current-user";
@@ -28,6 +29,8 @@ import {
   canManageAccess,
   canManageEmployees,
   canManageJobs,
+  canPinAnyTeamJobs,
+  canPinTeamJobs,
 } from "./permissions";
 import {
   customerFormSchema,
@@ -38,6 +41,7 @@ import {
   rolesFormSchema,
   teamFormSchema,
 } from "./rules/forms";
+import { pinTeamJob, unpinTeamJob } from "./team-jobs";
 import { createTeam, setTeamArchived, updateTeam } from "./teams";
 
 // Every action: requirePermission (server-side check) → Zod validation → service (audited) → revalidate.
@@ -232,6 +236,41 @@ export async function setTeamArchivedAction(
 ): Promise<void> {
   const user = await requirePermission(canManageEmployees);
   await setTeamArchived(ctxOf(user), id, archived);
+  revalidatePath(EMPLOYEES, "layout");
+}
+
+// ── Team jobs ("Zakázky party") ──
+
+const pinSchema = z.object({ jobId: z.uuid({ error: "validation.choose" }) });
+
+/** Coarse check first, then the team: a lead only for their own team (404 otherwise, like requirePermission). */
+async function requireTeamPinner(teamId: string) {
+  const user = await requirePermission(canPinAnyTeamJobs);
+  if (!canPinTeamJobs(user.actor, teamId)) notFound();
+  return user;
+}
+
+export async function pinTeamJobAction(
+  teamId: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  await requireTeamPinner(teamId);
+  return handle(
+    canPinAnyTeamJobs,
+    pinSchema,
+    formData,
+    (user, data) => pinTeamJob(ctxOf(user), teamId, data.jobId),
+    EMPLOYEES,
+  );
+}
+
+export async function unpinTeamJobAction(
+  teamId: string,
+  jobId: string,
+): Promise<void> {
+  const user = await requireTeamPinner(teamId);
+  await unpinTeamJob(ctxOf(user), teamId, jobId);
   revalidatePath(EMPLOYEES, "layout");
 }
 

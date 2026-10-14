@@ -176,6 +176,20 @@ export const standby = timesheetsSchema.table(
   ],
 );
 
+/**
+ * "Můj obvyklý den": one template per employee (items: from, to, kind work/break; rules/day-template.ts).
+ * Without it the company default from timesheet_settings (key default_day_template) applies.
+ */
+export const dayTemplate = timesheetsSchema.table("day_template", {
+  id: uuid().primaryKey().defaultRandom(),
+  employeeId: uuid()
+    .notNull()
+    .unique()
+    .references(() => employee.id),
+  items: jsonb().notNull(),
+  ...timestamps,
+});
+
 // ── Month ──
 
 /** One row per employee and month, created on first change; a missing row means open. */

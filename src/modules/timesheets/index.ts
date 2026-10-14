@@ -2,6 +2,7 @@
 export * from "./shared";
 export { listLeaveEntitlements, setLeaveEntitlement } from "./leave";
 export { loadDay, type DayEntryView, type DayView } from "./day";
+export { getDefaultDayTemplate, getOwnDayTemplate } from "./day-template";
 export { listWritableEmployees, type WritableEmployee } from "./writable";
 export { teamOn } from "./time-entries";
 export { listDecidableEmployees } from "./writable";

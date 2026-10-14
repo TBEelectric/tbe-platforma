@@ -3,6 +3,8 @@ import {
   canManageAccess,
   canManageEmployees,
   canManageJobs,
+  canPinAnyTeamJobs,
+  canPinTeamJobs,
   roleKey,
   rolesFromAssignments,
   type Actor,
@@ -29,6 +31,26 @@ describe("rolesFromAssignments", () => {
       ]),
     ).toEqual(["admin", "timesheetsManager"]);
     expect(rolesFromAssignments([])).toEqual([]);
+  });
+});
+
+describe("pinning team jobs", () => {
+  it("lets a lead pin only for their own team", () => {
+    expect(canPinTeamJobs(lead, "t1")).toBe(true);
+    expect(canPinTeamJobs(lead, "t2")).toBe(false);
+    expect(canPinTeamJobs(employee, "t1")).toBe(false);
+  });
+
+  it("lets the manager and administrator pin for every team", () => {
+    expect(canPinTeamJobs(manager, "t2")).toBe(true);
+    expect(canPinTeamJobs(admin, "t2")).toBe(true);
+  });
+
+  it("offers the coarse check to leads, manager and administrator only", () => {
+    expect(canPinAnyTeamJobs(employee)).toBe(false);
+    expect(canPinAnyTeamJobs(lead)).toBe(true);
+    expect(canPinAnyTeamJobs(manager)).toBe(true);
+    expect(canPinAnyTeamJobs(admin)).toBe(true);
   });
 });
 

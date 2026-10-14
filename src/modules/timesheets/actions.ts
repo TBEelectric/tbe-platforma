@@ -1,7 +1,8 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { msg } from "@/i18n/messages";
-import type { CurrentUser } from "@/lib/current-user";
+import { requirePermission, type CurrentUser } from "@/lib/current-user";
 import { handleFormAction } from "@/lib/form-action";
 import type { FormState } from "@/lib/form-state";
 import {
@@ -12,11 +13,19 @@ import {
 import { cancelAbsence, createAbsence, decideAbsence } from "./absences";
 import { setLeaveEntitlement } from "./leave";
 import {
+  deleteDayTemplate,
+  saveDayTemplate,
+  setDefaultDayTemplate,
+} from "./day-template";
+import {
+  canManageDayTemplates,
   canOpenAbsences,
   canRecordOwnTime,
+  canSaveOwnDayTemplate,
   canWriteForSomeoneElse,
 } from "./permissions";
 import { absenceFormSchema, type AbsenceDecision } from "./rules/absence";
+import { dayTemplateFormSchema } from "./rules/day-template";
 import { timeEntryFormSchema } from "./rules/forms";
 import {
   createTimeEntry,
@@ -102,6 +111,54 @@ export async function setLeaveAction(
     (user, data) =>
       setLeaveEntitlement({ userId: user.userId }, employeeId, data),
     "/timesheets/employees",
+  );
+}
+
+// ── Day template ("Obvyklý den") ──
+
+/** The employee saves their own template; never anybody else's. */
+export async function saveOwnDayTemplateAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  return handleFormAction(
+    canSaveOwnDayTemplate,
+    dayTemplateFormSchema,
+    formData,
+    async (user, data) => {
+      await saveDayTemplate(
+        { userId: user.userId },
+        user.actor.employeeId,
+        data.items,
+      );
+      return msg("timesheets.messages.templateSaved");
+    },
+    DAY,
+  );
+}
+
+export async function deleteDayTemplateAction(
+  employeeId: string,
+): Promise<void> {
+  const user = await requirePermission(canManageDayTemplates);
+  await deleteDayTemplate({ userId: user.userId }, employeeId);
+  revalidatePath("/timesheets/employees", "layout");
+  revalidatePath(DAY, "layout");
+}
+
+export async function setDefaultDayTemplateAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  return handleFormAction(
+    canManageDayTemplates,
+    dayTemplateFormSchema,
+    formData,
+    async (user, data) => {
+      await setDefaultDayTemplate({ userId: user.userId }, data.items);
+      return msg("timesheets.messages.defaultTemplateSaved");
+    },
+    DAY,
   );
 }
 

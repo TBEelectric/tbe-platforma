@@ -3,18 +3,23 @@ import { getTranslations } from "next-intl/server";
 import { BackLink } from "@/components/back-link";
 import { ConfirmButton } from "@/components/form/confirm-button";
 import { PageHeader } from "@/components/shell/page-header";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requirePermission } from "@/lib/current-user";
 import {
   canManageEmployees,
   getTeam,
   listEmployeeOptions,
+  listPinnableJobs,
+  listTeamJobs,
 } from "@/modules/core";
 import {
+  pinTeamJobAction,
   setTeamArchivedAction,
+  unpinTeamJobAction,
   updateTeamAction,
 } from "@/modules/core/actions";
 import { TeamForm } from "@/modules/core/components/simple-forms";
+import { PinJobForm } from "@/modules/core/components/team-jobs";
 
 export const instant = false;
 
@@ -24,9 +29,11 @@ export default async function TeamDetailPage({
   await requirePermission(canManageEmployees);
   const t = await getTranslations();
   const { id } = await params;
-  const [team, employees] = await Promise.all([
+  const [team, employees, pinned, pinnable] = await Promise.all([
     getTeam(id),
     listEmployeeOptions(),
+    listTeamJobs(id),
+    listPinnableJobs(id),
   ]);
   if (!team) notFound();
   const archived = !!team.archivedAt;
@@ -64,6 +71,51 @@ export default async function TeamDetailPage({
             initial={team}
             submitLabel={t("core.form.save")}
           />
+        </CardContent>
+      </Card>
+      <Card className="max-w-3xl">
+        <CardHeader>
+          <CardTitle>{t("core.teamJobs.title")}</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <p className="text-sm text-muted-foreground">
+            {t("core.teamJobs.hint")}
+          </p>
+          {pinned.length === 0 ? (
+            <p className="text-muted-foreground">{t("core.teamJobs.empty")}</p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {pinned.map((j) => (
+                <li
+                  key={j.id}
+                  className="flex min-h-11 items-center gap-3 rounded-lg border border-border px-3 py-1"
+                >
+                  <span className="flex-1 text-[15px]">
+                    <strong>{j.label}</strong>{" "}
+                    <span className="text-muted-foreground">
+                      {j.code} · {j.name}
+                      {j.closed ? ` · ${t("core.teamJobs.closed")}` : ""}
+                    </span>
+                  </span>
+                  {!archived && (
+                    <form
+                      action={unpinTeamJobAction.bind(null, team.id, j.jobId)}
+                    >
+                      <ConfirmButton confirm={t("core.teamJobs.confirmUnpin")}>
+                        {t("core.teamJobs.unpin")}
+                      </ConfirmButton>
+                    </form>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          {!archived && (
+            <PinJobForm
+              action={pinTeamJobAction.bind(null, team.id)}
+              jobs={pinnable}
+            />
+          )}
         </CardContent>
       </Card>
     </>

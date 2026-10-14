@@ -57,6 +57,13 @@
       "when": 1791973161278,
       "tag": "0007_job_site",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791983401628,
+      "tag": "0008_team_job_day_template",
+      "breakpoints": true
     }
   ]
 }
