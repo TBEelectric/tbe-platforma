@@ -290,18 +290,28 @@ export function useTimeline({
     enqueue((resolve) => ({ type: "delete", id: resolve(id) }));
   }, [enqueue, entries, selectedId]);
 
-  /** Quick buttons of an entry: the last used jobs plus its own (see `jobChipIds`). */
+  /**
+   * Quick buttons of an entry: the last used jobs plus its own (see `jobChipIds`). The order is
+   * fixed while the panel is open, so choosing a job does not make the buttons jump around;
+   * a job chosen from the full list is added at the end.
+   */
+  const chipIdsRef = useRef<string[] | null>(null);
+  useEffect(() => {
+    if (selectedId === null) chipIdsRef.current = null;
+  }, [selectedId]);
   const chipsFor = useCallback(
     (entry: TimelineEntry): TimelineJob[] => {
       const byId = new Map(day.jobs.map((j) => [j.id, j]));
-      return jobChipIds({
+      chipIdsRef.current ??= jobChipIds({
         recentIds: day.recentJobIds,
         currentJobId: entry.kind === "work" ? entry.jobId : null,
         teamJobIds: day.teamJobIds,
         activeJobIds: day.jobs.filter((j) => j.active).map((j) => j.id),
-      })
-        .map((id) => byId.get(id))
-        .filter((j) => j !== undefined);
+      });
+      const ids = chipIdsRef.current;
+      if (entry.kind === "work" && entry.jobId && !ids.includes(entry.jobId))
+        ids.push(entry.jobId);
+      return ids.map((id) => byId.get(id)).filter((j) => j !== undefined);
     },
     [day],
   );
