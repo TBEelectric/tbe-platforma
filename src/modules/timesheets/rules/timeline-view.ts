@@ -24,8 +24,9 @@ export const NIGHT_BANDS: AxisRange[] = [
   { start: 22 * 60, end: AXIS_END },
 ];
 
-/** The phone axis is shown from here (4:45, so the 5:00 label fits); earlier minutes are cut off. */
+/** The phone axis is shown from 4:45 (so the 5:00 label fits) to 0:30 +1; the rest is cut off for now. */
 export const VISIBLE_FROM = 4 * 60 + 45;
+export const VISIBLE_TO = 24 * 60 + 30;
 
 /** Height of the whole axis in px. */
 export const AXIS_HEIGHT_PX = (AXIS_END - AXIS_START) * PX_PER_MINUTE;

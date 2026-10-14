@@ -25,6 +25,7 @@ import {
   HANDLE_PX,
   HOLD_MS,
   VISIBLE_FROM,
+  VISIBLE_TO,
   hourMarks,
   jobChipIds,
   localAdjust,
@@ -460,10 +461,10 @@ export function MobileTimeline({
         className="pt-3"
         style={{ paddingBottom: selectedId ? 340 : canFill ? 120 : 24 }}
       >
-        {/* The axis starts at VISIBLE_FROM: the early night is cut off, the day opens at 6:00. */}
+        {/* Only VISIBLE_FROM–VISIBLE_TO is shown: the day opens at 6:00 and ends at midnight. */}
         <div
           className="overflow-hidden"
-          style={{ height: AXIS_HEIGHT_PX - minuteToPx(VISIBLE_FROM) }}
+          style={{ height: minuteToPx(VISIBLE_TO) - minuteToPx(VISIBLE_FROM) }}
         >
           <div
             ref={colRef}
