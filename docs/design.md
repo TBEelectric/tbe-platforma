@@ -48,11 +48,12 @@ Jedna aplikace a jedna adresa; rozložení se přepíná **automaticky podle š�
 
 | Šířka | Rozložení |
 | --- | --- |
-| < 768 px (telefon) | Spodní navigace, svislá osa dne, spodní panel (bottom sheet), výběr zakázky přes celou obrazovku |
-| 768–1023 px (tablet) | Na výšku mobilní rozložení, na šířku desktopové |
-| ≥ 1024 px (počítač) | Boční menu, vodorovná osa, panel vybraného intervalu vpravo |
+| < 1024 px (telefon, tablet na výšku) | Spodní navigace, svislá osa dne, spodní panel (bottom sheet), výběr zakázky přes celou obrazovku |
+| ≥ 1024 px (počítač, tablet na šířku) | Boční menu, vodorovná osa, panel vybraného intervalu pod osou vedle kartiček (od 1280 px; užší okno ho dá nad kartičky) |
 
-- Většina obrazovek se jen přeskládá (Tailwind breakpointy `md`, `lg`).
+- Jediná hranice je **1024 px** (Tailwind `lg`, u osy `matchMedia`): iPad na výšku (768–1023 px) je mobil, na šířku desktop.
+  Ostatní obrazovky se na 768–1023 px jen skládají do jednoho sloupce se spodní navigací.
+- Většina obrazovek se jen přeskládá (Tailwind breakpointy `sm`, `lg`, `xl`).
 - Osa dne má dvě komponenty (svislá pro mobil, vodorovná pro desktop) nad **společnou logikou** v `rules`;
   vybírá se podle šířky, obě se chovají stejně.
 - Mobil se instaluje jako PWA na plochu (bez lišty prohlížeče).
