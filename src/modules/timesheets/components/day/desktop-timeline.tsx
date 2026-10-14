@@ -558,7 +558,12 @@ export function DesktopTimeline({
         </p>
       )}
 
-      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_24rem]">
+      <div
+        className={cn(
+          "grid items-start gap-6",
+          selected && !readOnly && "xl:grid-cols-[minmax(0,1fr)_24rem]",
+        )}
+      >
         <ul
           aria-label={t("desktop.intervals")}
           className="flex flex-col gap-1.5 max-xl:order-2"

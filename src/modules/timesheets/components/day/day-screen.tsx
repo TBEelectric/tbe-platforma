@@ -173,7 +173,7 @@ export function DayScreen({
             </>
           }
         />
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-4 items-start gap-4">
           <StatCard
             label={
               isToday
@@ -197,97 +197,7 @@ export function DayScreen({
               count: view.totals.breakCount,
             })}
           />
-          <StatCard
-            label={t("timesheets.day.monthToDate", { month })}
-            value={formatMinutes(view.monthWorkMinutes)}
-            detail={
-              view.missingDays.length > 0
-                ? t("timesheets.day.missing", {
-                    days: view.missingDays
-                      .slice(0, 3)
-                      .map((d) => format.dateTime(calendarDate(d), "dayMonth"))
-                      .join(", "),
-                    more: view.missingDays.length > 3 ? "yes" : "no",
-                  })
-                : t("timesheets.day.noMissing")
-            }
-          />
-          <StatCard
-            label={t("timesheets.day.leaveRemaining")}
-            value={
-              view.leave
-                ? t("timesheets.absences.hours", {
-                    hours: view.leave.remainingHours,
-                  })
-                : "–"
-            }
-            detail={
-              view.leave
-                ? view.leave.remainingDays !== null
-                  ? t("timesheets.day.leaveDetailDays", {
-                      days: view.leave.remainingDays,
-                      total: view.leave.totalHours,
-                    })
-                  : t("timesheets.day.leaveDetail", {
-                      total: view.leave.totalHours,
-                    })
-                : t("timesheets.day.noEntitlement")
-            }
-          />
-        </div>
-      </div>
-
-      {/* Phone banners */}
-      <div className="flex flex-col gap-2 lg:hidden">
-        {headerActions && (
-          <div className="flex justify-end">{headerActions}</div>
-        )}
-        {view.missingDays.length > 0 && (
-          <Link
-            href={hrefFor(view.missingDays[0])}
-            className="flex min-h-11 items-center justify-between gap-3 rounded-lg bg-warning px-4 py-3 text-[15px] text-warning-foreground no-underline"
-          >
-            <span>
-              {t("timesheets.day.dayMissing", {
-                day: weekday(view.missingDays[0]),
-              })}
-            </span>
-            <span className="font-semibold">{t("timesheets.day.fill")}</span>
-          </Link>
-        )}
-        {view.warnings.map((w) => (
-          <p
-            key={w.code}
-            className="rounded-lg bg-warning px-4 py-3 text-[15px] text-warning-foreground"
-          >
-            {translate(t, w.message)}
-          </p>
-        ))}
-        {banners}
-      </div>
-
-      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start">
-        <section className="flex flex-col gap-4 lg:rounded-xl lg:border lg:border-border lg:bg-card lg:p-5">
-          <div className="hidden items-center justify-between gap-3 lg:flex">
-            <h2 className="text-lg font-bold">
-              {t("timesheets.day.entriesTitle")}
-            </h2>
-            <Badge variant={lockedOrOpen}>
-              <span aria-hidden className="size-2 rounded-full bg-current" />
-              {statusText}
-            </Badge>
-          </div>
-          <div className="hidden lg:block">{banners}</div>
-          <ResponsiveTimeline
-            key={`${view.employee.id}-${view.date}`}
-            day={timeline}
-            employeeId={view.employee.id}
-            needsReason={forSomeoneElse}
-          />
-        </section>
-
-        <aside className="hidden flex-col gap-5 lg:flex">
-          <Card>
+          <Card size="sm">
             <CardHeader>
               <CardTitle>
                 {isToday
@@ -332,7 +242,7 @@ export function DayScreen({
             </CardContent>
           </Card>
 
-          <Card>
+          <Card size="sm">
             <CardHeader>
               <CardTitle>{t("timesheets.day.checks")}</CardTitle>
             </CardHeader>
@@ -380,23 +290,57 @@ export function DayScreen({
                 )}
             </CardContent>
           </Card>
+        </div>
+      </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("timesheets.day.timesheet")}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-2 text-[15px]">
-              <p>
-                {view.status === "open"
-                  ? t("timesheets.day.confirmLater", { month })
-                  : t("timesheets.day.monthIs", { month, status })}
-              </p>
-              <Link href="/timesheets/month">
-                {t("timesheets.day.showMonth")}
-              </Link>
-            </CardContent>
-          </Card>
-        </aside>
+      {/* Phone banners */}
+      <div className="flex flex-col gap-2 lg:hidden">
+        {headerActions && (
+          <div className="flex justify-end">{headerActions}</div>
+        )}
+        {view.missingDays.length > 0 && (
+          <Link
+            href={hrefFor(view.missingDays[0])}
+            className="flex min-h-11 items-center justify-between gap-3 rounded-lg bg-warning px-4 py-3 text-[15px] text-warning-foreground no-underline"
+          >
+            <span>
+              {t("timesheets.day.dayMissing", {
+                day: weekday(view.missingDays[0]),
+              })}
+            </span>
+            <span className="font-semibold">{t("timesheets.day.fill")}</span>
+          </Link>
+        )}
+        {view.warnings.map((w) => (
+          <p
+            key={w.code}
+            className="rounded-lg bg-warning px-4 py-3 text-[15px] text-warning-foreground"
+          >
+            {translate(t, w.message)}
+          </p>
+        ))}
+        {banners}
+      </div>
+
+      <div className="grid gap-5">
+        <section className="flex flex-col gap-4 lg:rounded-xl lg:border lg:border-border lg:bg-card lg:p-5">
+          <div className="hidden items-center justify-between gap-3 lg:flex">
+            <h2 className="text-lg font-bold">
+              {t("timesheets.day.entriesTitle")}
+            </h2>
+            <Badge variant={lockedOrOpen}>
+              <span aria-hidden className="size-2 rounded-full bg-current" />
+              {statusText}
+            </Badge>
+          </div>
+          <div className="hidden lg:block">{banners}</div>
+          <ResponsiveTimeline
+            key={`${view.employee.id}-${view.date}`}
+            day={timeline}
+            employeeId={view.employee.id}
+            needsReason={forSomeoneElse}
+          />
+        </section>
       </div>
     </>
   );

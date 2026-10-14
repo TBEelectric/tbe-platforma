@@ -236,13 +236,6 @@
       "employment": "{type}, {schedule} doba",
       "noRecord": "bez záznamu",
       "breakCount": "{count, plural, =0 {bez přestávky} one {# přestávka} few {# přestávky} other {# přestávek}}",
-      "monthToDate": "{month} k dnešku",
-      "missing": "chybí {days}{more, select, yes {…} other {}}",
-      "noMissing": "bez chybějících dnů",
-      "leaveRemaining": "Dovolená zbývá",
-      "leaveDetailDays": "{days, plural, one {# den} few {# dny} many {# dne} other {# dní}} z nároku {total, number, hours} h",
-      "leaveDetail": "z nároku {total, number, hours} h",
-      "noEntitlement": "nárok není zadaný",
       "dayMissing": "{day} nemá záznam",
       "dayMissingFull": "{day} nemá záznam ani absenci.",
       "fill": "Doplnit",
@@ -257,9 +250,6 @@
       "attention": "Pozor",
       "missingBadge": "Chybí",
       "nothingToCheck": "Nic ke kontrole.",
-      "timesheet": "Měsíční výkaz",
-      "confirmLater": "{month} potvrdíte po skončení měsíce. Pak ho schválí vedoucí party.",
-      "monthIs": "{month} je {status}.",
       "showMonth": "Zobrazit můj měsíc"
     },
     "entries": {
