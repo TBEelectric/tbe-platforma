@@ -50,9 +50,9 @@ Sazby se zatím neevidují, `employment` i `job` je mohou dostat později.
 | `team_member` | team_id, employee_id, valid_from, valid_to | Členství s historií |
 | `role_assignment` | employee_id, module, role | Role po modulech; přiřazuje se zaměstnanci, aby šla zadat před prvním přihlášením |
 | `customer` | name, ico, external_id | |
-| `job` | code, name, customer_id, site_id, status (`active`,`closed`), external_id | Místo (`site_id`) povinné; v rozhraní se zakázka zobrazuje jako **„Firma, místo“**, číslo jen ve vyhledávání, správě a exportech |
+| `job` | code, name, customer_id, site_id, color, status (`active`,`closed`), external_id | Místo (`site_id`) povinné; `color` volitelná (prázdná = odvozená z id); v rozhraní se zakázka zobrazuje jako **„Firma, místo“**, číslo jen ve vyhledávání, správě a exportech |
 | `site` | name, type, address, lat, lng, customer_id | `name` = krátký název místa pro montéry („Jihlava, hala A“); použije i vozový park |
-| `team_job` | team_id, job_id, pinned_by, pinned_at | „Zakázky party“ – vedoucí připne zakázky, které parta právě dělá |
+| `team_job` | team_id, job_id, pinned_by, pinned_at | „Zakázky party“ – vedoucí připne zakázky, které parta právě dělá; unikátní (team_id, job_id); uzavřené zakázky se nezobrazují; změny do auditu |
 | `public_holiday` | date, name | Státní svátky ČR, generované na roky dopředu |
 | `audit_log` | actor_user_id, entity, entity_id, action, before, after, reason, at | |
 
@@ -68,7 +68,7 @@ Sazby se zatím neevidují, `employment` i `job` je mohou dostat později.
 | `timesheet` | employee_id, month, status, confirmed_at, approved_by, approved_at, return_reason | Jeden řádek na zaměstnance a měsíc |
 | `period_close` | month, closed_by, closed_at, reopened_by, reopened_at, reopen_reason, export_version | |
 | `timesheet_settings` | key, value, valid_from | Prahy a limity; výchozí šablona „Obvyklý den“ |
-| `day_template` | employee_id, items (JSON: od, do, typ), updated_at | Šablona „Obvyklý den“ zaměstnance; bez ní platí výchozí z nastavení |
+| `day_template` | employee_id (unikátní), items (JSON: od, do, typ `work`/`break`), updated_at | „Můj obvyklý den“ – ukládá zaměstnanec sám z vyplněného dne; správce může smazat; bez něj platí výchozí šablona firmy z `timesheet_settings`; změny do auditu |
 
 ## Stavy výkazu
 
@@ -90,6 +90,10 @@ Všechna pravidla jsou čisté funkce v `src/modules/timesheets/rules` s testy.
 **Validace (blokuje uložení):** konec po začátku, max 24 h; bez překryvů (i exclusion constraint v DB);
 práce má druh práce a aktivní zakázku (kromě režie); nelze měnit potvrzený/schválený/uzavřený měsíc; nekoliduje
 s celodenní absencí (žádost nebo schválená; zamítnutá a absence na hodiny neblokují).
+
+**Den a půlnoc:** interval patří ke dni začátku (`work_date`); osa dne pokrývá 0:00 až 6:00 dalšího dne, takže interval
+může končit nejpozději v 6:00 následujícího dne a nesmí se překrývat s intervaly dalšího dne (hlídá exclusion constraint
+nad `start_at`/`end_at`).
 
 **Upozornění (neblokuje):** přes 6 h práce bez přestávky ≥ 30 min (přestávka = interval `break` nebo mezera
 mezi intervaly; části aspoň 15 min); přes 12 h za den; odpočinek mezi dny
@@ -119,6 +123,9 @@ pod 11 h, týdenní pod 35 h; pracovní den bez záznamu a absence (e-mail dalš
 | Uzávěrka, znovuotevření, export | Ne | Ne | Ano | Ne |
 | Zakázky a druhy práce | Ne | Ne | Ano | Ano |
 | Zaměstnanci, týmy, úvazky, nároky | Ne | Ne | Ano | Ano |
+| Uložit vlastní obvyklý den | Ano | Ano | Ano | Ano |
+| Smazat obvyklý den zaměstnance, nastavit výchozí šablonu firmy | Ne | Ne | Ano | Ano |
+| Připnout zakázky party | Ne | Ano | Ano | Ano |
 | Role a povolené účty | Ne | Ne | Ne | Ano |
 
 Role v `role_assignment` (přes `employee_id`): `module = '*'`, `role = 'admin'` (administrátor) a `module = 'timesheets'`, `role = 'manager'`

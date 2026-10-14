@@ -5,7 +5,7 @@ Exportují se sem po každé změně prototypu.
 
 | Soubor | Co ukazuje | Poslední změna |
 | --- | --- | --- |
-| `MobilOsa.dc.html` | **Mobil (primární):** svislá osa dne, kreslení intervalu tažením, klepnutí vyplní mezeru, úchyty, společná hranice navazujících bloků, kompaktní spodní panel (−/+ 5 min, přestávka s ikonou kávy, naposledy použité zakázky), výběr zakázky přes celou obrazovku s vyhledáváním a sekcemi, šablony „Obvyklý den“ / „Jako včera“ | 14. 10. 2026 |
+| `MobilOsa.dc.html` | **Mobil (primární):** svislá osa dne, kreslení intervalu tažením, klepnutí vyplní mezeru, úchyty, společná hranice navazujících bloků, kompaktní spodní panel (−/+ 5 min, přestávka s ikonou kávy, naposledy použité zakázky), výběr zakázky přes celou obrazovku s vyhledáváním a sekcemi (vedoucí připíná zakázky party špendlíkem), šablony „Obvyklý den“ / „Jako včera“, „Uložit jako můj obvyklý den“ s potvrzením | 14. 10. 2026 |
 | `Den.dc.html` | **Desktop – celá obrazovka Můj den:** boční menu, přehledové karty, vodorovná interaktivní osa (hover s časem, čára „teď“, kreslení tažením, vyplnění mezery, okraje, posun, společná hranice), intervaly jako kartičky, panel vybraného intervalu (−/+ 5 min, přestávka, naposledy použité zakázky jako tlačítka, vyhledávací seznam zakázek, druh práce jako tlačítka), pravý sloupec se součty po zakázkách a kontrolami | 14. 10. 2026 |
 
 **Zobrazení zakázky (oba):** formát **„Firma, místo“** (firma bez právní formy s.r.o./a.s.); v seznamech tučně firma,

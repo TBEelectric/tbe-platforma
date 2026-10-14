@@ -68,6 +68,8 @@ seznamy, výběr zakázky) se zakázka zobrazuje ve formátu **„Firma, místo�
 - na tlačítku a v bloku na ose „Firma, místo“ zkráceně s trojtečkou, celý text v nápovědě,
 - **číslo zakázky se nezobrazuje**, ale vyhledávání ho najde; v exportech a správě zakázek zůstává,
 - sekce „Všechny aktivní“ je řazená podle firmy.
+- **barva zakázky** je stálá (stejná na všech dnech a obrazovkách): odvozená z id zakázky z palety 8 barev;
+  správce ji může ve správě zakázky změnit, kdyby dvě souběžné zakázky měly stejnou barvu (`job.color`).
 
 ## Interaktivní časová osa (Můj den)
 
@@ -85,7 +87,10 @@ Pravý sloupec (součty, kontroly, stav měsíce) beze změny.
 **Mobil je primární zařízení** (montéři nemají počítač). Na mobilu je osa **svislá jako denní pohled kalendáře** –
 viz níže „Mobil – zápis dne na ose“. Desktopová vodorovná osa je pro vedoucí a kancelář.
 
-- **Rozsah osy** 6:00–19:00; rozšíří se, když existuje interval mimo něj. Krok přichytávání **5 minut**.
+- **Rozsah osy (desktop):** přepínač **„Pracovní doba / Celý den“** vlevo nad osou. Pracovní doba = 6:00–19:00,
+  rozšíří se podle zapsaných intervalů; Celý den = 0:00 až 6:00 následujícího dne. Krok přichytávání **5 minut**.
+- **Noc a půlnoc (desktop i mobil):** osa pokračuje přes půlnoc do 6:00 dalšího dne (popisky „0:00 +1“); interval
+  přes půlnoc se kreslí jedním tahem a patří ke dni, kdy začal. Noční pásma 22:00–6:00 jsou jemně podbarvená.
 - **Hover:** svislá čára a štítek s časem pod kurzorem. Dnes je vidět i čára „teď“ s aktuálním časem.
 - **Tažení po prázdném místě nakreslí nový interval** od–do (hlavní způsob zápisu). Nový interval je hned vybraný,
   aby mu šla nastavit zakázka a druh práce; výchozí je poslední použitá zakázka.
@@ -114,8 +119,10 @@ viz níže „Mobil – zápis dne na ose“. Desktopová vodorovná osa je pro 
 
 Prototyp: artboard „Mobil – zápis dne na ose“. Nahrazuje dosavadní mobilní obrazovku 06-mobil-den (seznam intervalů).
 
-- **Svislá osa dne** 6:00–19:00 (rozšíří se podle intervalů), hodina ≈ 56 px, den se posouvá prstem.
-  Vlevo popisky hodin, čáry po hodinách a jemné čáry po půlhodinách.
+- **Svislá osa celého dne** 0:00 až 6:00 dalšího dne (popisky „0:00 +1“), hodina ≈ 56 px, den se posouvá prstem.
+  Po otevření dne se osa **sama posune na první zapsaný interval, u prázdného dne na 6:00** – běžný den vypadá
+  jako pracovní doba, noční práce se kreslí po posunutí nahoru/dolů, bez dalšího tlačítka. Noční pásma 22:00–6:00
+  jemně podbarvená. Vlevo popisky hodin, čáry po hodinách a jemné čáry po půlhodinách.
   Intervaly jsou bloky v barvě zakázky s časem, zakázkou, druhem práce a délkou.
 - **Nový interval:** podržet prst na prázdném místě (~300 ms, haptická odezva) a táhnout = nakreslit od–do;
   klepnutí do mezery mezi intervaly ji **celou vyplní**, jinde vloží 1 h. Bez podržení se den normálně posouvá –
@@ -131,11 +138,23 @@ Prototyp: artboard „Mobil – zápis dne na ose“. Nahrazuje dosavadní mobil
   **Klepnutí mimo panel ho zavře.** Žádné psaní na klávesnici v běžném případě.
 - **Výběr zakázky („Další zakázky…“)** – celá obrazovka: vyhledávání podle čísla, názvu i zákazníka bez ohledu na
   diakritiku; bez hledání sekce **Naposledy použité** (5), **Zakázky party** (připnuté vedoucím), **Všechny aktivní**
-  (podle čísla). Řádek = barva, číslo · název, zákazník. Uzavřené zakázky se nezobrazují. Výběr zavře obrazovku.
+  (podle firmy). Řádek = barva, tučně firma, pod ní místo, drobně název zakázky (viz „Zobrazení zakázky“). Uzavřené
+  zakázky se nezobrazují. Výběr zavře obrazovku.
+- **Zakázky party (připínání):** vedoucí party vidí ve výběru zakázky (mobil i desktopový combobox) u každé zakázky
+  **špendlík**; klepnutím ji připne / odepne pro celou partu. Ostatní špendlík nevidí, jen sekci „Zakázky party“.
+  Připnuté zakázky vidí všichni členové party v sekci „Zakázky party“; nový člen bez historie je má i jako tlačítka
+  v panelu. Připnutí platí do odepnutí; uzavřená zakázka ze zakázek party zmizí sama. Přehled a úprava připnutých
+  zakázek je i v detailu party (Zaměstnanci → parta) pro vedoucího a správce docházky.
 - **Přestávka** se všude (tlačítko, blok na ose, tabulka) pozná bez čtení: ikona hrnku kávy, teplá oranžová barva,
   na ose jemné šrafování. Ikony pomáhají i kolegům, kteří čtou česky hůř.
-- **Prázdný den:** tlačítka **„Obvyklý den“** (šablona zaměstnance, výchozí 7:00–11:30, přestávka 11:30–12:00,
-  12:00–15:30, poslední zakázka) a **„Jako včera“** (kopie posledního vyplněného pracovního dne). Pak se jen opraví rozdíly.
+- **Prázdný den:** tlačítka **„Obvyklý den“** (šablona zaměstnance, jinak výchozí šablona firmy 7:00–11:30, přestávka
+  11:30–12:00, 12:00–15:30; bloky práce dostanou naposledy použitou zakázku a druh „Montáž“) a **„Jako včera“** (kopie
+  posledního vyplněného pracovního dne). Pak se jen opraví rozdíly.
+- **Vlastní obvyklý den** si zaměstnanec nastaví sám: na vyplněném dni (mobil pod osou, desktop pod seznamem
+  intervalů) tlačítko **„Uložit jako můj obvyklý den“** → potvrzení se shrnutím („7:00–15:30 · 2× práce, 1× přestávka“,
+  případně „dosavadní se přepíše“). Ukládají se jen časy a typ bloku (práce / přestávka), ne zakázky ani druh práce.
+  Tlačítko „Obvyklý den“ pak zní „Můj obvyklý den“. **Správce docházky** vidí šablonu v detailu zaměstnance a může ji
+  smazat (vrátí se výchozí šablona firmy); výchozí šablonu firmy nastavuje v nastavení modulu. Vedoucí do šablon nezasahuje.
 - Hlavička: den se šipkami (výchozí je nejstarší nevyplněný pracovní den, jinak dnes), součet práce, přestávek a od–do.
 - Ukládá se okamžitě po každé změně; při výpadku signálu se změna uloží do fronty a odešle po připojení
   (offline je v plánu později – do té doby jasná hláška, že se nic neuložilo).

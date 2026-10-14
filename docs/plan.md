@@ -50,12 +50,14 @@ Reference: prototypy `docs/design/prototypes/MobilOsa.dc.html` (primární) a `D
 - [ ] **Mobil:** svislá osa dne podle `docs/design.md` („Mobil – zápis dne na ose“): podržet a táhnout = nový interval,
       klepnutí = 1 h, úchyty a posun, spodní panel s −/+ 5 min, zakázkami jako tlačítky (naposledy použité nahoře) a druhem práce
 - [ ] Výběr zakázky: řádek s naposledy použitými (max 4) + „Další zakázky…“ = obrazovka s vyhledáváním (bez diakritiky)
-      a sekcemi Naposledy použité / Zakázky party / Všechny aktivní; tabulka `team_job` a připínání zakázek vedoucím
+      a sekcemi Naposledy použité / Zakázky party / Všechny aktivní; tabulka `team_job`; vedoucí připíná/odepíná špendlíkem přímo ve výběru zakázky,
+      přehled připnutých v detailu party; nový člen bez historie vidí zakázky party jako tlačítka
 - [ ] Zakázka má povinné místo (`job.site_id`): migrace, formulář zakázky, seed; **import zakázek** podle nové šablony
       (`docs/import/sablona-importu.xlsx`, list Zakázky má nové sloupce Místo a Adresa místa – upravit parser a testy)
 - [ ] Zobrazení zakázky ve formátu „Firma, místo“ všude v rozhraní zaměstnance (viz `design.md`, Zobrazení zakázky)
 - [ ] Přestávka s ikonou hrnku a teplou barvou (tlačítko, blok, tabulka)
-- [ ] Prázdný den: „Obvyklý den“ (šablona v nastavení zaměstnance, výchozí v `timesheet_settings`) a „Jako včera“;
+- [ ] Prázdný den: „Obvyklý den“ (vlastní šablona zaměstnance, jinak výchozí šablona firmy v `timesheet_settings`) a „Jako včera“;
+      „Uložit jako můj obvyklý den“ na vyplněném dni s potvrzením; smazání šablony správcem v detailu zaměstnance;
       výchozí den = nejstarší nevyplněný pracovní den
 - [ ] **Desktop:** vodorovná osa místo statického pruhu na Můj den (hover s časem, čára „teď“, tažení, výběr propojený s tabulkou)
 - [ ] Ukládání každé změny přes server action s optimistickou aktualizací a auditem; zamčený měsíc jen pro čtení

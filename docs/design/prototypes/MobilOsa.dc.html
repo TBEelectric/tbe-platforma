@@ -40,6 +40,12 @@ body{margin:0;background:#f3f5f8;font-family:'Figtree',system-ui,sans-serif;colo
 .sec{position:sticky;top:0;z-index:1;font-size:12px;font-weight:700;color:#5b6877;text-transform:uppercase;letter-spacing:.04em;padding:8px 16px;background:#f3f5f8;border-bottom:1px solid #e2e7ee;border-top:1px solid #e2e7ee}
 .jrow{display:flex;align-items:center;gap:12px;padding:12px 16px;min-height:64px;border:0;border-bottom:1px solid #eef1f5;background:#fff;width:100%;text-align:left;font:inherit;cursor:pointer;box-sizing:border-box}
 .jrow.on{background:#eef7f6}
+.jline{display:flex;align-items:stretch;border-bottom:1px solid #eef1f5}
+.jline .jrow{border-bottom:0;flex:1}
+.pin{width:52px;flex:0 0 52px;border:0;background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#9aa6b2}
+.pin.on{color:#0e7c72}
+.pin svg{width:22px;height:22px}
+.hint{font-size:13px;color:#5b6877;padding:6px 16px 0}
 .del{height:44px;border:0;background:none;font:inherit;font-size:14px;font-weight:600;color:#8a4205;cursor:pointer;padding:0 8px}
 .grab{width:40px;height:5px;border-radius:3px;background:#d5dce5;align-self:center}
 .lab{font-size:12px;font-weight:700;color:#5b6877;text-transform:uppercase;letter-spacing:.04em}
@@ -72,7 +78,7 @@ body{margin:0;background:#f3f5f8;font-family:'Figtree',system-ui,sans-serif;colo
 <sc-if value="{{isEmpty}}" hint-placeholder-val="{{ true }}">
 <div style="padding: 12px 16px 4px; display: flex; flex-direction: column; gap: 8px">
 <div style="font-size: 14px; color: #3a4756">Den je prázdný. Vyplňte ho jedním klepnutím, nebo táhněte prstem po ose.</div>
-<div style="display: flex; gap: 8px"><button class="qa" onClick="{{fillUsual}}">Obvyklý den</button><button class="qa" onClick="{{fillYesterday}}">Jako včera</button></div>
+<div style="display: flex; gap: 8px"><button class="qa" onClick="{{fillUsual}}">{{usualLabel}}</button><button class="qa" onClick="{{fillYesterday}}">Jako včera</button></div>
 </div>
 </sc-if>
 <sc-if value="{{hasMsg}}" hint-placeholder-val="{{ false }}">
@@ -94,7 +100,19 @@ body{margin:0;background:#f3f5f8;font-family:'Figtree',system-ui,sans-serif;colo
 </div>
 </sc-for>
 </div>
+<sc-if value="{{canSaveUsual}}" hint-placeholder-val="{{ false }}">
+<div style="padding: 16px 12px 0 64px"><button class="qa" style="width: 100%; height: 44px; font-size: 14px; color: #0b5f57; border-style: dashed" onClick="{{askSaveUsual}}">Uložit jako můj obvyklý den</button></div>
+</sc-if>
 </div>
+<sc-if value="{{confirmUsual}}" hint-placeholder-val="{{ false }}">
+<div class="sheet" style="z-index: 6">
+<div class="grab"></div>
+<strong style="font-size: 17px">Uložit jako obvyklý den?</strong>
+<div style="font-size: 15px; color: #142433">{{usualSummary}}</div>
+<div style="font-size: 13px; color: #5b6877">Uloží se časy a přestávky, ne zakázky. Při použití se doplní naposledy použitá zakázka.{{usualOverwrite}}</div>
+<div style="display: flex; gap: 10px"><button class="btn" style="background: #fff; color: #142433; border: 1px solid #d5dce5" onClick="{{cancelUsual}}">Zrušit</button><button class="btn" style="background: #0e7c72; color: #fff" onClick="{{saveUsual}}">Uložit</button></div>
+</div>
+</sc-if>
 <nav aria-label="Hlavní navigace" style="display: flex; justify-content: space-around; background: #fff; border-top: 1px solid #e2e7ee; height: 68px">
 <span class="tb on"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Den</span>
 <span class="tb"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="2"></rect><path d="M3.5 10h17M8 3v4M16 3v4"></path></svg>Měsíc</span>
@@ -130,6 +148,7 @@ body{margin:0;background:#f3f5f8;font-family:'Figtree',system-ui,sans-serif;colo
 <button class="x" aria-label="Zpět" onClick="{{closePicker}}"><svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"></path></svg></button>
 <strong style="font-size: 18px">Vybrat zakázku</strong>
 </div>
+<div class="hint" style="padding: 0 16px 8px">Jste vedoucí party: špendlíkem připnete zakázku pro celou partu.</div>
 <div style="padding: 0 16px 8px; position: relative">
 <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#5b6877" stroke-width="2" stroke-linecap="round" style="position: absolute; left: 30px; top: 14px"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
 <input class="search" type="search" placeholder="Firma, místo, název nebo číslo" value="{{q}}" onChange="{{setQ}}" aria-label="Hledat zakázku">
@@ -138,7 +157,10 @@ body{margin:0;background:#f3f5f8;font-family:'Figtree',system-ui,sans-serif;colo
 <sc-for list="{{sections}}" as="sec" hint-placeholder-count="3">
 <div class="sec">{{sec.title}}</div>
 <sc-for list="{{sec.items}}" as="j" hint-placeholder-count="3">
+<div class="jline">
 <button class="{{j.cls}}" onClick="{{j.pick}}"><span class="dot" style="background: {{j.color}}; width: 12px; height: 12px"></span><span style="flex: 1; min-width: 0"><span style="display: block; font-size: 16px; font-weight: 700; color: #142433">{{j.firm}}</span><span style="display: block; font-size: 14px; color: #3a4756">{{j.place}}</span><span style="display: block; font-size: 12px; color: #6b7785">{{j.name}}</span></span></button>
+<button class="{{j.pinCls}}" onClick="{{j.togglePin}}" aria-label="{{j.pinLabel}}" title="{{j.pinLabel}}"><svg aria-hidden="true" viewBox="0 0 24 24" fill="{{j.pinFill}}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6l-1 6 4 4H6l4-4z"></path><path d="M12 13v8"></path></svg></button>
+</div>
 </sc-for>
 </sc-for>
 <sc-if value="{{noResults}}" hint-placeholder-val="{{ false }}"><div style="padding: 24px 16px; color: #5b6877; font-size: 15px">Nic nenalezeno. Zkuste číslo zakázky nebo část názvu.</div></sc-if>
@@ -170,7 +192,7 @@ class Component extends DCLogic {
 constructor(props) {
 super(props);
 this.state = {
-day: 1, sel: null, msg: '', picker: false, q: '',
+day: 1, sel: null, msg: '', picker: false, q: '', confirmUsual: false, usual: null, team: ['250147', '250201', '250251'],
 d12: [
 { id: 1, s: 420, e: 600, kind: 'work', job: '250147', wt: 'Montáž' },
 { id: 2, s: 600, e: 630, kind: 'break' },
@@ -311,9 +333,9 @@ const recent = [];
 st.d12.concat(st.d13).filter((e) => e.kind === 'work').sort((a, b) => b.id - a.id).forEach((e) => { if (recent.indexOf(e.job) < 0) recent.push(e.job); });
 const chipIds = recent.slice(0, 4);
 if (sel && sel.kind === 'work' && chipIds.indexOf(sel.job) < 0) chipIds.unshift(sel.job);
-if (chipIds.length === 0) chipIds.push(...TEAM);
+if (chipIds.length === 0) chipIds.push(...st.team);
 const pickJob = (id) => this.save(list.map((x) => (x.id === st.sel ? Object.assign({}, x, { kind: 'work', job: id, wt: x.wt || 'Montáž' }) : x)), { picker: false });
-const row = (j) => ({ firm: firm(j), place: j[4], name: j[1], color: j[2], cls: 'jrow' + (sel && sel.job === j[0] ? ' on' : ''), pick: () => pickJob(j[0]) });
+const row = (j) => ({ pinCls: 'pin' + (st.team.indexOf(j[0]) >= 0 ? ' on' : ''), pinFill: st.team.indexOf(j[0]) >= 0 ? 'currentColor' : 'none', pinLabel: st.team.indexOf(j[0]) >= 0 ? 'Odepnout ze zakázek party' : 'Připnout pro partu', togglePin: () => this.setState({ team: st.team.indexOf(j[0]) >= 0 ? st.team.filter((x) => x !== j[0]) : st.team.concat([j[0]]) }), firm: firm(j), place: j[4], name: j[1], color: j[2], cls: 'jrow' + (sel && sel.job === j[0] ? ' on' : ''), pick: () => pickJob(j[0]) });
 let sections;
 if (st.q.trim()) {
 const q = norm(st.q.trim());
@@ -321,9 +343,9 @@ const hits = JOBS.filter((j) => norm(j[0] + ' ' + j[1] + ' ' + j[3] + ' ' + j[4]
 sections = hits.length ? [{ title: 'Výsledky (' + hits.length + ')', items: hits.map(row) }] : [];
 } else {
 const rec = recent.slice(0, 5).map(job);
-const team = TEAM.filter((id) => recent.slice(0, 5).indexOf(id) < 0).map(job);
-const rest = JOBS.filter((j) => rec.indexOf(j) < 0 && team.indexOf(j) < 0).sort((a, b) => firm(a).localeCompare(firm(b), 'cs'));
-sections = [{ title: 'Naposledy použité', items: rec.map(row) }, { title: 'Zakázky party', items: team.map(row) }, { title: 'Všechny aktivní', items: rest.map(row) }].filter((x) => x.items.length);
+const team = st.team.map(job);
+const rest = JOBS.filter((j) => team.indexOf(j) < 0).sort((a, b) => firm(a).localeCompare(firm(b), 'cs'));
+sections = [{ title: 'Naposledy použité', items: rec.map(row) }, { title: 'Zakázky party (' + team.length + ')', items: team.map(row) }, { title: 'Všechny aktivní', items: rest.map(row) }].filter((x) => x.items.length);
 }
 return {
 dayTitle: DAYS[st.day].title, daySub: st.day === 1 ? 'Doplňte včerejší den' : 'Vyplněno',
@@ -331,11 +353,15 @@ prevDay: () => this.setState({ day: 0, sel: null, msg: '' }), nextDay: () => thi
 workTotal: dur(work), breakTotal: dur(brk),
 span: list.length ? fmt(list[0].s) + ' – ' + fmt(list[list.length - 1].e) : '–',
 isEmpty: list.length === 0,
-fillUsual: () => this.fill([
-{ s: 420, e: 690, kind: 'work', job: lj, wt: 'Montáž' },
-{ s: 690, e: 720, kind: 'break' },
-{ s: 720, e: 930, kind: 'work', job: lj, wt: 'Montáž' }
-]),
+fillUsual: () => this.fill((st.usual || [{ s: 420, e: 690, kind: 'work' }, { s: 690, e: 720, kind: 'break' }, { s: 720, e: 930, kind: 'work' }]).map((t) => (t.kind === 'work' ? Object.assign({}, t, { job: lj, wt: 'Montáž' }) : Object.assign({}, t)))),
+usualLabel: st.usual ? 'Můj obvyklý den' : 'Obvyklý den',
+canSaveUsual: list.length > 0 && !sel,
+askSaveUsual: () => this.setState({ confirmUsual: true }),
+cancelUsual: () => this.setState({ confirmUsual: false }),
+saveUsual: () => this.setState({ confirmUsual: false, usual: list.map((e) => ({ s: e.s, e: e.e, kind: e.kind })), msg: '' }),
+usualSummary: list.length ? fmt(list[0].s) + '–' + fmt(list[list.length - 1].e) + ' · ' + list.filter((e) => e.kind === 'work').length + '× práce, ' + list.filter((e) => e.kind === 'break').length + '× přestávka' : '',
+usualOverwrite: st.usual ? ' Váš dosavadní obvyklý den se přepíše.' : '',
+confirmUsual: st.confirmUsual,
 fillYesterday: () => this.fill(st.d12),
 hasMsg: !!st.msg, msg: st.msg,
 colHeight: SPAN * pxPerMin, colDown: (ev) => this.colDown(ev),
