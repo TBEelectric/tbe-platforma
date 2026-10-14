@@ -34,7 +34,7 @@ Docházka má prioritu. Vozový park se připravuje souběžně (Traccar, ověř
 - [x] Pravidla s testy: validace intervalu, překryvy, zamčený měsíc, kolize s absencí, upozornění
       (přestávka, 12 h, odpočinek), interval přes půlnoc a změna času
 - [x] Obrazovka Můj den (desktop i mobil), „Pokračovat od …“
-- [ ] Zápis za jiného zaměstnance s důvodem
+- [x] Zápis za jiného zaměstnance s důvodem
 - [ ] Absence a dovolená, zůstatek; žádost zaměstnance, schválení vedoucím nebo správcem
 - [ ] Seed: intervaly za aktuální měsíc pro ukázkové zaměstnance (jeden den Jana Nováka prázdný)
 

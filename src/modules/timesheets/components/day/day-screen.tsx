@@ -45,15 +45,19 @@ export function DayScreen({
   view,
   hrefFor,
   title,
-  needsReason,
+  forSomeoneElse,
   headerActions,
+  ownDayHref,
 }: {
   view: DayView;
   /** Link to another day (keeps e.g. the selected employee). */
   hrefFor: (date: string) => string;
   title: string;
-  needsReason: boolean;
+  /** Writing for someone else: every change needs a reason (stored in the audit log). */
+  forSomeoneElse: boolean;
   headerActions?: ReactNode;
+  /** Back to the own day (when writing for someone else). */
+  ownDayHref?: string;
 }) {
   const longDate = formatLongDate(pragueInstant(view.date, "12:00")!);
   const isToday = view.date === view.today;
@@ -117,7 +121,7 @@ export function DayScreen({
               {longDate.replace(/ \d{4}$/, "")}
             </h1>
             <p className="text-sm text-white/75">
-              {title !== "Můj den" ? `${view.employee.name} · ` : ""}
+              {forSomeoneElse ? `${view.employee.name} · ` : ""}
               {isToday ? "Dnes · " : ""}
               {statusText.toLowerCase()}
             </p>
@@ -146,6 +150,16 @@ export function DayScreen({
           />
         </div>
       </div>
+
+      {forSomeoneElse && (
+        <p className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-lg bg-info px-4 py-3 text-[15px] text-info-foreground">
+          <span>
+            Zapisujete za <strong>{view.employee.name}</strong>. Každá změna
+            vyžaduje důvod, uloží se do historie změn.
+          </span>
+          {ownDayHref && <Link href={ownDayHref}>Zpět na můj den</Link>}
+        </p>
+      )}
 
       {/* Desktop header and cards */}
       <div className="hidden flex-col gap-5 lg:flex">
@@ -212,6 +226,9 @@ export function DayScreen({
 
       {/* Phone banners */}
       <div className="flex flex-col gap-2 lg:hidden">
+        {headerActions && (
+          <div className="flex justify-end">{headerActions}</div>
+        )}
         {view.missingDays.length > 0 && (
           <Link
             href={hrefFor(view.missingDays[0])}
@@ -245,7 +262,7 @@ export function DayScreen({
             <DayTimeline date={view.date} entries={view.entries} />
           </div>
           <div className="hidden lg:block">{banners}</div>
-          <DayEntries view={view} needsReason={needsReason} />
+          <DayEntries view={view} needsReason={forSomeoneElse} />
         </section>
 
         <aside className="hidden flex-col gap-5 lg:flex">

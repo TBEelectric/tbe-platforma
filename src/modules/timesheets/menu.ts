@@ -1,5 +1,6 @@
 import {
   Briefcase,
+  UserPen,
   CalendarDays,
   Clock,
   Lock,
@@ -16,6 +17,7 @@ import {
   canManageEmployees,
   canManageJobs,
   canRecordOwnTime,
+  canWriteForSomeoneElse,
 } from "./permissions";
 
 export const timesheetsMenu: MenuItem[] = [
@@ -25,6 +27,14 @@ export const timesheetsMenu: MenuItem[] = [
     href: "/timesheets/day",
     icon: Clock,
     visible: canRecordOwnTime,
+  },
+  {
+    // Accounts without own attendance (e.g. the administrator) reach writing for others here.
+    label: "Zápis za jiné",
+    href: "/timesheets/day/someone",
+    icon: UserPen,
+    visible: (actor) =>
+      !canRecordOwnTime(actor) && canWriteForSomeoneElse(actor),
   },
   {
     label: "Můj měsíc",

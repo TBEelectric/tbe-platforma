@@ -125,7 +125,7 @@ export function DayEntries({ view, needsReason }: Props) {
                     {e.note}
                     {e.source === "manager" && (
                       <span className="block text-[13px] text-muted-foreground">
-                        zapsal vedoucí
+                        zapsáno za zaměstnance
                       </span>
                     )}
                   </td>
