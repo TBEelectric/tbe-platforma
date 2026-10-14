@@ -73,6 +73,8 @@ describe("template", () => {
       row: 7,
       code: "250188",
       name: "Osvětlení parkoviště",
+      siteName: "Úvaly, parkoviště u nádraží",
+      siteAddress: "Nádražní, Úvaly",
       customerName: "Město Úvaly",
       ico: "00240923",
       status: "closed",
@@ -188,27 +190,33 @@ describe("parseJobSheet", () => {
   const jobHeader = [...JOB_COLUMNS] as Cell[];
   it("defaults an empty status to active and pads a numeric IČO", () => {
     expect(
-      parseJobSheet([jobHeader, ["300001", "Test", "Obec", 240923, ""]])
+      parseJobSheet([
+        jobHeader,
+        ["300001", "Test", "Obec, úřad", "", "Obec", 240923, ""],
+      ])
         .rows[0],
     ).toMatchObject({
       ico: "00240923",
       status: "active",
+      siteAddress: null,
     });
   });
 
-  it("validates IČO, status and duplicates", () => {
+  it("validates site, IČO, status and duplicates", () => {
     const result = parseJobSheet([
       jobHeader,
-      ["1", "A", "X", "123", "aktivní"],
-      ["2", "B", "", "", "hotová"],
-      ["3", "C", "", "", ""],
-      ["3", "D", "", "", ""],
+      ["1", "A", "M", "", "X", "123", "aktivní"],
+      ["2", "B", "M", "", "", "", "hotová"],
+      ["3", "C", "M", "", "", "", ""],
+      ["3", "D", "M", "", "", "", ""],
+      ["4", "E", "", "Ulice 1", "", "", ""],
     ]);
     expect(result.issues).toEqual([
       { row: 2, column: "IČO zákazníka", message: "8 číslic" },
       { row: 3, column: "Stav", message: "aktivní nebo uzavřená" },
       { row: 4, column: "Číslo zakázky", message: "je v souboru vícekrát" },
       { row: 5, column: "Číslo zakázky", message: "je v souboru vícekrát" },
+      { row: 6, column: "Místo", message: "povinné" },
     ]);
   });
 });

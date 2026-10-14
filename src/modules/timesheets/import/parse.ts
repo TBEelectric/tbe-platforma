@@ -28,6 +28,8 @@ export const EMPLOYEE_COLUMNS = [
 export const JOB_COLUMNS = [
   "Číslo zakázky",
   "Název",
+  "Místo",
+  "Adresa místa",
   "Zákazník",
   "IČO zákazníka",
   "Stav",
@@ -57,6 +59,9 @@ export type JobImportRow = {
   row: number;
   code: string;
   name: string;
+  /** Short name of the site the workers know the job by, e.g. "Jihlava, hala A". */
+  siteName: string;
+  siteAddress: string | null;
   customerName: string | null;
   ico: string | null;
   status: "active" | "closed";
@@ -298,6 +303,9 @@ export function parseJobSheet(data: Cell[][]): SheetResult<JobImportRow> {
     if (!code) issue("Číslo zakázky", "povinné");
     const name = text(get("Název"));
     if (!name) issue("Název", "povinné");
+    const siteName = text(get("Místo"));
+    if (!siteName) issue("Místo", "povinné");
+    const siteAddress = text(get("Adresa místa")) || null;
     const customerName = text(get("Zákazník")) || null;
 
     // A numeric IČO cell loses leading zeros in Excel; pad it back to 8 digits.
@@ -314,7 +322,16 @@ export function parseJobSheet(data: Cell[][]): SheetResult<JobImportRow> {
     if (!status) issue("Stav", "aktivní nebo uzavřená");
 
     if (issues.length > before) return;
-    rows.push({ row, code, name, customerName, ico, status: status! });
+    rows.push({
+      row,
+      code,
+      name,
+      siteName,
+      siteAddress,
+      customerName,
+      ico,
+      status: status!,
+    });
   });
 
   issues.push(
