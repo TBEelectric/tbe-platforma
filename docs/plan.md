@@ -31,7 +31,7 @@ Docházka má prioritu. Vozový park se připravuje souběžně (Traccar, ověř
 
 - [x] Schéma `timesheets`: work_type, time_entry, absence, standby, timesheet, period_close, timesheet_settings
       (leave_entitlement už je z milníku 2); výchozí druhy práce a nastavení v seedu
-- [ ] Pravidla s testy: validace intervalu, překryvy, zamčený měsíc, kolize s absencí, upozornění
+- [x] Pravidla s testy: validace intervalu, překryvy, zamčený měsíc, kolize s absencí, upozornění
       (přestávka, 12 h, odpočinek), interval přes půlnoc a změna času
 - [ ] Obrazovka Můj den (desktop i mobil), „Pokračovat od …“
 - [ ] Zápis za jiného zaměstnance s důvodem

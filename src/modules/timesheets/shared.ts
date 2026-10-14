@@ -4,6 +4,11 @@ import type { ModuleInfo } from "@/lib/navigation";
 
 export { timesheetsMenu, visibleMenu } from "./menu";
 export * from "./permissions";
+export * from "./rules/time-entry";
+export * from "./rules/warnings";
+export * from "./rules/totals";
+export * from "./rules/leave";
+export * from "./rules/settings";
 
 export const timesheetsModule: ModuleInfo = {
   id: "timesheets",
