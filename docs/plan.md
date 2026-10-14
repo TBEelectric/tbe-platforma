@@ -77,7 +77,7 @@ hotových krocích před ním. Značky: `[ručně]` = skript krok nespustí, ud�
       Obvyklý den (zobrazení, smazání) v detailu zaměstnance. Vyzkoušet: připnout/odepnout zakázku u party, smazat šablonu.
       Rozhodl jsem sám: odepnutí a smazání šablony jsou skutečné DELETE s auditem (vazby, ne obchodní záznamy); šablona
       nese jen časy a typ (bez zakázek); akce pro výchozí šablonu firmy zatím nemá formulář (přijde s osou); vedoucí
-      zatím nemá vlastní obrazovku pro připínání (jen akce, UI v 3b.8).
+      zatím nemá vlastní obrazovku pro připínání (jen akce, UI v 3b.7).
 
 - [x] **3b.4 – Logika osy (čisté funkce)** [opus]
       Jen `src/modules/timesheets/rules` + testy, převzato z výpočtů v prototypech: přichytávání (15 min tažení na mobilu,
@@ -114,7 +114,7 @@ hotových krocích před ním. Značky: `[ručně]` = skript krok nespustí, ud�
       zakázkou skončí hláškou (nepřeskočí ji); smazání v den celodenní absence je povolené.
 
 - [x] **3b.6 – Mobil I: osa a úpravy**
-      Mobile-first obrazovka Můj den (< 768 px) podle `MobilOsa.dc.html`: svislá osa celého dne s automatickým posunem na
+      Mobile-first obrazovka Můj den (< 1024 px) podle `MobilOsa.dc.html`: svislá osa celého dne s automatickým posunem na
       pracovní dobu a podbarvenou nocí, podržet a táhnout = nový interval (nekoliduje se scrollem), klepnutí do mezery,
       úchyty a posun se společnou hranicí, kompaktní spodní panel (−/+ 5 min, Práce/Přestávka, smazat), zavření klepnutím
       mimo, přestávka s ikonou kávy a teplou barvou, optimistické ukládání přes akce z 3b.5. Zakázka zatím = naposledy použitá.
@@ -128,7 +128,7 @@ hotových krocích před ním. Značky: `[ručně]` = skript krok nespustí, ud�
       `jobChipIds` (naposledy použitá, jinak zakázka party), bez ní hláška místo chyby serveru; úchyty jsou jen na vybraném
       bloku (44 px, přes okraj), blok se na dotyku vybere klepnutím a posouvá po podržení; důvod u zápisu za jiného je
       pole nad osou (ne dialog); `TimelineJob` má nově `active`. Ověřeno v náhledu 375 px myší; dotykové podržení
-      (300 ms) a vibraci je nutné zkusit na skutečném telefonu (krok 3b.8).
+      (300 ms) a vibraci je nutné zkusit na skutečném telefonu (bod „Vývojové přihlášení…“ v milníku 5).
 
 - [x] **3b.7 – Mobil II: zakázky a šablony**
       V panelu tlačítka naposledy použitých zakázek („Firma, místo“) a „Další zakázky…“ = výběr přes celou obrazovku
@@ -161,11 +161,30 @@ hotových krocích před ním. Značky: `[ručně]` = skript krok nespustí, ud�
       přihlásit): vyzkoušet na desktopu kreslení tažením, okraje, posun, rozbalení noci šipkami, klávesy, combobox;
       na mobilu nahoře/dole rozbalení noci a udržení pozice.
 
-- [ ] **3b.10 – Dokončení milníku** [zastavit po]
-      Zamčený měsíc jen pro čtení na mobilu i desktopu, tablet (na výšku mobil, na šířku desktop), přístupnost (popisky,
-      fokus, kontrast), úklid nepoužívaného kódu staré mobilní obrazovky, Playwright test zápisu dne (mobil i desktop),
-      nové PNG náhledy do `docs/design/screens/` (02-muj-den, 06-mobil-den), aktualizace `docs/design.md`.
-      Hotovo, když: vše výše prochází; po kroku člověk vyzkouší iPhone Safari a Android Chrome.
+- [x] **3b.10 – Dokončení milníku** [zastavit po]
+      (1) Zamčený měsíc jen pro čtení na mobilu i desktopu: nejde kreslit, táhnout, vyplnit mezeru, upravovat v panelu,
+      klávesy nic nemění, nejsou šablony ani „Uložit jako můj obvyklý den“, nahoře hláška „Měsíc je uzavřený“; logika
+      „lze upravovat“ jako čistá funkce v `rules` s testem (server už zápis odmítá). (2) Tablet: kód zůstává na jedné
+      hranici 1024 px (iPad na výšku = mobil, na šířku = desktop); v `docs/design.md` (Responzivita) opravit tabulku podle
+      skutečnosti a čtením tříd ověřit, že ostatní obrazovky nejsou na 768–1023 px rozbité. (3) Přístupnost osy, panelu
+      a výběru zakázky: `aria-label` u prvků bez textu (úchyty, šipka noci, špendlík, −/+, přestávka), role a
+      `aria-selected` u bloků, viditelný fokus, na desktopu Tab na bloky a Enter = výběr, čitelný text na barevných blocích
+      (čistá funkce s testem, pokud ještě není). (4) Úklid nepoužívaného kódu staré mobilní obrazovky a starého Můj den
+      (komponenty, exporty, texty v `messages/cs.json`). (5) `docs/design.md`: sekce o ose a mobilu uvést do souladu
+      s hotovým stavem (rozhodnutí z „Výsledek:“ 3b.4–3b.9); u statických maket `02-muj-den` a `06-mobil-den`
+      v `docs/design/screens/` poznámka, že je nahradily prototypy v `docs/design/prototypes/` (PNG se negenerují).
+      (6) Opravit zastaralé odkazy v milníku 3b: zadání 3b.6 „< 768 px“ → „< 1024 px“; „UI v 3b.8“ u 3b.3 → 3b.7;
+      „krok 3b.8“ ve výsledku 3b.6 → bod „Vývojové přihlášení…“ v milníku 5.
+      Mimo rozsah (přesunuto do milníku 5, až bude vývojové přihlášení): Playwright test zápisu dne a zkouška na
+      iPhone Safari / Android Chrome. Nedělat Playwright, instalaci prohlížečů, PNG ani vývojové přihlášení.
+      Hotovo, když: body 1–6 jsou hotové, lint/typecheck/test/build prochází; po kroku člověk vyzkouší v Chromu náhled
+      telefonu, tabletu na výšku i na šířku a desktopu, zamčený měsíc a ovládání klávesnicí.
+      Výsledek: Zamčený měsíc a den s celodenní absencí jsou jen pro čtení na mobilu i desktopu (čistá funkce `dayEditability`
+      s testem, hláška „Měsíc je uzavřený“); osa má role `listbox`/`option` s `aria-selected`, viditelný fokus
+      (globální `:focus-visible`) a čitelný text na blocích (`readableTextColor` s testy); úklid: `validateTimeEntry`
+      a spol., akce `saveOwnDayTemplateAction`, text `timeline.readOnly`; `design.md` a odkazy v plánu opraveny. Ověřit v
+      Chromu: náhled 375 px, tablet 768 px (mobil) a 1024 px (desktop), zamčený měsíc, Tab/Enter/šipky na ose. Rozhodl jsem
+      sám: ostatní obrazovky na 768–1023 px jsem kontroloval jen čtením tříd (jednosloupcové, spodní navigace), ne v prohlížeči.
 
 ## Milník 4 – Měsíc, schválení, uzávěrka
 
