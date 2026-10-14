@@ -101,6 +101,16 @@
       "text": "Tato obrazovka vznikne v milníku {milestone} podle plánu vývoje."
     },
     "errors": {
+      "outOfAxis": "Interval musí začít v tento den a skončit nejpozději v 6:00 dalšího dne.",
+      "tooShort": "Interval musí mít aspoň 5 minut.",
+      "future": "Do budoucna zapisovat nejde.",
+      "cannotMove": "Dál to nejde – sousední interval už je nejkratší možný.",
+      "workTypeRequired": "Vyberte druh práce.",
+      "jobRequired": "Vyberte zakázku.",
+      "absenceBlocksDay": "V tento den je celodenní absence, intervaly nelze zapsat.",
+      "nothingToFill": "Nic se nevešlo – den už je v těchto časech vyplněný.",
+      "noTemplate": "Obvyklý den zatím není nastavený.",
+      "noPreviousDay": "Není z čeho kopírovat – žádný předchozí vyplněný pracovní den.",
       "skippedTime": "Tento čas v den změny času neexistuje.",
       "max24h": "Interval může mít nejvýš 24 h.",
       "monthLocked": "Měsíc je potvrzený nebo uzavřený, intervaly nelze měnit.",

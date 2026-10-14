@@ -13,6 +13,10 @@ export * from "./rules/month";
 export * from "./rules/forms";
 export * from "./rules/absence";
 export * from "./rules/day-template";
+export * from "./rules/timeline";
+export * from "./rules/day-fill";
+export * from "./rules/job-picker";
+export * from "./rules/timeline-change";
 
 export const timesheetsModule: ModuleInfo = {
   id: "timesheets",

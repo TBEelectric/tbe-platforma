@@ -95,12 +95,23 @@ hotových krocích před ním. Značky: `[ručně]` = skript krok nespustí, ud�
       bloky šablony se vynechají celé (nezkracují se); tažení přichytává posun, ne polohu (jako prototyp); „Všechny
       aktivní“ vynechá jen zakázky party (jako mobilní prototyp); nové funkce zatím nejsou v `shared.ts` (přidá 3b.5).
 
-- [ ] **3b.5 – Server pro osu** [opus]
+- [x] **3b.5 – Server pro osu** [opus]
       Jedno načtení dat dne (intervaly, naposledy použité zakázky, zakázky party, šablona, stav měsíce). Server akce
       vytvořit / upravit / smazat interval a použít šablonu; úprava hranice upraví i souseda v jedné transakci; validace
       přes pravidla z 3b.4, audit, zamčený měsíc, zápis za jiného s důvodem. Odpovědi vhodné pro optimistickou aktualizaci
       (nový stav dne nebo chyba s klíčem hlášky). Testy akcí.
       Hotovo, když: akce jsou otestované včetně kolizí, společné hranice a zamčeného měsíce.
+      Výsledek: `getTimelineDay` (intervaly v minutách osy, zablokované kusy sousedních dnů, stav a zámek měsíce, „teď“,
+      naposledy použité zakázky, zakázky party, platná šablona, zdroj „Jako včera“, zakázky a druhy práce) a server akce
+      `timelineAction` (vytvořit / upravit / posunout okraj nebo celý interval / smazat / Obvyklý den / Jako včera) v
+      `timeline-actions.ts`; odpověď `{ ok: true, day }` nebo `{ ok: false, error: "<klíč>" }`. Rozhodování je čistá funkce
+      `rules/timeline-change.ts` (oprávnění, důvod za jiného, zámek, celodenní absence, kolize i se sousedními dny,
+      společná hranice přes `adjustEntry`, zakázka a druh práce) s 20 testy; služba `timeline.ts` zapíše operace v jedné
+      transakci s auditem (zkracující změny první kvůli exclusion constraintu). Nové hlášky v `cs.json`, pravidla 3b.4 jsou
+      v `shared.ts`. Služba nad DB nemá automatický test (repo nemá testovací DB); jednorázově ověřeno proti lokální DB.
+      Rozhodl jsem sám: výchozí šablona firmy je v seedu (`default_day_template`, 7:00–11:30, 11:30–12:00, 12:00–15:30) –
+      na existující DB pustit `pnpm db:seed`; „Obvyklý den“ bez historie vezme první zakázku party; „Jako včera“ s uzavřenou
+      zakázkou skončí hláškou (nepřeskočí ji); smazání v den celodenní absence je povolené.
 
 - [ ] **3b.6 – Testování na telefonu** [ručně]
       Dočasný tunel (např. Cloudflare Tunnel) s veřejnou HTTPS adresou, adresa v Google OAuth a `BETTER_AUTH_URL`,

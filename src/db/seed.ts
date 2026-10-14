@@ -190,6 +190,12 @@ const settings: Record<string, unknown> = {
   daily_rest_minutes: 660,
   weekly_rest_minutes: 2100,
   dpp_yearly_limit_hours: 300,
+  // Company "obvyklý den" (docs/design.md): used when an employee has no template of their own.
+  default_day_template: [
+    { from: "07:00", to: "11:30", kind: "work" },
+    { from: "11:30", to: "12:00", kind: "break" },
+    { from: "12:00", to: "15:30", kind: "work" },
+  ],
 };
 
 /** Inserts a row unless one with the same unique key exists; audits new rows. Returns the row id. */
