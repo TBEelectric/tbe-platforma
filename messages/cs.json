@@ -296,6 +296,33 @@
       "add": "Přidat",
       "choose": "Vyberte"
     },
+    "timeline": {
+      "axisLabel": "Časová osa dne",
+      "nextDayMark": "{time} +1",
+      "entryLabel": "{from}–{to}, {title}, {duration}",
+      "blockedLabel": "Obsazeno sousedním dnem",
+      "now": "teď",
+      "reasonLabel": "Důvod zápisu",
+      "reasonPlaceholder": "Proč zapisujete za zaměstnance",
+      "reasonNeeded": "Nejdřív uveďte důvod zápisu.",
+      "saveFailed": "Změna se neuložila, zkontrolujte připojení. Zobrazený je poslední uložený stav.",
+      "noJobForNew": "Není zakázka pro nový interval. Vyberte ji ve formuláři na počítači.",
+      "panelLabel": "Úprava intervalu",
+      "start": "Začátek",
+      "end": "Konec",
+      "startEarlier": "Začátek o 5 minut dříve",
+      "startLater": "Začátek o 5 minut později",
+      "endEarlier": "Konec o 5 minut dříve",
+      "endLater": "Konec o 5 minut později",
+      "close": "Zavřít",
+      "work": "Práce",
+      "break": "Přestávka",
+      "duration": "Délka {duration}",
+      "delete": "Smazat interval",
+      "readOnly": "Jen pro čtení",
+      "handleStart": "Táhnutím změníte začátek",
+      "handleEnd": "Táhnutím změníte konec"
+    },
     "someone": {
       "subtitle": "Den {date}. Každá změna za jiného vyžaduje důvod, který se uloží do historie.",
       "nobody": "Nemáte nikoho, za koho byste mohli zapisovat."

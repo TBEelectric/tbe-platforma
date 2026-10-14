@@ -10,6 +10,7 @@ import {
   canRecordOwnTime,
   canWriteForSomeoneElse,
   canWriteTimeFor,
+  getTimelineDay,
   loadDay,
   teamOn,
 } from "@/modules/timesheets";
@@ -54,13 +55,17 @@ export default async function DayPage({
   )
     notFound();
 
-  const view = await loadDay(employeeId, date);
+  const [view, timeline] = await Promise.all([
+    loadDay(employeeId, date),
+    getTimelineDay(employeeId, date),
+  ]);
   if (!view) notFound();
   const query = forSomeoneElse ? `&employee=${employeeId}` : "";
   const t = await getTranslations("timesheets.day");
   return (
     <DayScreen
       view={view}
+      timeline={timeline}
       title={forSomeoneElse ? t("titleSomeone") : t("title")}
       forSomeoneElse={forSomeoneElse}
       hrefFor={(d) => `/timesheets/day?date=${d}${query}`}

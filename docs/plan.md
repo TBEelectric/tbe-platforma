@@ -113,12 +113,22 @@ hotových krocích před ním. Značky: `[ručně]` = skript krok nespustí, ud�
       na existující DB pustit `pnpm db:seed`; „Obvyklý den“ bez historie vezme první zakázku party; „Jako včera“ s uzavřenou
       zakázkou skončí hláškou (nepřeskočí ji); smazání v den celodenní absence je povolené.
 
-- [ ] **3b.6 – Mobil I: osa a úpravy**
+- [x] **3b.6 – Mobil I: osa a úpravy**
       Mobile-first obrazovka Můj den (< 768 px) podle `MobilOsa.dc.html`: svislá osa celého dne s automatickým posunem na
       pracovní dobu a podbarvenou nocí, podržet a táhnout = nový interval (nekoliduje se scrollem), klepnutí do mezery,
       úchyty a posun se společnou hranicí, kompaktní spodní panel (−/+ 5 min, Práce/Přestávka, smazat), zavření klepnutím
       mimo, přestávka s ikonou kávy a teplou barvou, optimistické ukládání přes akce z 3b.5. Zakázka zatím = naposledy použitá.
       Hotovo, když: den jde na telefonu poskládat a upravit tažením i tlačítky.
+      Výsledek: Pod 1024 px se místo seznamu intervalů zobrazí `MobileTimeline` (`components/day/mobile-timeline.tsx`,
+      stav a fronta ukládání v `use-timeline.ts`); desktop se nezměnil. Nová čistá logika s testy: `rules/timeline-view.ts`
+      (56 px/h, popisky hodin, noc, výška bloku, počet řádků textu) a `rules/timeline-local.ts` (optimistické změny přes
+      pravidla z 3b.4). Změny jdou na server po jedné přes `timelineAction`; rychlé klepání −/+ se nezahazuje, při chybě
+      se den načte znovu a ukáže hláška. Rozhodl jsem sám: akce po úspěchu volá `revalidatePath` (hlavička se součty se
+      aktualizuje v téže odpovědi; `router.refresh()` rušil probíhající akce); zakázka nového intervalu = první z
+      `jobChipIds` (naposledy použitá, jinak zakázka party), bez ní hláška místo chyby serveru; úchyty jsou jen na vybraném
+      bloku (44 px, přes okraj), blok se na dotyku vybere klepnutím a posouvá po podržení; důvod u zápisu za jiného je
+      pole nad osou (ne dialog); `TimelineJob` má nově `active`. Ověřeno v náhledu 375 px myší; dotykové podržení
+      (300 ms) a vibraci je nutné zkusit na skutečném telefonu (krok 3b.8).
 
 - [ ] **3b.7 – Mobil II: zakázky a šablony**
       V panelu tlačítka naposledy použitých zakázek („Firma, místo“) a „Další zakázky…“ = výběr přes celou obrazovku

@@ -17,6 +17,8 @@ export * from "./rules/timeline";
 export * from "./rules/day-fill";
 export * from "./rules/job-picker";
 export * from "./rules/timeline-change";
+export * from "./rules/timeline-view";
+export * from "./rules/timeline-local";
 
 export const timesheetsModule: ModuleInfo = {
   id: "timesheets",

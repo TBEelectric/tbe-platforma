@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requirePermission } from "@/lib/current-user";
 import type { Actor } from "../core/shared";
@@ -87,13 +88,16 @@ export async function timelineAction(
   const parsed = inputSchema.safeParse(input);
   if (!parsed.success) return { ok: false, error: "validation.invalid" };
   const { employeeId, date, reason, command } = parsed.data;
-  return applyTimelineCommand(
+  const result = await applyTimelineCommand(
     { userId: user.userId, actor: user.actor },
     employeeId,
     date,
     command,
     reason?.trim() || null,
   );
+  // Header totals, checks and the month page; the response carries the new page (no extra request).
+  if (result.ok) revalidatePath("/timesheets", "layout");
+  return result;
 }
 
 /** Reload of a day (after an error or when switching days); same permission as writing. */

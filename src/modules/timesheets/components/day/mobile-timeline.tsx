@@ -1,0 +1,770 @@
+"use client";
+
+import { Coffee, Lock, Minus, Plus, X } from "lucide-react";
+import { useTranslations } from "next-intl";
+import {
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
+import { translate } from "@/i18n/messages";
+import { formatMinutes } from "@/lib/duration";
+import { cn } from "@/lib/utils";
+import { jobLabel } from "@/modules/core/shared";
+import type { TimelineDay } from "../../timeline";
+import {
+  AXIS_END,
+  AXIS_HEIGHT_PX,
+  axisTime,
+  blockHeightPx,
+  blockLines,
+  dragCreate,
+  halfHourMarks,
+  HANDLE_PX,
+  HOLD_MS,
+  hourMarks,
+  initialFocusMinute,
+  localAdjust,
+  localSetRange,
+  minuteAtOffset,
+  minuteToPx,
+  movedBeyondTap,
+  NIGHT_BANDS,
+  pxToMinutes,
+  SNAP_TOUCH,
+  startCreate,
+  tapCreate,
+  type AdjustAction,
+  type CreateStart,
+  type TimelineEntry,
+} from "../../shared";
+import { useTimeline } from "./use-timeline";
+
+const BREAK_COLOR = "#f6e6d2";
+const BREAK_HATCH =
+  "repeating-linear-gradient(135deg, rgba(138,66,5,.07) 0 6px, transparent 6px 12px)";
+
+/** A finger or mouse gesture on the axis; see the comments in `onPointerDown`. */
+type Gesture =
+  | {
+      type: "create";
+      /** Why nothing can be drawn here (shown after a tap). */
+      refusal: "future" | "noRoom" | null;
+      create: CreateStart | null;
+      tempId: string | null;
+    }
+  | { type: "edit"; id: string; action: AdjustAction }
+  | { type: "tap" };
+
+type Active = Gesture & {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  /** Drawing / moving started (touch: after the hold; mouse: at once). */
+  armed: boolean;
+  moved: boolean;
+  /** Entries as they were when the gesture started. */
+  base: TimelineEntry[];
+  timer: ReturnType<typeof setTimeout> | null;
+};
+
+const timeText = (minute: number) => {
+  const { time, nextDay } = axisTime(minute);
+  return nextDay ? `${time} +1` : time;
+};
+
+/**
+ * Vertical timeline of the day for phones (docs/design.md, Mobil – zápis dne na ose): draw an entry
+ * by holding and dragging, tap a gap to fill it, drag the handles, move by holding. All logic is in
+ * rules/timeline*.ts; this component wires pointer events to it and saves through useTimeline.
+ */
+export function MobileTimeline({
+  day: initial,
+  employeeId,
+  needsReason,
+}: {
+  day: TimelineDay;
+  employeeId: string;
+  /** Writing for someone else: a reason is required before the first change. */
+  needsReason: boolean;
+}) {
+  const t = useTranslations();
+  const [reason, setReason] = useState("");
+  const tl = useTimeline({
+    initial,
+    employeeId,
+    reason: needsReason ? reason.trim() || null : null,
+  });
+  const { day, entries, selectedId } = tl;
+  const readOnly = day.locked || day.absenceOnDay;
+  const colRef = useRef<HTMLDivElement>(null);
+  const gesture = useRef<Active | null>(null);
+  const { message, setMessage, select } = tl;
+  // Entries when the day opened: only they decide where the axis scrolls to (not later saves).
+  const [opened] = useState(initial.entries);
+
+  // Latest values and handlers for the window listeners (they live across renders).
+  const live = useRef({ tl, readOnly, needsReason, reason });
+  useEffect(() => {
+    live.current = { tl, readOnly, needsReason, reason };
+  });
+
+  const jobsById = useMemo(
+    () => new Map(day.jobs.map((j) => [j.id, j])),
+    [day.jobs],
+  );
+  const workTypesById = useMemo(
+    () => new Map(day.workTypes.map((w) => [w.id, w.name])),
+    [day.workTypes],
+  );
+  const marks = useMemo(() => hourMarks(), []);
+  const halves = useMemo(() => halfHourMarks(), []);
+
+  // Open on the first entry (an empty day on 6:00).
+  useLayoutEffect(() => {
+    const col = colRef.current;
+    if (!col) return;
+    const scroll = () => {
+      const top =
+        col.getBoundingClientRect().top +
+        window.scrollY +
+        minuteToPx(initialFocusMinute(opened)) -
+        72;
+      window.scrollTo({ top: Math.max(0, top) });
+    };
+    // After the navigation's own scroll to the top.
+    const id = requestAnimationFrame(() => requestAnimationFrame(scroll));
+    return () => cancelAnimationFrame(id);
+  }, [opened]);
+
+  // Message disappears by itself.
+  useEffect(() => {
+    if (!message) return;
+    const id = setTimeout(() => setMessage(null), 5000);
+    return () => clearTimeout(id);
+  }, [message, setMessage]);
+
+  // A touch that stays still for HOLD_MS arms drawing; from then on the page must not scroll.
+  // touch-action cannot change mid-touch, so touchmove is cancelled while a gesture is armed.
+  useEffect(() => {
+    const col = colRef.current;
+    if (!col) return;
+    const block = (event: TouchEvent) => {
+      if (gesture.current?.armed) event.preventDefault();
+    };
+    col.addEventListener("touchmove", block, { passive: false });
+    return () => col.removeEventListener("touchmove", block);
+  }, []);
+
+  // A tap outside the timeline and the panel closes the panel.
+  useEffect(() => {
+    if (!selectedId) return;
+    const onDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("[data-timeline-root], [data-timeline-panel]"))
+        return;
+      select(null);
+    };
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
+  }, [selectedId, select]);
+
+  const offsetY = (clientY: number) =>
+    clientY - colRef.current!.getBoundingClientRect().top;
+
+  // Window listeners: set once, they act only while a gesture started on the axis is running.
+  useEffect(() => {
+    const end = () => {
+      const g = gesture.current;
+      if (g?.timer) clearTimeout(g.timer);
+      gesture.current = null;
+    };
+
+    function onMove(event: PointerEvent) {
+      const g = gesture.current;
+      if (!g || event.pointerId !== g.pointerId) return;
+      const { tl: line } = live.current;
+      const dx = event.clientX - g.startX;
+      const dy = event.clientY - g.startY;
+      if (!g.moved && movedBeyondTap(dx, dy)) {
+        g.moved = true;
+        // A finger that moves before the hold is scrolling the day; leave it alone.
+        if (!g.armed) {
+          end();
+          return;
+        }
+      }
+      if (!g.armed || !g.moved) return;
+      event.preventDefault();
+
+      if (g.type === "create" && g.create) {
+        const range = dragCreate(
+          g.create,
+          minuteAtOffset(offsetY(event.clientY), g.create.step),
+        );
+        if (!g.tempId) {
+          if (!line.ensureCanCreate()) {
+            end();
+            return;
+          }
+          g.tempId = line.nextTempId();
+          line.createLocal(g.tempId, range);
+          line.select(g.tempId);
+        } else {
+          const id = g.tempId;
+          line.setEntries((list) => localSetRange(list, id, range));
+        }
+      } else if (g.type === "edit") {
+        const next = localAdjust(
+          g.base,
+          line.day.blocked,
+          g.id,
+          g.action,
+          pxToMinutes(dy),
+          { maxEnd: line.day.maxEnd, step: SNAP_TOUCH },
+        );
+        line.setEntries(next ?? g.base);
+      }
+    }
+
+    function onUp(event: PointerEvent) {
+      const g = gesture.current;
+      if (!g || event.pointerId !== g.pointerId) return;
+      const { tl: line } = live.current;
+      const dy = event.clientY - g.startY;
+      end();
+
+      if (g.moved && g.armed) {
+        if (g.type === "create" && g.tempId) {
+          const created = line.entries.find((e) => e.id === g.tempId);
+          if (created)
+            line.commitCreate(g.tempId, {
+              start: created.start,
+              end: created.end,
+            });
+        } else if (g.type === "edit") {
+          const next = localAdjust(
+            g.base,
+            line.day.blocked,
+            g.id,
+            g.action,
+            pxToMinutes(dy),
+            { maxEnd: line.day.maxEnd, step: SNAP_TOUCH },
+          );
+          if (next)
+            line.commitAdjust(g.id, g.action, pxToMinutes(dy), SNAP_TOUCH);
+          else line.setEntries(g.base);
+        }
+        return;
+      }
+      if (g.moved) return; // scrolled
+
+      // A tap.
+      if (g.type === "edit" && g.action === "move") {
+        line.select(g.id);
+      } else if (g.type === "create") {
+        if (line.selectedId) {
+          line.select(null);
+        } else if (g.create) {
+          if (!line.ensureCanCreate()) return;
+          const range = tapCreate(g.create);
+          const id = line.nextTempId();
+          line.createLocal(id, range);
+          line.select(id);
+          line.commitCreate(id, range);
+        } else if (g.refusal === "future") {
+          line.setMessage({ key: "timesheets.errors.future" });
+        } else if (g.refusal === "noRoom") {
+          line.setMessage({ key: "timesheets.errors.overlap" });
+        }
+      } else if (g.type === "tap") {
+        line.select(null);
+      }
+    }
+
+    function onCancel(event: PointerEvent) {
+      const g = gesture.current;
+      if (!g || event.pointerId !== g.pointerId) return;
+      live.current.tl.setEntries(g.base);
+      end();
+    }
+
+    window.addEventListener("pointermove", onMove, { passive: false });
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onCancel);
+    return () => {
+      end();
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onCancel);
+    };
+  }, []);
+
+  function onPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
+    if (gesture.current || event.button > 0) return;
+    const {
+      tl: line,
+      readOnly: locked,
+      needsReason: asked,
+      reason: why,
+    } = live.current;
+    if (locked) return;
+    const target = event.target as HTMLElement;
+    const handle = target.closest<HTMLElement>("[data-handle]");
+    const block = target.closest<HTMLElement>("[data-block]");
+
+    if (asked && !why.trim()) {
+      line.setMessage({ key: "timesheets.timeline.reasonNeeded" });
+      return;
+    }
+
+    const touch = event.pointerType !== "mouse";
+    const base: Active = {
+      type: "tap",
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      armed: false,
+      moved: false,
+      base: line.entries,
+      timer: null,
+    };
+    let next: Active = base;
+
+    if (handle || block) {
+      const id = (handle ?? block)!.dataset.id!;
+      const action = (handle?.dataset.handle ?? "move") as AdjustAction;
+      next = { ...base, type: "edit", id, action };
+      // Handles have touch-action: none, so they drag at once; a block body must be held.
+      if (handle || !touch) next.armed = true;
+      if (!handle && !touch) line.select(id);
+    } else {
+      const minute = minuteAtOffset(offsetY(event.clientY), SNAP_TOUCH);
+      const started = startCreate(
+        [
+          ...line.entries,
+          ...line.day.blocked.map((r, i) => ({ ...r, id: `~b${i}` })),
+        ],
+        minute,
+        { maxEnd: line.day.maxEnd, step: SNAP_TOUCH },
+      );
+      next = {
+        ...base,
+        type: "create",
+        refusal: started.ok
+          ? null
+          : started.reason === "occupied"
+            ? null
+            : started.reason,
+        create: started.ok ? started.create : null,
+        tempId: null,
+      };
+      if (!touch) next.armed = true;
+    }
+
+    if (touch && !next.armed) {
+      next.timer = setTimeout(() => {
+        if (gesture.current !== next || next.moved) return;
+        next.armed = true;
+        navigator.vibrate?.(15);
+        if (next.type === "edit") live.current.tl.select(next.id);
+      }, HOLD_MS);
+    }
+    gesture.current = next;
+  }
+
+  const selected = entries.find((e) => e.id === selectedId) ?? null;
+  const isToday = day.date === day.today;
+  const futureFrom = day.maxEnd < AXIS_END ? day.maxEnd : null;
+
+  const titleOf = (e: TimelineEntry) => {
+    if (e.kind === "break") return t("timesheets.timeline.break");
+    const j = e.jobId ? jobsById.get(e.jobId) : null;
+    return j ? jobLabel(j) : t("timesheets.entries.noJob");
+  };
+
+  return (
+    <div
+      data-timeline-root
+      role="region"
+      className="flex flex-col gap-3 lg:hidden"
+      aria-label={t("timesheets.timeline.axisLabel")}
+    >
+      {needsReason && !readOnly && (
+        <label className="flex flex-col gap-1.5 text-[15px] font-semibold">
+          {t("timesheets.timeline.reasonLabel")}
+          <input
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            maxLength={500}
+            placeholder={t("timesheets.timeline.reasonPlaceholder")}
+            className="h-12 rounded-xl border border-input bg-card px-3.5 text-base font-normal"
+          />
+        </label>
+      )}
+      {readOnly && (
+        <p className="flex items-center gap-2 rounded-lg bg-neutral px-4 py-3 text-[15px] text-neutral-foreground">
+          <Lock className="size-4 shrink-0" aria-hidden />
+          {day.locked
+            ? t("timesheets.errors.monthLocked")
+            : t("timesheets.errors.absenceBlocksDay")}
+        </p>
+      )}
+
+      <div className="pt-3" style={{ paddingBottom: selectedId ? 280 : 24 }}>
+        <div
+          ref={colRef}
+          onPointerDown={onPointerDown}
+          onContextMenu={(e) => e.preventDefault()}
+          className="relative mr-1 ml-[52px] touch-pan-y select-none [-webkit-touch-callout:none]"
+          style={{
+            height: AXIS_HEIGHT_PX,
+            cursor: readOnly ? "default" : "crosshair",
+          }}
+        >
+          {NIGHT_BANDS.map((b) => (
+            <div
+              key={b.start}
+              aria-hidden
+              className="absolute inset-x-0 bg-[#142433]/[0.05]"
+              style={{
+                top: minuteToPx(b.start),
+                height: minuteToPx(b.end) - minuteToPx(b.start),
+              }}
+            />
+          ))}
+          {halves.map((m) => (
+            <div
+              key={m}
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 border-t border-dashed border-border/60"
+              style={{ top: minuteToPx(m) }}
+            />
+          ))}
+          {marks.map((m) => (
+            <div
+              key={m.minute}
+              aria-hidden
+              className="pointer-events-none absolute right-0 -left-[52px] border-t border-border"
+              style={{ top: minuteToPx(m.minute) }}
+            >
+              <span className="absolute -top-2.5 left-0 w-[46px] bg-background pr-1 text-right text-xs font-semibold text-muted-foreground tabular-nums">
+                {m.nextDay
+                  ? t("timesheets.timeline.nextDayMark", { time: m.label })
+                  : m.label}
+              </span>
+            </div>
+          ))}
+          {day.blocked.map((b, i) => (
+            <div
+              key={i}
+              role="img"
+              aria-label={t("timesheets.timeline.blockedLabel")}
+              className="pointer-events-none absolute inset-x-0 rounded-lg bg-neutral"
+              style={{
+                top: minuteToPx(b.start),
+                height: minuteToPx(b.end) - minuteToPx(b.start),
+                backgroundImage:
+                  "repeating-linear-gradient(135deg, rgba(20,36,51,.08) 0 6px, transparent 6px 12px)",
+              }}
+            />
+          ))}
+
+          {entries.map((e) => {
+            const isBreak = e.kind === "break";
+            const j = e.jobId ? jobsById.get(e.jobId) : null;
+            const height = blockHeightPx(e);
+            const lines = blockLines(height);
+            const active = e.id === selectedId;
+            const duration = formatMinutes(e.end - e.start);
+            const sub = isBreak
+              ? duration
+              : [
+                  j?.siteName,
+                  e.workTypeId ? workTypesById.get(e.workTypeId) : null,
+                  duration,
+                ]
+                  .filter(Boolean)
+                  .join(" · ");
+            return (
+              <div
+                key={e.id}
+                data-block
+                data-id={e.id}
+                role="button"
+                tabIndex={0}
+                aria-pressed={active}
+                aria-label={t("timesheets.timeline.entryLabel", {
+                  from: timeText(e.start),
+                  to: timeText(e.end),
+                  title: titleOf(e),
+                  duration,
+                })}
+                onKeyDown={(ev) => {
+                  if (ev.key === "Enter" || ev.key === " ") {
+                    ev.preventDefault();
+                    tl.select(e.id);
+                  }
+                }}
+                className={cn(
+                  "absolute inset-x-0 flex cursor-grab flex-col justify-center overflow-hidden rounded-[10px]",
+                  active && "z-10 ring-[3px] ring-foreground",
+                )}
+                style={{
+                  top: minuteToPx(e.start),
+                  height,
+                  background: isBreak ? BREAK_COLOR : (j?.color ?? "#5b6877"),
+                  backgroundImage: isBreak ? BREAK_HATCH : undefined,
+                  color: isBreak ? "#6e3604" : "#fff",
+                }}
+              >
+                {lines >= 1 && (
+                  <span className="flex items-center gap-1.5 px-2.5 text-xs leading-tight font-bold">
+                    {isBreak && (
+                      <Coffee className="size-3.5 shrink-0" aria-hidden />
+                    )}
+                    <span className="truncate">
+                      {timeText(e.start)}–{timeText(e.end)} · {titleOf(e)}
+                    </span>
+                  </span>
+                )}
+                {lines >= 2 && (
+                  <span className="truncate px-2.5 text-xs leading-tight opacity-90">
+                    {sub}
+                  </span>
+                )}
+                {active && !readOnly && (
+                  <>
+                    <Handle
+                      id={e.id}
+                      edge="start"
+                      label={t("timesheets.timeline.handleStart")}
+                    />
+                    <Handle
+                      id={e.id}
+                      edge="end"
+                      label={t("timesheets.timeline.handleEnd")}
+                    />
+                  </>
+                )}
+              </div>
+            );
+          })}
+
+          {futureFrom !== null && (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 bg-background/60"
+              style={{
+                top: minuteToPx(futureFrom),
+                height: AXIS_HEIGHT_PX - minuteToPx(futureFrom),
+              }}
+            />
+          )}
+          {isToday && futureFrom !== null && (
+            <div
+              aria-hidden
+              className="pointer-events-none absolute right-0 -left-[52px] z-20 border-t-2 border-destructive"
+              style={{ top: minuteToPx(futureFrom) }}
+            >
+              <span className="absolute -top-2.5 left-0 rounded bg-destructive px-1 text-xs font-bold text-white tabular-nums">
+                {timeText(futureFrom)}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {selected && !readOnly && (
+        <EntryPanel
+          entry={selected}
+          label={titleOf(selected)}
+          onNudge={tl.nudge}
+          onKind={tl.setKind}
+          onDelete={tl.remove}
+          onClose={() => tl.select(null)}
+        />
+      )}
+
+      {tl.message && (
+        <p
+          role="status"
+          className="fixed inset-x-4 top-3 z-50 rounded-xl bg-[#fdf0e1] px-4 py-3 text-[15px] text-[#6e3604] shadow-lg"
+        >
+          {"key" in tl.message
+            ? translate(t, { key: tl.message.key })
+            : t("timesheets.timeline.saveFailed")}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** Edge handle of the selected entry: a 44 px touch target straddling the edge, a small pill to see. */
+function Handle({
+  id,
+  edge,
+  label,
+}: {
+  id: string;
+  edge: "start" | "end";
+  label: string;
+}) {
+  return (
+    <div
+      data-handle={edge}
+      data-id={id}
+      aria-label={label}
+      className="absolute inset-x-0 z-10 flex cursor-ns-resize touch-none items-center justify-center"
+      style={{
+        height: HANDLE_PX,
+        [edge === "start" ? "top" : "bottom"]: -HANDLE_PX / 2,
+      }}
+    >
+      <span
+        aria-hidden
+        className="h-1 w-8 rounded-full bg-white shadow ring-1 ring-foreground/40"
+      />
+    </div>
+  );
+}
+
+function EntryPanel({
+  entry,
+  label,
+  onNudge,
+  onKind,
+  onDelete,
+  onClose,
+}: {
+  entry: TimelineEntry;
+  label: string;
+  onNudge: (edge: "start" | "end", delta: number) => boolean;
+  onKind: (kind: "work" | "break") => void;
+  onDelete: () => void;
+  onClose: () => void;
+}) {
+  const t = useTranslations("timesheets.timeline");
+  const isBreak = entry.kind === "break";
+  const step = (
+    edge: "start" | "end",
+    value: number,
+    earlier: string,
+    later: string,
+  ) => (
+    <div className="flex items-center gap-1.5">
+      <StepButton label={earlier} onClick={() => onNudge(edge, -5)}>
+        <Minus aria-hidden />
+      </StepButton>
+      <strong className="min-w-[3.2rem] text-center text-[17px] tabular-nums">
+        {timeText(value)}
+      </strong>
+      <StepButton label={later} onClick={() => onNudge(edge, 5)}>
+        <Plus aria-hidden />
+      </StepButton>
+    </div>
+  );
+  return (
+    <div
+      data-timeline-panel
+      role="group"
+      aria-label={t("panelLabel")}
+      className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 flex flex-col gap-2.5 rounded-t-[18px] bg-card px-4 pt-2 pb-3 shadow-[0_-8px_30px_rgba(15,47,69,.18)]"
+    >
+      <div aria-hidden className="mx-auto h-1.5 w-10 rounded-full bg-border" />
+      <div className="flex items-center justify-between gap-1">
+        {step("start", entry.start, t("startEarlier"), t("startLater"))}
+        <span aria-hidden className="text-muted-foreground">
+          –
+        </span>
+        {step("end", entry.end, t("endEarlier"), t("endLater"))}
+      </div>
+      <div className="flex items-center gap-2">
+        <KindChip active={!isBreak} onClick={() => onKind("work")}>
+          {t("work")}
+        </KindChip>
+        <KindChip brk active={isBreak} onClick={() => onKind("break")}>
+          <Coffee className="size-[18px]" aria-hidden />
+          {t("break")}
+        </KindChip>
+        <button
+          type="button"
+          aria-label={t("close")}
+          onClick={onClose}
+          className="ml-auto flex size-11 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground"
+        >
+          <X aria-hidden className="size-5" />
+        </button>
+      </div>
+      <div className="flex items-center justify-between">
+        <span className="min-w-0 truncate text-sm font-semibold text-muted-foreground">
+          {t("duration", { duration: formatMinutes(entry.end - entry.start) })}
+          {!isBreak && ` · ${label}`}
+        </span>
+        <button
+          type="button"
+          onClick={onDelete}
+          className="h-11 shrink-0 px-2 text-sm font-semibold whitespace-nowrap text-[#8a4205]"
+        >
+          {t("delete")}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function StepButton({
+  label,
+  onClick,
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      onClick={onClick}
+      className="flex size-11 items-center justify-center rounded-xl border border-border bg-card text-foreground [&_svg]:size-5"
+    >
+      {children}
+    </button>
+  );
+}
+
+function KindChip({
+  active,
+  brk,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  brk?: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      className={cn(
+        "flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-3.5 text-sm font-semibold",
+        brk
+          ? active
+            ? "border-[#8a4205] bg-[#8a4205] text-white"
+            : "border-[#f0c48e] bg-[#fff4e6] text-[#7a3a05]"
+          : active
+            ? "border-foreground bg-foreground text-background"
+            : "border-border bg-card text-foreground",
+      )}
+    >
+      {children}
+    </button>
+  );
+}

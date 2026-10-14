@@ -76,6 +76,8 @@ export type TimelineJob = {
   customerName: string | null;
   siteName: string | null;
   color: string;
+  /** Open and not archived; closed jobs are listed only because the day uses them. */
+  active: boolean;
 };
 
 export type TimelineEntryView = TimelineEntry & { source: "self" | "manager" };
@@ -316,6 +318,7 @@ export async function getTimelineDay(
       customerName: j.customerName,
       siteName: j.siteName,
       color: jobColor(j),
+      active: j.status === "active" && !j.archivedAt,
     })),
     workTypes: state.workTypes
       .filter((w) => !w.archivedAt)

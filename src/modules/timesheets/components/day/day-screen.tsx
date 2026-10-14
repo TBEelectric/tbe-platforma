@@ -12,12 +12,15 @@ import { addDays } from "@/lib/dates";
 import { formatMinutes } from "@/lib/duration";
 import { cn } from "@/lib/utils";
 import type { DayView } from "../../day";
+import type { TimelineDay } from "../../timeline";
 import { DayEntries } from "./day-entries";
 import { DayTimeline } from "./day-timeline";
+import { MobileTimeline } from "./mobile-timeline";
 
 /** Můj den (docs/design/screens/02-muj-den, 06-mobil-den). */
 export function DayScreen({
   view,
+  timeline,
   hrefFor,
   title,
   forSomeoneElse,
@@ -25,6 +28,8 @@ export function DayScreen({
   ownDayHref,
 }: {
   view: DayView;
+  /** The same day for the interactive phone timeline. */
+  timeline: TimelineDay;
   /** Link to another day (keeps e.g. the selected employee). */
   hrefFor: (date: string) => string;
   title: string;
@@ -278,6 +283,12 @@ export function DayScreen({
             <DayTimeline date={view.date} entries={view.entries} />
           </div>
           <div className="hidden lg:block">{banners}</div>
+          <MobileTimeline
+            key={`${view.employee.id}-${view.date}`}
+            day={timeline}
+            employeeId={view.employee.id}
+            needsReason={forSomeoneElse}
+          />
           <DayEntries view={view} needsReason={forSomeoneElse} />
         </section>
 

@@ -5,7 +5,6 @@ import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { formatMinutes } from "@/lib/duration";
 import { cn } from "@/lib/utils";
 import type { DayEntryView, DayView } from "../../day";
@@ -42,21 +41,16 @@ const timeRange = (e: DayEntryView) =>
   `${e.from}–${e.to}${e.overnight ? " (+1)" : ""}`;
 
 /**
- * Intervals of the day: a table with the add/edit form on desktop, cards with a bottom sheet and
- * "continue from …" on phones.
+ * Intervals of the day on desktop: a table with the add/edit form. Phones use the vertical
+ * timeline instead (mobile-timeline.tsx).
  */
 export function DayEntries({ view, needsReason }: Props) {
   const t = useTranslations("timesheets.entries");
   const [editing, setEditing] = useState<DayEntryView | null>(null);
   const [formKey, setFormKey] = useState(0);
-  const [sheet, setSheet] = useState<{
-    entry?: DayEntryView;
-    defaults?: EntryDefaults;
-  } | null>(null);
 
   const done = useCallback(() => {
     setEditing(null);
-    setSheet(null);
     setFormKey((k) => k + 1);
   }, []);
 
@@ -64,14 +58,6 @@ export function DayEntries({ view, needsReason }: Props) {
   const continueDefaults: EntryDefaults | undefined = next
     ? { from: next.from, jobId: next.jobId, workTypeId: next.workTypeId }
     : undefined;
-  const nextLabel = next
-    ? [
-        view.jobs.find((j) => j.id === next.jobId)?.label,
-        view.workTypes.find((w) => w.id === next.workTypeId)?.name,
-      ]
-        .filter(Boolean)
-        .join(" · ")
-    : "";
 
   return (
     <>
@@ -194,132 +180,6 @@ export function DayEntries({ view, needsReason }: Props) {
           </div>
         )}
       </div>
-
-      {/* Phone */}
-      <div className="flex flex-col gap-2 lg:hidden">
-        {view.entries.length === 0 && (
-          <p className="rounded-xl border border-border bg-card px-4 py-5 text-[15px] text-muted-foreground">
-            {t("empty")}
-          </p>
-        )}
-        {view.entries.map((e) =>
-          e.kind === "break" ? (
-            <button
-              key={e.id}
-              type="button"
-              disabled={view.locked}
-              onClick={() => setSheet({ entry: e })}
-              className="flex min-h-11 items-center justify-between rounded-lg bg-neutral px-4 text-left text-sm text-neutral-foreground"
-            >
-              <span>
-                {t("break")} {timeRange(e)}
-              </span>
-              <span className="tabular-nums">{formatMinutes(e.minutes)}</span>
-            </button>
-          ) : (
-            <button
-              key={e.id}
-              type="button"
-              disabled={view.locked}
-              onClick={() => setSheet({ entry: e })}
-              className="flex items-center gap-3 rounded-xl border border-border bg-card p-3.5 text-left"
-            >
-              <span
-                aria-hidden
-                className="w-1 self-stretch rounded-full"
-                style={{ background: e.color }}
-              />
-              <span className="flex w-12 shrink-0 flex-col text-[15px] font-semibold tabular-nums">
-                {e.from}
-                <span className="font-normal text-muted-foreground">
-                  {e.to}
-                </span>
-              </span>
-              <span className="flex min-w-0 flex-1 flex-col gap-1.5">
-                <span className="text-base leading-snug font-semibold">
-                  {e.jobLabel ?? t("noJob")}
-                </span>
-                <span className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                  {workTypeBadge(e)}
-                  {e.note}
-                </span>
-              </span>
-              <span className="text-lg font-bold tabular-nums">
-                {formatMinutes(e.minutes)}
-              </span>
-            </button>
-          ),
-        )}
-
-        {view.locked ? (
-          <LockedNotice />
-        ) : (
-          <>
-            {/* Space for the fixed action bar. */}
-            <div className="h-20" aria-hidden />
-            <div className="fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-30 flex gap-3 border-t border-border bg-card px-4 py-3">
-              {next ? (
-                <Button
-                  size="lg"
-                  className="h-auto min-h-12 flex-1 flex-col gap-0 py-1.5"
-                  onClick={() => setSheet({ defaults: continueDefaults })}
-                >
-                  <span>{t("continueFrom", { from: next.from })}</span>
-                  {nextLabel && (
-                    <span className="text-[13px] font-normal opacity-90">
-                      {nextLabel}
-                    </span>
-                  )}
-                </Button>
-              ) : (
-                <Button
-                  size="lg"
-                  className="flex-1"
-                  onClick={() => setSheet({})}
-                >
-                  {t("addEntry")}
-                </Button>
-              )}
-              {next && (
-                <Button
-                  size="lg"
-                  variant="outline"
-                  onClick={() => setSheet({})}
-                >
-                  {t("otherEntry")}
-                </Button>
-              )}
-            </div>
-          </>
-        )}
-      </div>
-
-      <Sheet
-        open={sheet !== null}
-        onOpenChange={(open) => !open && setSheet(null)}
-      >
-        <SheetContent
-          side="bottom"
-          className="max-h-[90dvh] gap-3 overflow-y-auto rounded-t-2xl px-4 pt-5 pb-[calc(1rem+env(safe-area-inset-bottom))]"
-        >
-          <SheetTitle className="text-lg font-bold">
-            {sheet?.entry
-              ? t("editEntry", { range: timeRange(sheet.entry) })
-              : t("addEntry")}
-          </SheetTitle>
-          {sheet && (
-            <EntryForm
-              key={`sheet-${formKey}`}
-              view={view}
-              entry={sheet.entry}
-              defaults={sheet.defaults}
-              needsReason={needsReason}
-              compact
-              onDone={done}
-            />
-          )}
-        </SheetContent>
-      </Sheet>
     </>
   );
 }
