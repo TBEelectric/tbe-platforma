@@ -3,6 +3,7 @@
 import { Coffee, Lock, Minus, Plus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -28,7 +29,6 @@ import {
   HOLD_MS,
   hourMarks,
   isNightEntry,
-  jobChipIds,
   localAdjust,
   localSetRange,
   minuteAtOffset,
@@ -45,7 +45,6 @@ import {
   type CreateStart,
   type TimelineEntry,
 } from "../../shared";
-import { pinTeamJobAction } from "../../timeline-actions";
 import { JobPickerScreen } from "./job-picker-screen";
 import { NightToggle } from "./night-toggle";
 import { TemplateSave } from "./template-save";
@@ -176,10 +175,15 @@ export function MobileTimeline({
     return () => document.removeEventListener("pointerdown", onDown);
   }, [selectedId, select]);
 
-  const offsetY = (clientY: number) =>
-    clientY - colRef.current!.getBoundingClientRect().top;
-  const minuteAtY = (clientY: number, step: number) =>
-    minuteAtOffset(offsetY(clientY), step, live.current.range);
+  const minuteAtY = useCallback(
+    (clientY: number, step: number) =>
+      minuteAtOffset(
+        clientY - colRef.current!.getBoundingClientRect().top,
+        step,
+        live.current.range,
+      ),
+    [],
+  );
 
   // Window listeners: set once, they act only while a gesture started on the axis is running.
   useEffect(() => {
@@ -312,7 +316,7 @@ export function MobileTimeline({
       window.removeEventListener("pointerup", onUp);
       window.removeEventListener("pointercancel", onCancel);
     };
-  }, []);
+  }, [minuteAtY]);
 
   function onPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
     if (gesture.current || event.button > 0) return;
@@ -398,25 +402,7 @@ export function MobileTimeline({
   };
 
   const activeJobs = day.jobs.filter((j) => j.active);
-  const chips = selected
-    ? jobChipIds({
-        recentIds: day.recentJobIds,
-        currentJobId: selected.kind === "work" ? selected.jobId : null,
-        teamJobIds: day.teamJobIds,
-        activeJobIds: activeJobs.map((j) => j.id),
-      })
-        .map((id) => jobsById.get(id))
-        .filter((j) => j !== undefined)
-    : [];
-
-  async function togglePin(jobId: string, pinned: boolean) {
-    try {
-      const next = await pinTeamJobAction(employeeId, day.date, jobId, pinned);
-      if (next) tl.setTeamJobIds(next.teamJobIds);
-    } catch {
-      setMessage({ text: "saveFailed" });
-    }
-  }
+  const chips = selected ? tl.chipsFor(selected) : [];
 
   const canFill = !readOnly && entries.length === 0;
 
@@ -424,7 +410,7 @@ export function MobileTimeline({
     <div
       data-timeline-root
       role="region"
-      className="flex flex-col gap-3 lg:hidden"
+      className="flex flex-col gap-3"
       aria-label={t("timesheets.timeline.axisLabel")}
     >
       {needsReason && !readOnly && (
@@ -676,7 +662,7 @@ export function MobileTimeline({
             tl.setJob(id);
             setPicking(false);
           }}
-          onTogglePin={togglePin}
+          onTogglePin={tl.togglePin}
           onClose={() => setPicking(false)}
         />
       )}

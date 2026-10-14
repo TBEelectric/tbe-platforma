@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { jobLabel } from "@/modules/core/shared";
-import type { TimelineDay } from "../../timeline";
+import type { TimelineDay, TimelineJob } from "../../timeline";
 import {
   loadTimelineDayAction,
+  pinTeamJobAction,
   timelineAction,
   type TimelineActionInput,
 } from "../../timeline-actions";
@@ -289,9 +290,45 @@ export function useTimeline({
     enqueue((resolve) => ({ type: "delete", id: resolve(id) }));
   }, [enqueue, entries, selectedId]);
 
+  /** Quick buttons of an entry: the last used jobs plus its own (see `jobChipIds`). */
+  const chipsFor = useCallback(
+    (entry: TimelineEntry): TimelineJob[] => {
+      const byId = new Map(day.jobs.map((j) => [j.id, j]));
+      return jobChipIds({
+        recentIds: day.recentJobIds,
+        currentJobId: entry.kind === "work" ? entry.jobId : null,
+        teamJobIds: day.teamJobIds,
+        activeJobIds: day.jobs.filter((j) => j.active).map((j) => j.id),
+      })
+        .map((id) => byId.get(id))
+        .filter((j) => j !== undefined);
+    },
+    [day],
+  );
+
+  /** Pin / unpin a job for the whole team (team lead); only the lists are replaced. */
+  const togglePin = useCallback(
+    async (jobId: string, pinned: boolean) => {
+      try {
+        const next = await pinTeamJobAction(
+          employeeId,
+          initial.date,
+          jobId,
+          pinned,
+        );
+        if (next) setDay((d) => ({ ...d, teamJobIds: next.teamJobIds }));
+      } catch {
+        setMessage({ text: "saveFailed" });
+      }
+    },
+    [employeeId, initial.date],
+  );
+
   return {
     day,
     entries,
+    chipsFor,
+    togglePin,
     setEntries,
     selectedId,
     select: setSelectedId,
@@ -308,9 +345,6 @@ export function useTimeline({
     fill,
     setOwnTemplate: (items: DayTemplateItem[]) =>
       setDay((d) => ({ ...d, template: { items, source: "own" } })),
-    /** Team jobs changed (pin): only the lists are replaced, never the entries being saved. */
-    setTeamJobIds: (teamJobIds: string[]) =>
-      setDay((d) => ({ ...d, teamJobIds })),
     remove,
     createLocal: (id: string, range: AxisRange) =>
       setEntries((list) =>

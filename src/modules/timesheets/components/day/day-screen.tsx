@@ -13,9 +13,7 @@ import { formatMinutes } from "@/lib/duration";
 import { cn } from "@/lib/utils";
 import type { DayView } from "../../day";
 import type { TimelineDay } from "../../timeline";
-import { DayEntries } from "./day-entries";
-import { DayTimeline } from "./day-timeline";
-import { MobileTimeline } from "./mobile-timeline";
+import { ResponsiveTimeline } from "./responsive-timeline";
 
 /** Můj den (docs/design/screens/02-muj-den, 06-mobil-den). */
 export function DayScreen({
@@ -279,17 +277,13 @@ export function DayScreen({
               {statusText}
             </Badge>
           </div>
-          <div className="hidden lg:block">
-            <DayTimeline date={view.date} entries={view.entries} />
-          </div>
           <div className="hidden lg:block">{banners}</div>
-          <MobileTimeline
+          <ResponsiveTimeline
             key={`${view.employee.id}-${view.date}`}
             day={timeline}
             employeeId={view.employee.id}
             needsReason={forSomeoneElse}
           />
-          <DayEntries view={view} needsReason={forSomeoneElse} />
         </section>
 
         <aside className="hidden flex-col gap-5 lg:flex">
