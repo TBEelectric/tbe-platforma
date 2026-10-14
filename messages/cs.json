@@ -135,9 +135,6 @@
       "cancelMonthLocked": "Měsíc je potvrzený nebo uzavřený, absenci nelze zrušit."
     },
     "messages": {
-      "entryAdded": "Interval přidán.",
-      "entrySaved": "Interval uložen.",
-      "entryDeleted": "Interval smazán.",
       "absenceRequested": "Žádost odeslána ke schválení.",
       "absenceRecorded": "Absence zapsána a schválena.",
       "approved": "Schváleno.",
@@ -266,35 +263,7 @@
       "showMonth": "Zobrazit můj měsíc"
     },
     "entries": {
-      "noJob": "Bez zakázky",
-      "from": "Od",
-      "to": "Do",
-      "job": "Zakázka",
-      "workType": "Druh práce",
-      "note": "Poznámka",
-      "duration": "Doba",
-      "actions": "Akce",
-      "break": "Přestávka",
-      "writtenByManager": "zapsáno za zaměstnance",
-      "edit": "Upravit",
-      "empty": "Tento den zatím nemá žádný interval.",
-      "editEntry": "Upravit interval {range}",
-      "addEntry": "Přidat interval",
-      "prefillHint": "Začátek se předvyplní koncem posledního intervalu, zakázka a druh práce posledním zápisem.",
-      "continueFrom": "Pokračovat od {from}",
-      "otherEntry": "Jiný zápis",
-      "kind": "Typ",
-      "work": "Práce",
-      "chooseJob": "Vyberte zakázku",
-      "optional": "Volitelné",
-      "reason": "Důvod zápisu za zaměstnance",
-      "reasonHint": "Povinné, uloží se do historie změn.",
-      "confirmDelete": "Smazat interval? Zůstane v historii změn.",
-      "delete": "Smazat",
-      "cancel": "Zrušit",
-      "save": "Uložit",
-      "add": "Přidat",
-      "choose": "Vyberte"
+      "noJob": "Bez zakázky"
     },
     "timeline": {
       "axisLabel": "Časová osa dne",
@@ -344,8 +313,7 @@
         "searchJob": "Hledat zakázku",
         "done": "Hotovo",
         "nowMark": "teď {time}",
-        "intervals": "Seznam intervalů",
-        "noJob": "Bez zakázky"
+        "intervals": "Seznam intervalů"
       },
       "picker": {
         "title": "Výběr zakázky",

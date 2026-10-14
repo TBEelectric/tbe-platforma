@@ -14,6 +14,12 @@ body{margin:0;background:#f3f5f8;font-family:'Figtree',system-ui,sans-serif;colo
 .ib{width:44px;height:44px;border:0;border-radius:10px;background:rgba(255,255,255,.1);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .col{position:relative;margin-left:52px;margin-right:12px;user-select:none;touch-action:none;cursor:crosshair}
 .hr{position:absolute;left:-52px;right:0;border-top:1px solid #dfe5ec;height:0;pointer-events:none}
+.arw{position:absolute;left:-52px;width:44px;height:30px;border:0;background:transparent;color:#5b6877;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2}
+.arw:hover{color:#0e7c72}
+.arw svg{width:18px;height:18px}
+.nnote{font-size:13px;color:#244f8f;background:#e6eef9;border-radius:8px;padding:6px 10px}
+.night{position:absolute;left:-52px;right:0;background:rgba(58,104,168,.07);pointer-events:none}
+.nightlbl{position:absolute;right:4px;font-size:11px;font-weight:700;color:#3a68a8;opacity:.8}
 .hr.half{left:0;border-top:1px dashed #e9edf2}
 .hrl{position:absolute;left:4px;top:-9px;width:42px;text-align:right;font-size:12px;font-weight:600;color:#5b6877;font-variant-numeric:tabular-nums;background:#f3f5f8;padding-right:4px;box-sizing:border-box}
 .blk{position:absolute;left:0;right:0;border-radius:10px;box-sizing:border-box;cursor:grab;overflow:hidden;display:flex;flex-direction:column}
@@ -84,8 +90,12 @@ body{margin:0;background:#f3f5f8;font-family:'Figtree',system-ui,sans-serif;colo
 <sc-if value="{{hasMsg}}" hint-placeholder-val="{{ false }}">
 <div style="margin: 8px 16px 0; background: #fdf0e1; color: #6e3604; border-radius: 10px; padding: 8px 12px; font-size: 14px">{{msg}}</div>
 </sc-if>
-<div style="flex: 1; overflow-y: auto; padding: 18px 0 {{bottomPad}}px" onPointerDown="{{outsideDown}}">
+<div style="flex: 1; overflow-y: auto; padding: 44px 0 {{bottomPad}}px" onPointerDown="{{outsideDown}}" ref="{{scrollRef}}">
 <div class="col" style="height: {{colHeight}}px" data-col="1" onPointerDown="{{colDown}}">
+<sc-if value="{{showTopTog}}" hint-placeholder-val="{{ true }}"><button class="arw" style="top: -40px" aria-label="{{topTogLabel}}" title="{{topTogLabel}}" onPointerDown="{{stopDown}}" onClick="{{toggleTop}}"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="{{topChevron}}"></path></svg></button></sc-if>
+<sc-if value="{{showBotTog}}" hint-placeholder-val="{{ true }}"><button class="arw" style="bottom: -40px" aria-label="{{botTogLabel}}" title="{{botTogLabel}}" onPointerDown="{{stopDown}}" onClick="{{toggleBot}}"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="{{botChevron}}"></path></svg></button></sc-if>
+<div class="night" style="top: 0px; height: {{nightA}}px"></div>
+<div class="night" style="top: {{nightBTop}}px; height: {{nightBH}}px"></div>
 <sc-for list="{{halves}}" as="h" hint-placeholder-count="13">
 <div class="hr half" style="top: {{h.top}}px"></div>
 </sc-for>
@@ -139,6 +149,7 @@ body{margin:0;background:#f3f5f8;font-family:'Figtree',system-ui,sans-serif;colo
 <sc-for list="{{wtChips}}" as="w" hint-placeholder-count="4"><button class="{{w.cls}}" onClick="{{w.pick}}">{{w.label}}</button></sc-for>
 </div>
 </sc-if>
+<sc-if value="{{selNight}}" hint-placeholder-val="{{ false }}"><div class="nnote">Noční práce – zkontrolujte čas.</div></sc-if>
 <div style="display: flex; justify-content: space-between; align-items: center"><span style="font-size: 14px; color: #5b6877; font-weight: 600">{{selDur}}</span><button class="del" onClick="{{deleteSel}}">Smazat interval</button></div>
 </div>
 </sc-if>
@@ -170,7 +181,7 @@ body{margin:0;background:#f3f5f8;font-family:'Figtree',system-ui,sans-serif;colo
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
-const DS = 360, DE = 1140, SPAN = DE - DS, PXH = 56, DRAG = 15, FINE = 5;
+const DAY_FROM = 300, DAY_TO = 1440, NIGHT_FROM = 0, NIGHT_TO = 1800, PXH = 56, DRAG = 15, FINE = 5;
 const PAL = ['#0e7c72', '#3a68a8', '#7a4fb5', '#b45309', '#0f766e', '#be185d', '#4d7c0f', '#1d4ed8'];
 const RAW = [['250147', 'Rozvaděče hala A', 'Strojírny Vysočina s.r.o.', 'Jihlava, hala A'], ['250162', 'Elektroinstalace kanceláře', 'Kancelářský dům Na Poříčí a.s.', 'Praha 1, Na Poříčí 12'], ['250201', 'Servis technologie', 'Pekárna Zlatý klas s.r.o.', 'Kolín, pekárna'], ['250215', 'Revize hromosvodu – sklad', 'Logistika Brod s.r.o.', 'Český Brod, sklad 3'], ['250230', 'Fotovoltaika RD', 'Novotný Josef', 'Kolín, Polepská 8'], ['250244', 'Přípojka NN – dílna', 'Strojírny Vysočina s.r.o.', 'Jihlava, dílna'], ['250251', 'Osvětlení haly B', 'Strojírny Vysočina s.r.o.', 'Jihlava, hala B'], ['250258', 'Rekonstrukce rozvodny', 'Město Úvaly', 'Úvaly, náměstí'], ['250263', 'Datové rozvody 2. NP', 'Kancelářský dům Na Poříčí a.s.', 'Praha 1, Na Poříčí 12'], ['250270', 'Revize elektro', 'MŠ Sluníčko', 'Říčany, MŠ Sluníčko'], ['250277', 'Wallboxy parkoviště', 'Logistika Brod s.r.o.', 'Český Brod, parkoviště'], ['250284', 'Servis UPS', 'Nemocnice Kolín', 'Kolín, nemocnice'], ['250291', 'Hromosvod RD', 'Dvořáková Marie', 'Říčany, Lipová 5'], ['250298', 'Nouzové osvětlení', 'Pekárna Zlatý klas s.r.o.', 'Kolín, pekárna']];
 const JOBS = RAW.map((r, i) => [r[0], r[1], PAL[i % PAL.length], r[2], r[3]]);
@@ -192,7 +203,7 @@ class Component extends DCLogic {
 constructor(props) {
 super(props);
 this.state = {
-day: 1, sel: null, msg: '', picker: false, q: '', confirmUsual: false, usual: null, team: ['250147', '250201', '250251'],
+day: 1, sel: null, msg: '', picker: false, q: '', confirmUsual: false, usual: null, nightTop: false, nightBot: false, team: ['250147', '250201', '250251'],
 d12: [
 { id: 1, s: 420, e: 600, kind: 'work', job: '250147', wt: 'Montáž' },
 { id: 2, s: 600, e: 630, kind: 'break' },
@@ -205,18 +216,32 @@ this.drag = null;
 this.onMove = this.onMove.bind(this);
 this.onUp = this.onUp.bind(this);
 }
-componentDidMount() { window.addEventListener('pointermove', this.onMove); window.addEventListener('pointerup', this.onUp); }
+componentDidMount() { window.addEventListener('pointermove', this.onMove); window.addEventListener('pointerup', this.onUp); this.scrollToWork(); }
+componentDidUpdate(prev, prevState) {
+if (prevState.day !== this.state.day) { this.scrollToWork(); return; }
+if (this.shift && this.scrollEl) { this.scrollEl.scrollTop += this.shift; }
+this.shift = 0;
+}
+scrollToWork() {
+const el = this.scrollEl; if (!el) return;
+const list = this.list();
+const first = list.length ? list[0].s : 360;
+el.scrollTop = Math.max(0, (first - 30 - this.range().ds) * PXH / 60);
+}
 componentWillUnmount() { window.removeEventListener('pointermove', this.onMove); window.removeEventListener('pointerup', this.onUp); }
 key() { return DAYS[this.state.day].key; }
+topOpen() { return this.state.nightTop || this.list().some((e) => e.s < DAY_FROM); }
+botOpen() { return this.state.nightBot || this.list().some((e) => e.e > DAY_TO); }
+range() { const ds = this.topOpen() ? NIGHT_FROM : DAY_FROM, de = this.botOpen() ? NIGHT_TO : DAY_TO; return { ds, de, span: de - ds }; }
 list() { return this.state[this.key()]; }
 save(list, extra) { this.setState(Object.assign({ [this.key()]: list.slice().sort((a, b) => a.s - b.s), msg: '' }, extra || {})); }
-minAt(y, rect, step) { return clamp(Math.round((DS + (y - rect.top) / rect.height * SPAN) / step) * step, DS, DE); }
+minAt(y, rect, step) { const r = this.range(); return clamp(Math.round((r.ds + (y - rect.top) / rect.height * r.span) / step) * step, r.ds, r.de); }
 lastJob() { const w = this.list().filter((e) => e.kind === 'work'); return w.length ? w[w.length - 1].job : '250147'; }
 bounds(id, s, e) {
 const others = this.list().filter((x) => x.id !== id);
 return {
-prevEnd: Math.max(DS, ...others.filter((x) => x.e <= s).map((x) => x.e)),
-nextStart: Math.min(DE, ...others.filter((x) => x.s >= e).map((x) => x.s))
+prevEnd: Math.max(this.range().ds, ...others.filter((x) => x.e <= s).map((x) => x.e)),
+nextStart: Math.min(this.range().de, ...others.filter((x) => x.s >= e).map((x) => x.s))
 };
 }
 colDown(ev) {
@@ -256,7 +281,7 @@ else { s = clamp(cur, d.prevEnd, d.anchor - DRAG); e = d.anchor; }
 this.save(this.list().map((x) => (x.id === d.id ? Object.assign({}, x, { s, e }) : x)));
 return;
 }
-const delta = Math.round((ev.clientY - d.y) / d.rect.height * SPAN / DRAG) * DRAG;
+const delta = Math.round((ev.clientY - d.y) / d.rect.height * this.range().span / DRAG) * DRAG;
 const b = this.bounds(d.id, d.s, d.e);
 let s = d.s, e = d.e;
 const patch = {};
@@ -306,6 +331,9 @@ fill(entries) { this.save(entries.map((e) => Object.assign({}, e, { id: uid++ })
 renderVals() {
 const st = this.state, list = this.list();
 const pxPerMin = PXH / 60;
+const R = this.range(), DS = R.ds;
+const topOpen = this.topOpen(), botOpen = this.botOpen();
+const topHasData = list.some((e) => e.s < DAY_FROM), botHasData = list.some((e) => e.e > DAY_TO);
 const blocks = list.map((e) => {
 const work = e.kind === 'work';
 const color = work ? job(e.job)[2] : BREAK;
@@ -322,8 +350,8 @@ downR: (ev) => this.startDrag(ev, e.id, 'r')
 };
 });
 const hours = [], halves = [];
-for (let h = 6; h <= 19; h++) hours.push({ top: ((h * 60 - DS) * pxPerMin).toFixed(1), label: h + ':00' });
-for (let h = 6; h < 19; h++) halves.push({ top: ((h * 60 + 30 - DS) * pxPerMin).toFixed(1) });
+for (let h = Math.ceil(R.ds / 60); h <= R.de / 60; h++) hours.push({ top: ((h * 60 - DS) * pxPerMin).toFixed(1), label: h < 24 ? h + ':00' : (h - 24) + ':00 +1' });
+for (let h = Math.ceil(R.ds / 60); h < R.de / 60; h++) halves.push({ top: ((h * 60 + 30 - DS) * pxPerMin).toFixed(1) });
 const work = list.filter((e) => e.kind === 'work').reduce((a, e) => a + e.e - e.s, 0);
 const brk = list.filter((e) => e.kind === 'break').reduce((a, e) => a + e.e - e.s, 0);
 const sel = list.find((e) => e.id === st.sel);
@@ -349,7 +377,7 @@ sections = [{ title: 'Naposledy použité', items: rec.map(row) }, { title: 'Zak
 }
 return {
 dayTitle: DAYS[st.day].title, daySub: st.day === 1 ? 'Doplňte včerejší den' : 'Vyplněno',
-prevDay: () => this.setState({ day: 0, sel: null, msg: '' }), nextDay: () => this.setState({ day: 1, sel: null, msg: '' }),
+prevDay: () => this.setState({ day: 0, sel: null, msg: '', nightTop: false, nightBot: false }), nextDay: () => this.setState({ day: 1, sel: null, msg: '', nightTop: false, nightBot: false }),
 workTotal: dur(work), breakTotal: dur(brk),
 span: list.length ? fmt(list[0].s) + ' – ' + fmt(list[list.length - 1].e) : '–',
 isEmpty: list.length === 0,
@@ -364,10 +392,19 @@ usualOverwrite: st.usual ? ' Váš dosavadní obvyklý den se přepíše.' : '',
 confirmUsual: st.confirmUsual,
 fillYesterday: () => this.fill(st.d12),
 hasMsg: !!st.msg, msg: st.msg,
-colHeight: SPAN * pxPerMin, colDown: (ev) => this.colDown(ev),
+colHeight: R.span * pxPerMin, colDown: (ev) => this.colDown(ev),
 outsideDown: () => { if (st.sel != null && !this.drag) this.setState({ sel: null }); },
-bottomPad: sel ? 260 : 24,
+bottomPad: sel ? 260 : 52,
 hours, halves, blocks,
+nightA: (Math.max(0, 360 - R.ds) * pxPerMin).toFixed(1), nightBTop: ((1320 - R.ds) * pxPerMin).toFixed(1), nightBH: ((R.de - 1320) * pxPerMin).toFixed(1),
+showTopTog: !topHasData, showBotTog: !botHasData,
+topChevron: topOpen ? 'M6 9l6 6 6-6' : 'M6 15l6-6 6 6', botChevron: botOpen ? 'M6 15l6-6 6 6' : 'M6 9l6 6 6-6',
+stopDown: (ev) => ev.stopPropagation(),
+topTogLabel: topOpen ? 'Skrýt noc 0:00–5:00' : 'Zobrazit noc 0:00–5:00', botTogLabel: botOpen ? 'Skrýt čas po půlnoci' : 'Zobrazit čas po půlnoci (do 6:00)',
+toggleTop: () => { this.shift = (topOpen ? -1 : 1) * (DAY_FROM - NIGHT_FROM) * pxPerMin; this.setState({ nightTop: !topOpen }); },
+toggleBot: () => this.setState({ nightBot: !botOpen }),
+selNight: !!sel && (sel.s < 360 || sel.e > 1320),
+scrollRef: (el) => { this.scrollEl = el; },
 hasSel: !!sel,
 selRange: sel ? fmt(sel.s) + '–' + fmt(sel.e) : '', selDur: sel ? dur(sel.e - sel.s) : '',
 selStart: sel ? fmt(sel.s) : '', selEnd: sel ? fmt(sel.e) : '',

@@ -138,12 +138,28 @@ hotových krocích před ním. Značky: `[ručně]` = skript krok nespustí, ud�
       Hotovo, když: celý mobilní zápis odpovídá prototypu (ověřeno v náhledu telefonu v prohlížeči).
       Výsledek: panel má přestávku, tlačítka zakázek a druhů práce; „Další zakázky…“ je celá obrazovka s hledáním a sekcemi, špendlík pro vedoucího (akce `pinTeamJobAction`); prázdný den má „Obvyklý den“ / „Jako včera“; „Uložit jako můj obvyklý den“ s potvrzením; den bez parametru se otevře na nejstarším nevyplněném dni. Špendlík jsem v náhledu neviděl (testovací účet nevede žádnou partu), ověřeno jen typově.
 
-- [ ] **3b.9 – Desktop: Můj den**
-      Obrazovka Můj den (≥ 1024 px) podle `Den.dc.html`: vodorovná osa nad stejnou logikou, přepínač
-      „Pracovní doba / Celý den“, čára „teď“, hover s časem, kartičky intervalů propojené s osou, panel vybraného intervalu
+- [x] **3b.9 – Desktop: Můj den**
+      Obrazovka Můj den (≥ 1024 px) podle `Den.dc.html`: vodorovná osa nad stejnou logikou, sbalená noc za
+      šipkou ve sloupci/řádku časů jako na mobilu (viz design.md „Rozsah osy a sbalená noc“), čára „teď“, hover s časem, kartičky intervalů propojené s osou, panel vybraného intervalu
       (−/+, Přestávka, naposledy použité zakázky, combobox zakázek se sekcemi a špendlíkem, druh práce jako tlačítka) místo
       starého formuláře, pravý sloupec (součty po zakázkách, kontroly, měsíční výkaz), ovládání klávesnicí (šipky ±5 min).
+      Sbalenou noc (šipka ve sloupci časů, automatické rozbalení podle dat, zachování pozice, poznámka
+      „Noční práce“) doplnit i do mobilní osy z 3b.6 – mobilní osa teď končí o půlnoci a noc neumí zobrazit.
       Hotovo, když: desktop odpovídá prototypu, starý formulář „Přidat interval“ je odstraněný.
+      Výsledek: Od 1024 px vybírá `ResponsiveTimeline` desktopovou osu (`desktop-timeline.tsx`), pod ním mobilní; obě
+      sdílejí `useTimeline` (stav, ukládání, tlačítka zakázek, špendlík), `useNight` + `NightToggle` (sbalená noc) a čisté
+      funkce v `rules/timeline-view.ts` (`nightState`, `shownRange`, `isNightEntry`, `nightBands`, 13 testů).
+      Desktop: vodorovná osa s krokem 5 min, čára „teď“, hover s časem, kartičky intervalů propojené s osou, panel
+      vybraného intervalu (−/+, Přestávka, tlačítka zakázek, combobox `job-combobox.tsx` se sekcemi a špendlíkem, druh
+      práce, Smazat / Hotovo), klávesnice (←/→ = konec ±5 min, Shift+←/→ = začátek, Esc zruší výběr). Šipka noci je vedle
+      osy (vlevo/vpravo; na mobilu nad 5:00 a pod 24:00), noc s daty se rozbalí sama, poznámka „Noční práce“ v panelu;
+      na mobilu se při rozbalení nahoře zachová pozice 5:00. Smazáno: starý formulář a tabulka (`day-entries`,
+      `entry-form`, `day-timeline`), akce `create/update/deleteTimeEntryAction`, `rules/forms`, `continueFrom`, služby
+      v `time-entries.ts` a texty `timesheets.entries.*`. Rozhodl jsem sám: panel je pod osou vedle kartiček od 1280 px
+      (užší okno ho dá nad kartičky); důvod zápisu za jiného je pole nad osou (jako na mobilu); příznak desktop/mobil
+      je JS (`matchMedia`), první vykreslení je mobil. NEOVĚŘENO v prohlížeči (přihlášení jen přes Google, nešlo se
+      přihlásit): vyzkoušet na desktopu kreslení tažením, okraje, posun, rozbalení noci šipkami, klávesy, combobox;
+      na mobilu nahoře/dole rozbalení noci a udržení pozice.
 
 - [ ] **3b.10 – Dokončení milníku** [zastavit po]
       Zamčený měsíc jen pro čtení na mobilu i desktopu, tablet (na výšku mobil, na šířku desktop), přístupnost (popisky,

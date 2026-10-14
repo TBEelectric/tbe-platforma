@@ -5,11 +5,7 @@ import { msg } from "@/i18n/messages";
 import { requirePermission, type CurrentUser } from "@/lib/current-user";
 import { handleFormAction } from "@/lib/form-action";
 import type { FormState } from "@/lib/form-state";
-import {
-  canManageEmployees,
-  leaveFormSchema,
-  type Actor,
-} from "../core/shared";
+import { canManageEmployees, leaveFormSchema } from "../core/shared";
 import { cancelAbsence, createAbsence, decideAbsence } from "./absences";
 import { setLeaveEntitlement } from "./leave";
 import {
@@ -20,84 +16,17 @@ import {
 import {
   canManageDayTemplates,
   canOpenAbsences,
-  canRecordOwnTime,
   canSaveOwnDayTemplate,
-  canWriteForSomeoneElse,
 } from "./permissions";
 import { absenceFormSchema, type AbsenceDecision } from "./rules/absence";
 import { dayTemplateFormSchema } from "./rules/day-template";
-import { timeEntryFormSchema } from "./rules/forms";
-import {
-  createTimeEntry,
-  deleteTimeEntry,
-  updateTimeEntry,
-} from "./time-entries";
 
 const DAY = "/timesheets/day";
-
-/** Coarse check; the service then checks the specific employee (own time, team, everyone). */
-const canWriteTime = (actor: Actor) =>
-  canRecordOwnTime(actor) || canWriteForSomeoneElse(actor);
 
 const writerOf = (user: CurrentUser) => ({
   userId: user.userId,
   actor: user.actor,
 });
-
-export async function createTimeEntryAction(
-  _prev: FormState,
-  formData: FormData,
-): Promise<FormState> {
-  return handleFormAction(
-    canWriteTime,
-    timeEntryFormSchema,
-    formData,
-    async (user, data) => {
-      await createTimeEntry(writerOf(user), data);
-      return msg("timesheets.messages.entryAdded");
-    },
-    DAY,
-  );
-}
-
-export async function updateTimeEntryAction(
-  id: string,
-  _prev: FormState,
-  formData: FormData,
-): Promise<FormState> {
-  return handleFormAction(
-    canWriteTime,
-    timeEntryFormSchema,
-    formData,
-    async (user, data) => {
-      await updateTimeEntry(writerOf(user), id, data);
-      return msg("timesheets.messages.entrySaved");
-    },
-    DAY,
-  );
-}
-
-const deleteSchema = timeEntryFormSchema.pick({
-  employeeId: true,
-  reason: true,
-});
-
-export async function deleteTimeEntryAction(
-  id: string,
-  _prev: FormState,
-  formData: FormData,
-): Promise<FormState> {
-  return handleFormAction(
-    canWriteTime,
-    deleteSchema,
-    formData,
-    async (user, data) => {
-      await deleteTimeEntry(writerOf(user), id, data.employeeId, data.reason);
-      return msg("timesheets.messages.entryDeleted");
-    },
-    DAY,
-  );
-}
 
 export async function setLeaveAction(
   employeeId: string,

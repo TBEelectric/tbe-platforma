@@ -40,6 +40,11 @@ a{color:#0b5f57}a:hover{color:#08463f}
 .hdl:hover{background:rgba(255,255,255,.55)}
 .seg.brk .hdl{background:rgba(138,66,5,.12)}
 .tick{position:absolute;top:0;bottom:0;width:1px;background:#e2e7ee}
+.night{position:absolute;top:0;bottom:0;background:rgba(58,104,168,.08);pointer-events:none}
+.arw{position:absolute;top:-4px;width:24px;height:24px;border:0;background:transparent;color:#5b6877;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.arw:hover{color:#0e7c72}
+.arw svg{width:18px;height:18px}
+.nnote{font-size:13px;color:#244f8f;background:#e6eef9;border-radius:8px;padding:6px 10px}
 .tick.half{background:#eceff3}
 .ticklbl{position:absolute;font-size:12px;font-weight:600;color:#5b6877;transform:translateX(-50%)}
 .now{position:absolute;top:-6px;bottom:-6px;width:2px;background:#c2410c;pointer-events:none}
@@ -114,8 +119,13 @@ a{color:#0b5f57}a:hover{color:#08463f}
 <span style="font-size: 13px; color: #5b6877">Táhnutím po ose nakreslete interval · klik do mezery ji vyplní · tažením okrajů upravíte</span>
 <span class="pill p-teal">Říjen otevřený</span>
 </div>
-<div style="padding-top: 22px">
+<div style="padding: 22px 30px 0; position: relative">
+<sc-if value="{{showTopTog}}" hint-placeholder-val="{{ true }}"><button class="arw" style="left: 3px; top: 42px" aria-label="{{topTogLabel}}" title="{{topTogLabel}}" onClick="{{toggleTop}}"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="{{leftChevron}}"></path></svg></button></sc-if>
+<sc-if value="{{showBotTog}}" hint-placeholder-val="{{ true }}"><button class="arw" style="right: 3px; top: 42px" aria-label="{{botTogLabel}}" title="{{botTogLabel}}" onClick="{{toggleBot}}"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="{{rightChevron}}"></path></svg></button></sc-if>
+
 <div class="track" data-track="1" onPointerDown="{{trackDown}}" onPointerMove="{{trackMove}}" onPointerLeave="{{trackLeave}}">
+<div class="night" style="left: 0%; width: {{nightAW}}%"></div>
+<div class="night" style="left: {{nightBL}}%; width: {{nightBW}}%"></div>
 <sc-for list="{{halves}}" as="t" hint-placeholder-count="13"><div class="tick half" style="left: {{t.left}}%"></div></sc-for>
 <sc-for list="{{ticks}}" as="t" hint-placeholder-count="14"><div class="tick" style="left: {{t.left}}%"></div></sc-for>
 <sc-for list="{{segs}}" as="s" hint-placeholder-count="4">
@@ -166,6 +176,7 @@ a{color:#0b5f57}a:hover{color:#08463f}
 <div class="step"><button aria-label="Konec o 5 minut dříve" onClick="{{endMinus}}">−</button><strong>{{selEnd}}</strong><button aria-label="Konec o 5 minut později" onClick="{{endPlus}}">+</button></div>
 <span style="margin-left: auto; font-weight: 600; color: #5b6877">{{selDur}}</span>
 </div>
+<sc-if value="{{selNight}}" hint-placeholder-val="{{ false }}"><div class="nnote">Noční práce – zkontrolujte čas.</div></sc-if>
 <div style="display: flex; flex-direction: column; gap: 8px">
 <span class="lab">Zakázka nebo přestávka</span>
 <div class="chips">
@@ -226,7 +237,7 @@ a{color:#0b5f57}a:hover{color:#08463f}
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1080}}'>
-const DS = 360, DE = 1140, SPAN = DE - DS, STEP = 5;
+const DAY_FROM = 300, DAY_TO = 1440, NIGHT_FROM = 0, NIGHT_TO = 1800, STEP = 5;
 const PAL = ['#0e7c72', '#3a68a8', '#7a4fb5', '#b45309', '#0f766e', '#be185d', '#4d7c0f', '#1d4ed8'];
 const RAW = [['250147', 'Rozvaděče hala A', 'Strojírny Vysočina s.r.o.', 'Jihlava, hala A'], ['250162', 'Elektroinstalace kanceláře', 'Kancelářský dům Na Poříčí a.s.', 'Praha 1, Na Poříčí 12'], ['250201', 'Servis technologie', 'Pekárna Zlatý klas s.r.o.', 'Kolín, pekárna'], ['250215', 'Revize hromosvodu – sklad', 'Logistika Brod s.r.o.', 'Český Brod, sklad 3'], ['250230', 'Fotovoltaika RD', 'Novotný Josef', 'Kolín, Polepská 8'], ['250244', 'Přípojka NN – dílna', 'Strojírny Vysočina s.r.o.', 'Jihlava, dílna'], ['250251', 'Osvětlení haly B', 'Strojírny Vysočina s.r.o.', 'Jihlava, hala B'], ['250258', 'Rekonstrukce rozvodny', 'Město Úvaly', 'Úvaly, náměstí'], ['250263', 'Datové rozvody 2. NP', 'Kancelářský dům Na Poříčí a.s.', 'Praha 1, Na Poříčí 12'], ['250270', 'Revize elektro', 'MŠ Sluníčko', 'Říčany, MŠ Sluníčko'], ['250277', 'Wallboxy parkoviště', 'Logistika Brod s.r.o.', 'Český Brod, parkoviště'], ['250284', 'Servis UPS', 'Nemocnice Kolín', 'Kolín, nemocnice'], ['250291', 'Hromosvod RD', 'Dvořáková Marie', 'Říčany, Lipová 5'], ['250298', 'Nouzové osvětlení', 'Pekárna Zlatý klas s.r.o.', 'Kolín, pekárna']];
 const JOBS = RAW.map((r, i) => [r[0], r[1], PAL[i % PAL.length], r[2], r[3]]);
@@ -248,7 +259,7 @@ class Component extends DCLogic {
 constructor(props) {
 super(props);
 this.state = {
-now: 990, hover: null, sel: null, msg: '', q: '', comboOpen: false,
+now: 990, hover: null, sel: null, msg: '', q: '', comboOpen: false, nightTop: false, nightBot: false,
 day: [
 { id: 1, s: 390, e: 495, kind: 'work', job: '250147', wt: 'Montáž' },
 { id: 2, s: 495, e: 510, kind: 'break' },
@@ -266,11 +277,14 @@ componentWillUnmount() { window.removeEventListener('pointermove', this.onMove);
 list() { return this.state.day; }
 save(list, extra) { this.setState(Object.assign({ day: list.slice().sort((a, b) => a.s - b.s), msg: '' }, extra || {})); }
 maxEnd() { return this.state.now; }
-minAt(x, rect) { return clamp(snap(DS + (x - rect.left) / rect.width * SPAN), DS, DE); }
+topOpen() { return this.state.nightTop || this.list().some((e) => e.s < DAY_FROM); }
+botOpen() { return this.state.nightBot || this.list().some((e) => e.e > DAY_TO); }
+range() { const ds = this.topOpen() ? NIGHT_FROM : DAY_FROM, de = this.botOpen() ? NIGHT_TO : DAY_TO; return { ds, de, span: de - ds }; }
+minAt(x, rect) { const r = this.range(); return clamp(snap(r.ds + (x - rect.left) / rect.width * r.span), r.ds, r.de); }
 lastJob() { const w = this.list().filter((e) => e.kind === 'work'); return w.length ? w[w.length - 1].job : '250147'; }
 bounds(id, s, e) {
 const others = this.list().filter((x) => x.id !== id);
-return { prevEnd: Math.max(DS, ...others.filter((x) => x.e <= s).map((x) => x.e)), nextStart: Math.min(this.maxEnd(), ...others.filter((x) => x.s >= e).map((x) => x.s)) };
+return { prevEnd: Math.max(this.range().ds, ...others.filter((x) => x.e <= s).map((x) => x.e)), nextStart: Math.min(this.maxEnd(), ...others.filter((x) => x.s >= e).map((x) => x.s)) };
 }
 trackDown(ev) {
 const rect = ev.currentTarget.getBoundingClientRect();
@@ -308,7 +322,7 @@ if (cur >= d.anchor) e = clamp(cur, d.anchor + STEP, d.limit); else { s = clamp(
 this.save(this.list().map((x) => (x.id === d.id ? Object.assign({}, x, { s, e }) : x)), { hover: cur });
 return;
 }
-const delta = snap((ev.clientX - d.x) / d.rect.width * SPAN);
+const delta = snap((ev.clientX - d.x) / d.rect.width * this.range().span);
 const b = this.bounds(d.id, d.s, d.e);
 let s = d.s, e = d.e;
 const patch = {};
@@ -348,7 +362,8 @@ this.save(list.map((y) => (patch[y.id] ? Object.assign({}, y, patch[y.id]) : y))
 }
 renderVals() {
 const st = this.state, list = this.list();
-const pct = (m) => ((m - DS) / SPAN) * 100;
+const R = this.range(), topOpen = this.topOpen(), botOpen = this.botOpen();
+const pct = (m) => ((m - R.ds) / R.span) * 100;
 const segs = list.map((e) => {
 const work = e.kind === 'work', j = work ? job(e.job) : null;
 let style = 'background-color: ' + (work ? j[2] : BREAK) + ';';
@@ -361,8 +376,8 @@ down: (ev) => this.startDrag(ev, e.id, 'move'), downL: (ev) => this.startDrag(ev
 };
 });
 const ticks = [], halves = [];
-for (let h = 6; h <= 19; h++) ticks.push({ left: pct(h * 60).toFixed(3), label: h + ':00' });
-for (let h = 6; h < 19; h++) halves.push({ left: pct(h * 60 + 30).toFixed(3) });
+for (let h = Math.ceil(R.ds / 60); h <= R.de / 60; h++) ticks.push({ left: pct(h * 60).toFixed(3), label: h < 24 ? h + ':00' : (h - 24) + ':00 +1' });
+for (let h = Math.ceil(R.ds / 60); h < R.de / 60; h++) halves.push({ left: pct(h * 60 + 30).toFixed(3) });
 const works = list.filter((e) => e.kind === 'work'), breaks = list.filter((e) => e.kind === 'break');
 const work = works.reduce((a, e) => a + e.e - e.s, 0);
 const brk = breaks.reduce((a, e) => a + e.e - e.s, 0);
@@ -393,6 +408,12 @@ const rest = JOBS.filter((j) => rec.indexOf(j) < 0 && team.indexOf(j) < 0).sort(
 sections = [{ title: 'Naposledy použité', items: rec.map(opt) }, { title: 'Zakázky party', items: team.map(opt) }, { title: 'Všechny aktivní', items: rest.map(opt) }].filter((x) => x.items.length);
 }
 return {
+nightAW: Math.max(0, pct(360)).toFixed(3), nightBL: pct(1320).toFixed(3), nightBW: Math.max(0, 100 - pct(1320)).toFixed(3),
+showTopTog: !list.some((e) => e.s < DAY_FROM), showBotTog: !list.some((e) => e.e > DAY_TO),
+leftChevron: topOpen ? 'M9 6l6 6-6 6' : 'M15 6l-6 6 6 6', rightChevron: botOpen ? 'M15 6l-6 6 6 6' : 'M9 6l6 6-6 6',
+topTogLabel: topOpen ? 'Skrýt noc 0:00–5:00' : 'Zobrazit noc 0:00–5:00', botTogLabel: botOpen ? 'Skrýt čas po půlnoci' : 'Zobrazit čas po půlnoci (do 6:00)',
+toggleTop: () => this.setState({ nightTop: !topOpen }), toggleBot: () => this.setState({ nightBot: !botOpen }),
+selNight: !!sel && (sel.s < 360 || sel.e > 1320),
 trackDown: (ev) => this.trackDown(ev), trackMove: (ev) => this.trackMove(ev), trackLeave: () => this.trackLeave(),
 ticks, halves, segs,
 nowLeft: pct(st.now).toFixed(3), nowText: fmt(st.now),

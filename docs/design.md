@@ -87,10 +87,19 @@ Pravý sloupec (součty, kontroly, stav měsíce) beze změny.
 **Mobil je primární zařízení** (montéři nemají počítač). Na mobilu je osa **svislá jako denní pohled kalendáře** –
 viz níže „Mobil – zápis dne na ose“. Desktopová vodorovná osa je pro vedoucí a kancelář.
 
-- **Rozsah osy (desktop):** přepínač **„Pracovní doba / Celý den“** vlevo nad osou. Pracovní doba = 6:00–19:00,
-  rozšíří se podle zapsaných intervalů; Celý den = 0:00 až 6:00 následujícího dne. Krok přichytávání **5 minut**.
-- **Noc a půlnoc (desktop i mobil):** osa pokračuje přes půlnoc do 6:00 dalšího dne (popisky „0:00 +1“); interval
-  přes půlnoc se kreslí jedním tahem a patří ke dni, kdy začal. Noční pásma 22:00–6:00 jsou jemně podbarvená.
+- **Rozsah osy a sbalená noc (desktop i mobil):** osa standardně ukazuje **5:00–24:00**. Noc je sbalená za
+  **jedinou šipkou** (bez ikony a bez textu; popis jen pro čtečky / tooltip), umístěnou **ve sloupci s časy, mimo plochu
+  pro kreslení**: nad popiskem 5:00 šipka nahoru = „Zobrazit noc 0:00–5:00“, pod popiskem 24:00 šipka dolů = „Zobrazit čas
+  po půlnoci (do 6:00)“. Po rozbalení se šipka otočí a slouží ke sbalení. Žádný řádek navíc, žádné místo navíc.
+  Pojistky: šipka není v ploše osy, klepnutí jen rozbalí/sbalí (nikdy nevytvoří interval, tažení z ní nic nekreslí),
+  po rozbalení noci nahoře se **zachová pozice** (5:00 zůstane na stejném místě displeje), prázdná noc se při přechodu
+  na jiný den sama sbalí. **Když den v noci něco má, je noc rozbalená automaticky a šipka se neukazuje.**
+  Na desktopu (vodorovná osa) stejně: šipka vlevo od osy (před 5:00, ←) a vpravo od osy (za 24:00, →), svisle
+  uprostřed osy, v okraji mimo plochu pro kreslení; po rozbalení se otočí.
+  Krok přichytávání 5 min (tažení na mobilu 15 min).
+- **Noc a půlnoc:** rozbalená osa končí v 6:00 dalšího dne (popisky „0:00 +1“); interval přes půlnoc se kreslí jedním
+  tahem a patří ke dni, kdy začal. Noční pásma 22:00–6:00 jsou jemně podbarvená; v panelu vybraného nočního intervalu
+  nenápadná poznámka „Noční práce – zkontrolujte čas“ (nic neblokuje).
 - **Hover:** svislá čára a štítek s časem pod kurzorem. Dnes je vidět i čára „teď“ s aktuálním časem.
 - **Tažení po prázdném místě nakreslí nový interval** od–do (hlavní způsob zápisu). Nový interval je hned vybraný,
   aby mu šla nastavit zakázka a druh práce; výchozí je poslední použitá zakázka.
@@ -119,10 +128,9 @@ viz níže „Mobil – zápis dne na ose“. Desktopová vodorovná osa je pro 
 
 Prototyp: artboard „Mobil – zápis dne na ose“. Nahrazuje dosavadní mobilní obrazovku 06-mobil-den (seznam intervalů).
 
-- **Svislá osa celého dne** 0:00 až 6:00 dalšího dne (popisky „0:00 +1“), hodina ≈ 56 px, den se posouvá prstem.
-  Po otevření dne se osa **sama posune na první zapsaný interval, u prázdného dne na 6:00** – běžný den vypadá
-  jako pracovní doba, noční práce se kreslí po posunutí nahoru/dolů, bez dalšího tlačítka. Noční pásma 22:00–6:00
-  jemně podbarvená. Vlevo popisky hodin, čáry po hodinách a jemné čáry po půlhodinách.
+- **Svislá osa** 5:00–24:00 se sbalenou nocí (viz „Rozsah osy a sbalená noc“ výše), hodina ≈ 56 px, den se posouvá
+  prstem. Po otevření dne se osa posune na první zapsaný interval, u prázdného dne na 6:00. Vlevo popisky hodin,
+  čáry po hodinách a jemné čáry po půlhodinách.
   Intervaly jsou bloky v barvě zakázky s časem, zakázkou, druhem práce a délkou.
 - **Nový interval:** podržet prst na prázdném místě (~300 ms, haptická odezva) a táhnout = nakreslit od–do;
   klepnutí do mezery mezi intervaly ji **celou vyplní**, jinde vloží 1 h. Bez podržení se den normálně posouvá –

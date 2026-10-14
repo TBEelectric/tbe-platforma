@@ -10,7 +10,6 @@ export * from "./rules/totals";
 export * from "./rules/leave";
 export * from "./rules/settings";
 export * from "./rules/month";
-export * from "./rules/forms";
 export * from "./rules/absence";
 export * from "./rules/day-template";
 export * from "./rules/timeline";

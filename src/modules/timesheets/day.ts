@@ -30,7 +30,7 @@ import {
   type TimeEntryKind,
   type TimesheetStatus,
 } from "./rules/time-entry";
-import { continueFrom, dayTotals, totalsByJob } from "./rules/totals";
+import { dayTotals, totalsByJob } from "./rules/totals";
 import {
   dayWarnings,
   missingWorkdays,
@@ -133,11 +133,6 @@ export type DayView = {
     remainingHours: number;
     remainingDays: number | null;
     totalHours: number;
-  } | null;
-  continueFrom: {
-    from: string;
-    jobId: string | null;
-    workTypeId: string | null;
   } | null;
   /** Active jobs (and closed ones used on the day), sorted by label (company first). */
   jobs: DayJob[];
@@ -393,7 +388,6 @@ export async function loadDay(
       remainingDays: leave.remainingDays,
       totalHours: leave.entitled + leave.carriedOver,
     },
-    continueFrom: continueFrom(day, date),
     jobs,
     workTypes: workTypes.map((w) => ({
       id: w.id,

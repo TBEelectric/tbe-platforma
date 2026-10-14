@@ -327,7 +327,7 @@ export function DesktopTimeline({
   const titleOf = (e: TimelineEntry) => {
     if (e.kind === "break") return t("break");
     const j = e.jobId ? jobsById.get(e.jobId) : null;
-    return j ? jobLabel(j) : t("desktop.noJob");
+    return j ? jobLabel(j) : root("timesheets.entries.noJob");
   };
 
   return (

@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { pragueInstant } from "@/lib/dates";
-import {
-  continueFrom,
-  dayTotals,
-  totalsByJob,
-  type TotalsEntry,
-} from "./totals";
+import { dayTotals, totalsByJob, type TotalsEntry } from "./totals";
 
 const at = (date: string, time: string) => pragueInstant(date, time)!;
 const entry = (
@@ -65,34 +60,5 @@ describe("totalsByJob", () => {
     expect(totalsByJob([entry("06:00", "07:00", null, "rezie")])).toEqual([
       { jobId: null, minutes: 60 },
     ]);
-  });
-});
-
-describe("continueFrom", () => {
-  it("starts at the end of the last entry with its job and work type", () => {
-    expect(continueFrom(referenceDay, "2026-10-13")).toEqual({
-      from: "15:15",
-      jobId: "A",
-      workTypeId: "montaz",
-    });
-  });
-
-  it("after a break takes job and work type of the last work", () => {
-    expect(
-      continueFrom(
-        [
-          entry("06:00", "10:00", "B", "revize"),
-          entry("10:00", "10:30", null, null),
-        ],
-        "2026-10-13",
-      ),
-    ).toEqual({ from: "10:30", jobId: "B", workTypeId: "revize" });
-  });
-
-  it("has nothing to continue on an empty day or after midnight", () => {
-    expect(continueFrom([], "2026-10-13")).toBeNull();
-    expect(
-      continueFrom([entry("20:00", "01:00", "A")], "2026-10-13"),
-    ).toBeNull();
   });
 });

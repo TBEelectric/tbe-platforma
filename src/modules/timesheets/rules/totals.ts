@@ -1,4 +1,3 @@
-import { pragueDate, pragueTime } from "@/lib/dates";
 import { entryDurationMinutes, type TimeEntryKind } from "./time-entry";
 
 export type TotalsEntry = {
@@ -48,26 +47,4 @@ export function totalsByJob(
   return [...sums]
     .map(([jobId, minutes]) => ({ jobId, minutes }))
     .sort((a, b) => b.minutes - a.minutes);
-}
-
-/**
- * „Pokračovat od …“: the next entry starts where the last one ended, with the job and work type of the
- * last work. Nothing on an empty day, or when the last entry ended after midnight.
- */
-export function continueFrom(
-  entries: TotalsEntry[],
-  workDate: string,
-): { from: string; jobId: string | null; workTypeId: string | null } | null {
-  if (entries.length === 0) return null;
-  const byEnd = [...entries].sort(
-    (a, b) => a.endAt.getTime() - b.endAt.getTime(),
-  );
-  const last = byEnd[byEnd.length - 1];
-  if (pragueDate(last.endAt) !== workDate) return null;
-  const lastWork = byEnd.filter((e) => e.kind === "work").at(-1);
-  return {
-    from: pragueTime(last.endAt),
-    jobId: lastWork?.jobId ?? null,
-    workTypeId: lastWork?.workTypeId ?? null,
-  };
 }
