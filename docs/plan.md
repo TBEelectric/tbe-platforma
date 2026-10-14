@@ -113,7 +113,21 @@ hotových krocích před ním. Značky: `[ručně]` = skript krok nespustí, ud�
       na existující DB pustit `pnpm db:seed`; „Obvyklý den“ bez historie vezme první zakázku party; „Jako včera“ s uzavřenou
       zakázkou skončí hláškou (nepřeskočí ji); smazání v den celodenní absence je povolené.
 
-- [ ] **3b.6 – Vývojové přihlášení a přístup z telefonu v domácí síti**
+- [ ] **3b.6 – Mobil I: osa a úpravy**
+      Mobile-first obrazovka Můj den (< 768 px) podle `MobilOsa.dc.html`: svislá osa celého dne s automatickým posunem na
+      pracovní dobu a podbarvenou nocí, podržet a táhnout = nový interval (nekoliduje se scrollem), klepnutí do mezery,
+      úchyty a posun se společnou hranicí, kompaktní spodní panel (−/+ 5 min, Práce/Přestávka, smazat), zavření klepnutím
+      mimo, přestávka s ikonou kávy a teplou barvou, optimistické ukládání přes akce z 3b.5. Zakázka zatím = naposledy použitá.
+      Hotovo, když: den jde na telefonu poskládat a upravit tažením i tlačítky.
+
+- [ ] **3b.7 – Mobil II: zakázky a šablony**
+      V panelu tlačítka naposledy použitých zakázek („Firma, místo“) a „Další zakázky…“ = výběr přes celou obrazovku
+      (vyhledávání, sekce Naposledy použité / Zakázky party / Všechny aktivní, špendlík pro vedoucího), druh práce jako
+      tlačítka; prázdný den („Můj obvyklý den“ / „Obvyklý den“, „Jako včera“), „Uložit jako můj obvyklý den“ s potvrzením,
+      výchozí den, hlavička se součty, spodní navigace. Nový člen party vidí zakázky party jako tlačítka.
+      Hotovo, když: celý mobilní zápis odpovídá prototypu (ověřeno v náhledu telefonu v prohlížeči).
+
+- [ ] **3b.8 – Vývojové přihlášení a přístup z telefonu v domácí síti** [zastavit po]
       Bez tunelu a bez Google Console. (1) **Vývojové přihlášení:** na přihlašovací stránce navíc „Přihlásit jako…“
       se seznamem aktivních zaměstnanců (jméno, role); vytvoří normální Better Auth session daného uživatele. Funguje jen
       při `NODE_ENV=development` **a** `DEV_LOGIN=true` v `.env` (do `.env.example` zakomentovaně); jinak route i tlačítko
@@ -122,21 +136,8 @@ hotových krocích před ním. Značky: `[ručně]` = skript krok nespustí, ud�
       / povolené originy Better Auth upravit tak, aby fungovaly i z IP adresy v síti (jen ve vývoji). Postup do `CLAUDE.md`.
       PWA instalace a HTTPS až s nasazením na VPS (milník 5).
       Hotovo, když: na telefonu ve stejné Wi-Fi jde otevřít aplikaci a přihlásit se „jako“ ukázkový zaměstnanec;
-      v produkčním buildu vývojové přihlášení neexistuje.
-
-- [ ] **3b.7 – Mobil I: osa a úpravy**
-      Mobile-first obrazovka Můj den (< 768 px) podle `MobilOsa.dc.html`: svislá osa celého dne s automatickým posunem na
-      pracovní dobu a podbarvenou nocí, podržet a táhnout = nový interval (nekoliduje se scrollem), klepnutí do mezery,
-      úchyty a posun se společnou hranicí, kompaktní spodní panel (−/+ 5 min, Práce/Přestávka, smazat), zavření klepnutím
-      mimo, přestávka s ikonou kávy a teplou barvou, optimistické ukládání přes akce z 3b.5. Zakázka zatím = naposledy použitá.
-      Hotovo, když: den jde na telefonu poskládat a upravit tažením i tlačítky.
-
-- [ ] **3b.8 – Mobil II: zakázky a šablony** [zastavit po]
-      V panelu tlačítka naposledy použitých zakázek („Firma, místo“) a „Další zakázky…“ = výběr přes celou obrazovku
-      (vyhledávání, sekce Naposledy použité / Zakázky party / Všechny aktivní, špendlík pro vedoucího), druh práce jako
-      tlačítka; prázdný den („Můj obvyklý den“ / „Obvyklý den“, „Jako včera“), „Uložit jako můj obvyklý den“ s potvrzením,
-      výchozí den, hlavička se součty, spodní navigace. Nový člen party vidí zakázky party jako tlačítka.
-      Hotovo, když: celý mobilní zápis odpovídá prototypu. Po kroku člověk vyzkouší na skutečném telefonu.
+      v produkčním buildu vývojové přihlášení neexistuje. Po kroku člověk vyzkouší mobilní
+      zápis (kroky 3b.6–3b.7) na skutečném telefonu.
 
 - [ ] **3b.9 – Desktop: Můj den**
       Obrazovka Můj den (≥ 1024 px) podle `Den.dc.html`: vodorovná osa nad stejnou logikou, přepínač
