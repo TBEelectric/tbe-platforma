@@ -144,6 +144,14 @@ Notes:
   If the push fails (conflict, no network), stop and tell the user. Never force push, never push other
   branches, never rewrite history (rebase, reset of committed work) unless the user asks.
 
+## Automated runs
+
+Milestone steps can run unattended via `scripts/milestone.sh <milestone>` (each step = new `claude -p` session,
+prompt in `scripts/claude/step-prompt.md`, extra rules in `scripts/claude/headless-rules.md`). Steps in
+`docs/plan.md` use the format `- [ ] **3b.4 – Title**` + indented description + `Hotovo, když:`; tags `[ručně]`
+(not automated) and `[zastavit po]` (pause for human testing). When finishing a step, tick it and add an indented
+`Výsledek:` line; when blocked, add `BLOKOVÁNO:` and end with `STATUS: BLOCKED – …`. Logs go to `logs/` (ignored).
+
 ## Working style
 
 - Small, reviewable steps. Follow `docs/plan.md`; tick tasks when done (in the same commit).

@@ -37,3 +37,6 @@ pnpm-debug.log*
 # pnp
 .pnp
 .pnp.*
+
+# Claude Code automated runs
+logs/

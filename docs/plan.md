@@ -40,30 +40,78 @@ Docházka má prioritu. Vozový park se připravuje souběžně (Traccar, ověř
 
 ## Milník 3b – Interaktivní časová osa (mobil primárně)
 
-Reference: prototypy `docs/design/prototypes/MobilOsa.dc.html` (primární) a `Den.dc.html` (celá obrazovka Můj den) – převzít chování
-(výpočty jako čisté funkce s testy) a rozložení, UI postavit znovu.
+Reference: prototypy `docs/design/prototypes/MobilOsa.dc.html` (mobil, primární) a `Den.dc.html` (celá obrazovka Můj den)
+– převzít chování (výpočty jako čisté funkce s testy) a rozložení, UI postavit znovu. Podklady: `docs/design.md`
+(Responzivita, Zobrazení zakázky, Interaktivní časová osa, Mobil – zápis dne na ose), `docs/technicky-navrh.md`,
+`docs/architektura.md` (Jazyky rozhraní).
 
-- [x] **Jazyky (první úkol milníku):** zavést `next-intl`, převést dosavadní texty rozhraní (milníky 1–3) na klíče
-      v `messages/cs.json`, přidat `user.locale` (výchozí `cs`); nové obrazovky už rovnou s klíči. Bez překladu.
-- [ ] Pravidla s testy: společná hranice navazujících intervalů (soused min. 5 min, nezmizí), vložení intervalu do mezery, změna začátku/konce a posun bez překryvů, přichytávání
-      (15 min tažení na mobilu, 5 min jinak), ne do budoucna; šablona „Obvyklý den“ a „Jako včera“ (vynechá kolize)
-- [ ] **Mobil:** svislá osa dne podle `docs/design.md` („Mobil – zápis dne na ose“): podržet a táhnout = nový interval,
-      klepnutí = 1 h, úchyty a posun, spodní panel s −/+ 5 min, zakázkami jako tlačítky (naposledy použité nahoře) a druhem práce
-- [ ] Výběr zakázky: řádek s naposledy použitými (max 4) + „Další zakázky…“ = obrazovka s vyhledáváním (bez diakritiky)
-      a sekcemi Naposledy použité / Zakázky party / Všechny aktivní; tabulka `team_job`; vedoucí připíná/odepíná špendlíkem přímo ve výběru zakázky,
-      přehled připnutých v detailu party; nový člen bez historie vidí zakázky party jako tlačítka
-- [ ] Zakázka má povinné místo (`job.site_id`): migrace, formulář zakázky, seed; **import zakázek** podle nové šablony
-      (`docs/import/sablona-importu.xlsx`, list Zakázky má nové sloupce Místo a Adresa místa – upravit parser a testy)
-- [ ] Zobrazení zakázky ve formátu „Firma, místo“ všude v rozhraní zaměstnance (viz `design.md`, Zobrazení zakázky)
-- [ ] Přestávka s ikonou hrnku a teplou barvou (tlačítko, blok, tabulka)
-- [ ] Prázdný den: „Obvyklý den“ (vlastní šablona zaměstnance, jinak výchozí šablona firmy v `timesheet_settings`) a „Jako včera“;
-      „Uložit jako můj obvyklý den“ na vyplněném dni s potvrzením; smazání šablony správcem v detailu zaměstnance;
-      výchozí den = nejstarší nevyplněný pracovní den
-- [ ] **Desktop:** vodorovná osa místo statického pruhu na Můj den (hover s časem, čára „teď“, tažení, výběr propojený s tabulkou)
-- [ ] Ukládání každé změny přes server action s optimistickou aktualizací a auditem; zamčený měsíc jen pro čtení
-- [ ] Testování na telefonu během vývoje: dočasný tunel (např. Cloudflare Tunnel) s veřejnou HTTPS adresou,
-      přidat ji do Google OAuth a `BETTER_AUTH_URL`; postup zapsat do `CLAUDE.md`
-- [ ] Ovládání klávesnicí (šipky ±5 min); otestovat na skutečném telefonu (iPhone Safari i Android Chrome)
+Kroky jdou po sobě; každý se pouští v nové session (ručně nebo `scripts/milestone.sh 3b`). Každý krok staví jen na
+hotových krocích před ním. Značky: `[ručně]` = skript krok nespustí, udělá ho člověk s Claude Code interaktivně;
+`[zastavit po]` = skript po kroku zastaví, aby člověk výsledek vyzkoušel.
+
+- [x] **3b.1 – Jazyky**
+      next-intl, texty milníků 1–3 na klíčích v `messages/cs.json`, `user.locale` (výchozí `cs`). Bez překladu.
+
+- [ ] **3b.2 – Zakázka s místem**
+      Migrace `job.site_id` (povinné; existující zakázky v DB a seedu dostanou místo), formulář zakázky s výběrem /
+      založením místa, seed, import zakázek podle `docs/import/sablona-importu.xlsx` (sloupce Místo, Adresa místa –
+      parser a testy). Funkce zobrazení „Firma, místo“ (bez s.r.o./a.s.) s testy a její použití v existujících obrazovkách
+      (správa zakázek, dosavadní Můj den). Pozn.: krok byl rozpracovaný (migrace 0007, `job-display.ts`) – navázat.
+      Hotovo, když: zakázky mají místo, import nové šablony projde včetně testů, všude je vidět „Firma, místo“.
+
+- [ ] **3b.3 – Zakázky party a obvyklý den (data a server)**
+      Tabulky `team_job` (unikátní team+job) a `day_template` (jedna na zaměstnance), výchozí šablona firmy
+      v `timesheet_settings`. Server akce s oprávněními, auditem a testy: připnout/odepnout zakázku party (vedoucí, správce,
+      admin), uložit vlastní obvyklý den (zaměstnanec), smazat šablonu zaměstnance a nastavit výchozí šablonu firmy (správce).
+      Jednoduché UI ve správě: přehled připnutých zakázek v detailu party, šablona v detailu zaměstnance (zobrazit, smazat).
+      Hotovo, když: akce a oprávnění jsou otestované, správa funguje; nová osa zatím není.
+
+- [ ] **3b.4 – Logika osy (čisté funkce)**
+      Jen `src/modules/timesheets/rules` + testy, převzato z výpočtů v prototypech: přichytávání (15 min tažení na mobilu,
+      5 min jinak), zarážky o sousedy, společná hranice navazujících intervalů (soused min. 5 min, nezmizí), kreslení
+      tažením, klik do mezery = celá mezera / jinde 1 h, ne do budoucna, rozsah osy 0:00 až 6:00 +1 a interval přes půlnoc,
+      použití šablon „Obvyklý den“ a „Jako včera“ (vynechá kolize), řazení naposledy použitých zakázek (max 4 + aktuální),
+      sekce výběru zakázky, hledání bez diakritiky (číslo, název, firma, místo), výchozí den = nejstarší nevyplněný pracovní den.
+      Hotovo, když: testy pokrývají všechna pravidla a prochází; žádné UI.
+
+- [ ] **3b.5 – Server pro osu**
+      Jedno načtení dat dne (intervaly, naposledy použité zakázky, zakázky party, šablona, stav měsíce). Server akce
+      vytvořit / upravit / smazat interval a použít šablonu; úprava hranice upraví i souseda v jedné transakci; validace
+      přes pravidla z 3b.4, audit, zamčený měsíc, zápis za jiného s důvodem. Odpovědi vhodné pro optimistickou aktualizaci
+      (nový stav dne nebo chyba s klíčem hlášky). Testy akcí.
+      Hotovo, když: akce jsou otestované včetně kolizí, společné hranice a zamčeného měsíce.
+
+- [ ] **3b.6 – Testování na telefonu** [ručně]
+      Dočasný tunel (např. Cloudflare Tunnel) s veřejnou HTTPS adresou, adresa v Google OAuth a `BETTER_AUTH_URL`,
+      skript `pnpm tunnel`, postup v `CLAUDE.md`. Vyžaduje instalaci nástroje a nastavení v Google Cloud Console.
+      Hotovo, když: aplikace se otevře a přihlásí na telefonu.
+
+- [ ] **3b.7 – Mobil I: osa a úpravy**
+      Mobile-first obrazovka Můj den (< 768 px) podle `MobilOsa.dc.html`: svislá osa celého dne s automatickým posunem na
+      pracovní dobu a podbarvenou nocí, podržet a táhnout = nový interval (nekoliduje se scrollem), klepnutí do mezery,
+      úchyty a posun se společnou hranicí, kompaktní spodní panel (−/+ 5 min, Práce/Přestávka, smazat), zavření klepnutím
+      mimo, přestávka s ikonou kávy a teplou barvou, optimistické ukládání přes akce z 3b.5. Zakázka zatím = naposledy použitá.
+      Hotovo, když: den jde na telefonu poskládat a upravit tažením i tlačítky.
+
+- [ ] **3b.8 – Mobil II: zakázky a šablony** [zastavit po]
+      V panelu tlačítka naposledy použitých zakázek („Firma, místo“) a „Další zakázky…“ = výběr přes celou obrazovku
+      (vyhledávání, sekce Naposledy použité / Zakázky party / Všechny aktivní, špendlík pro vedoucího), druh práce jako
+      tlačítka; prázdný den („Můj obvyklý den“ / „Obvyklý den“, „Jako včera“), „Uložit jako můj obvyklý den“ s potvrzením,
+      výchozí den, hlavička se součty, spodní navigace. Nový člen party vidí zakázky party jako tlačítka.
+      Hotovo, když: celý mobilní zápis odpovídá prototypu. Po kroku člověk vyzkouší na skutečném telefonu.
+
+- [ ] **3b.9 – Desktop: Můj den**
+      Obrazovka Můj den (≥ 1024 px) podle `Den.dc.html`: vodorovná osa nad stejnou logikou, přepínač
+      „Pracovní doba / Celý den“, čára „teď“, hover s časem, kartičky intervalů propojené s osou, panel vybraného intervalu
+      (−/+, Přestávka, naposledy použité zakázky, combobox zakázek se sekcemi a špendlíkem, druh práce jako tlačítka) místo
+      starého formuláře, pravý sloupec (součty po zakázkách, kontroly, měsíční výkaz), ovládání klávesnicí (šipky ±5 min).
+      Hotovo, když: desktop odpovídá prototypu, starý formulář „Přidat interval“ je odstraněný.
+
+- [ ] **3b.10 – Dokončení milníku** [zastavit po]
+      Zamčený měsíc jen pro čtení na mobilu i desktopu, tablet (na výšku mobil, na šířku desktop), přístupnost (popisky,
+      fokus, kontrast), úklid nepoužívaného kódu staré mobilní obrazovky, Playwright test zápisu dne (mobil i desktop),
+      nové PNG náhledy do `docs/design/screens/` (02-muj-den, 06-mobil-den), aktualizace `docs/design.md`.
+      Hotovo, když: vše výše prochází; po kroku člověk vyzkouší iPhone Safari a Android Chrome.
 
 ## Milník 4 – Měsíc, schválení, uzávěrka
 
