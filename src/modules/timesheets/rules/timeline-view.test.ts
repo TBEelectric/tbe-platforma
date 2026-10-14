@@ -6,7 +6,6 @@ import {
   blockLines,
   halfHourMarks,
   hourMarks,
-  initialFocusMinute,
   minuteAtOffset,
   minuteToPx,
   movedBeyondTap,
@@ -37,16 +36,6 @@ describe("timeline view geometry", () => {
     expect(marks[30]).toEqual({ minute: 1800, label: "6:00", nextDay: true });
     expect(halfHourMarks()).toHaveLength(30);
     expect(halfHourMarks()[0]).toBe(30);
-  });
-
-  it("opens on the first entry, an empty day on 6:00", () => {
-    expect(initialFocusMinute([])).toBe(360);
-    expect(
-      initialFocusMinute([
-        { start: 600, end: 700 },
-        { start: 420, end: 500 },
-      ]),
-    ).toBe(420);
   });
 
   it("shows fewer text lines in short blocks", () => {

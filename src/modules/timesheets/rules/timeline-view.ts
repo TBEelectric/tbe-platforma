@@ -24,6 +24,9 @@ export const NIGHT_BANDS: AxisRange[] = [
   { start: 22 * 60, end: AXIS_END },
 ];
 
+/** The phone axis is shown from here (4:45, so the 5:00 label fits); earlier minutes are cut off. */
+export const VISIBLE_FROM = 4 * 60 + 45;
+
 /** Height of the whole axis in px. */
 export const AXIS_HEIGHT_PX = (AXIS_END - AXIS_START) * PX_PER_MINUTE;
 
@@ -60,11 +63,6 @@ export function halfHourMarks(): number[] {
   for (let minute = AXIS_START + 30; minute < AXIS_END; minute += 60)
     marks.push(minute);
   return marks;
-}
-
-/** Where the axis scrolls to when a day opens: the first entry, an empty day at 6:00. */
-export function initialFocusMinute(entries: AxisRange[]): number {
-  return entries.length > 0 ? Math.min(...entries.map((e) => e.start)) : 6 * 60;
 }
 
 /** How many text lines fit in a block of this height (0 = the block is only a coloured bar). */

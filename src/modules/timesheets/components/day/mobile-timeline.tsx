@@ -4,7 +4,6 @@ import { Coffee, Lock, Minus, Plus, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -25,8 +24,8 @@ import {
   halfHourMarks,
   HANDLE_PX,
   HOLD_MS,
+  VISIBLE_FROM,
   hourMarks,
-  initialFocusMinute,
   jobChipIds,
   localAdjust,
   localSetRange,
@@ -107,8 +106,6 @@ export function MobileTimeline({
   const colRef = useRef<HTMLDivElement>(null);
   const gesture = useRef<Active | null>(null);
   const { message, setMessage, select } = tl;
-  // Entries when the day opened: only they decide where the axis scrolls to (not later saves).
-  const [opened] = useState(initial.entries);
   const [picking, setPicking] = useState(false);
 
   // Latest values and handlers for the window listeners (they live across renders).
@@ -127,23 +124,6 @@ export function MobileTimeline({
   );
   const marks = useMemo(() => hourMarks(), []);
   const halves = useMemo(() => halfHourMarks(), []);
-
-  // Open on the first entry (an empty day on 6:00).
-  useLayoutEffect(() => {
-    const col = colRef.current;
-    if (!col) return;
-    const scroll = () => {
-      const top =
-        col.getBoundingClientRect().top +
-        window.scrollY +
-        minuteToPx(initialFocusMinute(opened)) -
-        72;
-      window.scrollTo({ top: Math.max(0, top) });
-    };
-    // After the navigation's own scroll to the top.
-    const id = requestAnimationFrame(() => requestAnimationFrame(scroll));
-    return () => cancelAnimationFrame(id);
-  }, [opened]);
 
   // Message disappears by itself.
   useEffect(() => {
@@ -480,168 +460,175 @@ export function MobileTimeline({
         className="pt-3"
         style={{ paddingBottom: selectedId ? 340 : canFill ? 120 : 24 }}
       >
+        {/* The axis starts at VISIBLE_FROM: the early night is cut off, the day opens at 6:00. */}
         <div
-          ref={colRef}
-          onPointerDown={onPointerDown}
-          onContextMenu={(e) => e.preventDefault()}
-          className="relative mr-1 ml-[52px] touch-pan-y select-none [-webkit-touch-callout:none]"
-          style={{
-            height: AXIS_HEIGHT_PX,
-            cursor: readOnly ? "default" : "crosshair",
-          }}
+          className="overflow-hidden"
+          style={{ height: AXIS_HEIGHT_PX - minuteToPx(VISIBLE_FROM) }}
         >
-          {NIGHT_BANDS.map((b) => (
-            <div
-              key={b.start}
-              aria-hidden
-              className="absolute inset-x-0 bg-[#142433]/[0.05]"
-              style={{
-                top: minuteToPx(b.start),
-                height: minuteToPx(b.end) - minuteToPx(b.start),
-              }}
-            />
-          ))}
-          {halves.map((m) => (
-            <div
-              key={m}
-              aria-hidden
-              className="pointer-events-none absolute inset-x-0 border-t border-dashed border-border/60"
-              style={{ top: minuteToPx(m) }}
-            />
-          ))}
-          {marks.map((m) => (
-            <div
-              key={m.minute}
-              aria-hidden
-              className="pointer-events-none absolute right-0 -left-[52px] border-t border-border"
-              style={{ top: minuteToPx(m.minute) }}
-            >
-              <span className="absolute -top-2.5 left-0 w-[46px] bg-background pr-1 text-right text-xs font-semibold text-muted-foreground tabular-nums">
-                {m.nextDay
-                  ? t("timesheets.timeline.nextDayMark", { time: m.label })
-                  : m.label}
-              </span>
-            </div>
-          ))}
-          {day.blocked.map((b, i) => (
-            <div
-              key={i}
-              role="img"
-              aria-label={t("timesheets.timeline.blockedLabel")}
-              className="pointer-events-none absolute inset-x-0 rounded-lg bg-neutral"
-              style={{
-                top: minuteToPx(b.start),
-                height: minuteToPx(b.end) - minuteToPx(b.start),
-                backgroundImage:
-                  "repeating-linear-gradient(135deg, rgba(20,36,51,.08) 0 6px, transparent 6px 12px)",
-              }}
-            />
-          ))}
-
-          {entries.map((e) => {
-            const isBreak = e.kind === "break";
-            const j = e.jobId ? jobsById.get(e.jobId) : null;
-            const fill = isBreak ? BREAK_COLOR : (j?.color ?? "#5b6877");
-            const height = blockHeightPx(e);
-            const lines = blockLines(height);
-            const active = e.id === selectedId;
-            const duration = formatMinutes(e.end - e.start);
-            const sub = isBreak
-              ? duration
-              : [
-                  j?.siteName,
-                  e.workTypeId ? workTypesById.get(e.workTypeId) : null,
-                  duration,
-                ]
-                  .filter(Boolean)
-                  .join(" · ");
-            return (
+          <div
+            ref={colRef}
+            onPointerDown={onPointerDown}
+            onContextMenu={(e) => e.preventDefault()}
+            className="relative mr-1 ml-[52px] touch-pan-y select-none [-webkit-touch-callout:none]"
+            style={{
+              height: AXIS_HEIGHT_PX,
+              marginTop: -minuteToPx(VISIBLE_FROM),
+              cursor: readOnly ? "default" : "crosshair",
+            }}
+          >
+            {NIGHT_BANDS.map((b) => (
               <div
-                key={e.id}
-                data-block
-                data-id={e.id}
-                role="button"
-                tabIndex={0}
-                aria-pressed={active}
-                aria-label={t("timesheets.timeline.entryLabel", {
-                  from: timeText(e.start),
-                  to: timeText(e.end),
-                  title: titleOf(e),
-                  duration,
-                })}
-                onKeyDown={(ev) => {
-                  if (ev.key === "Enter" || ev.key === " ") {
-                    ev.preventDefault();
-                    tl.select(e.id);
-                  }
-                }}
-                className={cn(
-                  "absolute inset-x-0 flex cursor-grab flex-col justify-center overflow-hidden rounded-[10px] border",
-                  active && "z-10 ring-[3px] ring-foreground",
-                )}
+                key={b.start}
+                aria-hidden
+                className="absolute inset-x-0 bg-[#142433]/[0.05]"
                 style={{
-                  top: minuteToPx(e.start),
-                  height,
-                  backgroundColor: fill,
-                  borderColor: `color-mix(in srgb, ${fill} 78%, black)`,
-                  backgroundImage: isBreak ? BREAK_HATCH : undefined,
-                  color: isBreak ? "#6e3604" : "#fff",
+                  top: minuteToPx(b.start),
+                  height: minuteToPx(b.end) - minuteToPx(b.start),
                 }}
+              />
+            ))}
+            {halves.map((m) => (
+              <div
+                key={m}
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 border-t border-dashed border-border/60"
+                style={{ top: minuteToPx(m) }}
+              />
+            ))}
+            {marks.map((m) => (
+              <div
+                key={m.minute}
+                aria-hidden
+                className="pointer-events-none absolute right-0 -left-[52px] border-t border-border"
+                style={{ top: minuteToPx(m.minute) }}
               >
-                {lines >= 1 && (
-                  <span className="flex items-center gap-1.5 px-2.5 text-xs leading-tight font-bold">
-                    {isBreak && (
-                      <Coffee className="size-3.5 shrink-0" aria-hidden />
-                    )}
-                    <span className="truncate">
-                      {timeText(e.start)}–{timeText(e.end)} · {titleOf(e)}
-                    </span>
-                  </span>
-                )}
-                {lines >= 2 && (
-                  <span className="truncate px-2.5 text-xs leading-tight opacity-90">
-                    {sub}
-                  </span>
-                )}
-                {active && !readOnly && (
-                  <>
-                    <Handle
-                      id={e.id}
-                      edge="start"
-                      label={t("timesheets.timeline.handleStart")}
-                    />
-                    <Handle
-                      id={e.id}
-                      edge="end"
-                      label={t("timesheets.timeline.handleEnd")}
-                    />
-                  </>
-                )}
+                <span className="absolute -top-2.5 left-0 w-[46px] bg-background pr-1 text-right text-xs font-semibold text-muted-foreground tabular-nums">
+                  {m.nextDay
+                    ? t("timesheets.timeline.nextDayMark", { time: m.label })
+                    : m.label}
+                </span>
               </div>
-            );
-          })}
+            ))}
+            {day.blocked.map((b, i) => (
+              <div
+                key={i}
+                role="img"
+                aria-label={t("timesheets.timeline.blockedLabel")}
+                className="pointer-events-none absolute inset-x-0 rounded-lg bg-neutral"
+                style={{
+                  top: minuteToPx(b.start),
+                  height: minuteToPx(b.end) - minuteToPx(b.start),
+                  backgroundImage:
+                    "repeating-linear-gradient(135deg, rgba(20,36,51,.08) 0 6px, transparent 6px 12px)",
+                }}
+              />
+            ))}
 
-          {futureFrom !== null && (
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-x-0 bg-background/60"
-              style={{
-                top: minuteToPx(futureFrom),
-                height: AXIS_HEIGHT_PX - minuteToPx(futureFrom),
-              }}
-            />
-          )}
-          {isToday && futureFrom !== null && (
-            <div
-              aria-hidden
-              className="pointer-events-none absolute right-0 -left-[52px] z-20 border-t-2 border-destructive"
-              style={{ top: minuteToPx(futureFrom) }}
-            >
-              <span className="absolute -top-2.5 left-0 rounded bg-destructive px-1 text-xs font-bold text-white tabular-nums">
-                {timeText(futureFrom)}
-              </span>
-            </div>
-          )}
+            {entries.map((e) => {
+              const isBreak = e.kind === "break";
+              const j = e.jobId ? jobsById.get(e.jobId) : null;
+              const fill = isBreak ? BREAK_COLOR : (j?.color ?? "#5b6877");
+              const height = blockHeightPx(e);
+              const lines = blockLines(height);
+              const active = e.id === selectedId;
+              const duration = formatMinutes(e.end - e.start);
+              const sub = isBreak
+                ? duration
+                : [
+                    j?.siteName,
+                    e.workTypeId ? workTypesById.get(e.workTypeId) : null,
+                    duration,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ");
+              return (
+                <div
+                  key={e.id}
+                  data-block
+                  data-id={e.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={active}
+                  aria-label={t("timesheets.timeline.entryLabel", {
+                    from: timeText(e.start),
+                    to: timeText(e.end),
+                    title: titleOf(e),
+                    duration,
+                  })}
+                  onKeyDown={(ev) => {
+                    if (ev.key === "Enter" || ev.key === " ") {
+                      ev.preventDefault();
+                      tl.select(e.id);
+                    }
+                  }}
+                  className={cn(
+                    "absolute inset-x-0 flex cursor-grab flex-col justify-center overflow-hidden rounded-[10px] border",
+                    active && "z-10 ring-[3px] ring-foreground",
+                  )}
+                  style={{
+                    top: minuteToPx(e.start),
+                    height,
+                    backgroundColor: fill,
+                    borderColor: `color-mix(in srgb, ${fill} 78%, black)`,
+                    backgroundImage: isBreak ? BREAK_HATCH : undefined,
+                    color: isBreak ? "#6e3604" : "#fff",
+                  }}
+                >
+                  {lines >= 1 && (
+                    <span className="flex items-center gap-1.5 px-2.5 text-xs leading-tight font-bold">
+                      {isBreak && (
+                        <Coffee className="size-3.5 shrink-0" aria-hidden />
+                      )}
+                      <span className="truncate">
+                        {timeText(e.start)}–{timeText(e.end)} · {titleOf(e)}
+                      </span>
+                    </span>
+                  )}
+                  {lines >= 2 && (
+                    <span className="truncate px-2.5 text-xs leading-tight opacity-90">
+                      {sub}
+                    </span>
+                  )}
+                  {active && !readOnly && (
+                    <>
+                      <Handle
+                        id={e.id}
+                        edge="start"
+                        label={t("timesheets.timeline.handleStart")}
+                      />
+                      <Handle
+                        id={e.id}
+                        edge="end"
+                        label={t("timesheets.timeline.handleEnd")}
+                      />
+                    </>
+                  )}
+                </div>
+              );
+            })}
+
+            {futureFrom !== null && (
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-x-0 bg-background/60"
+                style={{
+                  top: minuteToPx(futureFrom),
+                  height: AXIS_HEIGHT_PX - minuteToPx(futureFrom),
+                }}
+              />
+            )}
+            {isToday && futureFrom !== null && (
+              <div
+                aria-hidden
+                className="pointer-events-none absolute right-0 -left-[52px] z-20 border-t-2 border-destructive"
+                style={{ top: minuteToPx(futureFrom) }}
+              >
+                <span className="absolute -top-2.5 left-0 rounded bg-destructive px-1 text-xs font-bold text-white tabular-nums">
+                  {timeText(futureFrom)}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
