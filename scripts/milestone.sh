@@ -58,7 +58,24 @@ notify() {
   printf '\a'
 }
 
-for cmd in claude git pnpm docker; do
+# Claude Code: bash nevidí aliasy a PATH ze zsh, proto ho hledáme i v běžných instalačních místech.
+# Vlastní cestu jde zadat proměnnou CLAUDE_BIN=/cesta/ke/claude.
+find_claude() {
+  if [ -n "${CLAUDE_BIN:-}" ] && [ -x "$CLAUDE_BIN" ]; then printf '%s' "$CLAUDE_BIN"; return 0; fi
+  if command -v claude >/dev/null 2>&1; then command -v claude; return 0; fi
+  for c in "$HOME/.local/bin/claude" "$HOME/.claude/local/claude" "/opt/homebrew/bin/claude" \
+           "/usr/local/bin/claude" "$HOME/.npm-global/bin/claude" "$HOME/.bun/bin/claude"; do
+    [ -x "$c" ] && { printf '%s' "$c"; return 0; }
+  done
+  # Poslední pokus: zeptat se přihlašovacího zsh (načte ~/.zshrc včetně aliasů a PATH).
+  if command -v zsh >/dev/null 2>&1; then
+    c="$(zsh -ic 'whence -p claude 2>/dev/null || alias claude 2>/dev/null' 2>/dev/null | tail -1 | sed -E "s/^claude=//; s/^'//; s/'$//")"
+    [ -n "$c" ] && [ -x "${c%% *}" ] && { printf '%s' "${c%% *}"; return 0; }
+  fi
+  return 1
+}
+CLAUDE="$(find_claude)" || fail "Nenašel jsem Claude Code. V terminálu spusť: type claude  – a pak skript pusť s CLAUDE_BIN=<cesta> scripts/milestone.sh $MILESTONE"
+for cmd in git pnpm docker; do
   command -v "$cmd" >/dev/null 2>&1 || fail "Chybí příkaz: $cmd"
 done
 HAVE_JQ=0; command -v jq >/dev/null 2>&1 && HAVE_JQ=1
@@ -123,12 +140,12 @@ run_step() {
   [ -n "$BUDGET" ] && extra+=(--max-budget-usd "$BUDGET")
 
   if [ $DRY_RUN -eq 1 ]; then
-    printf '%s\n' "claude -p --append-system-prompt-file $RULES --output-format stream-json --verbose --max-turns $MAX_TURNS ${mode_args[*]} ${extra[*]} <<< \"<prompt>\""
+    printf '%s\n' "$CLAUDE -p --append-system-prompt-file $RULES --output-format stream-json --verbose --max-turns $MAX_TURNS ${mode_args[*]} ${extra[*]} <<< \"<prompt>\""
     printf '%s\n%s\n' "--- prompt ---" "$prompt"
     return 0
   fi
 
-  printf '%s' "$prompt" | claude -p \
+  printf '%s' "$prompt" | "$CLAUDE" -p \
       --append-system-prompt-file "$RULES" \
       --output-format stream-json --verbose \
       --max-turns "$MAX_TURNS" \
@@ -188,6 +205,7 @@ while [ $count -lt "$MAX_STEPS" ]; do
 
   ts="$(date +%Y%m%d-%H%M%S)"; log="$LOG_DIR/${id}-${ts}.jsonl"
   say "Krok $title  ${c_dim}(log: $log)${c_0}"
+  [ $first -eq 1 ] && printf '%s\n' "${c_dim}  Claude Code: $CLAUDE ($("$CLAUDE" --version 2>/dev/null | head -1))${c_0}"
   start=$(date +%s)
   run_step "$id" "$log" "$note"; rc=$?
   mins=$(( ($(date +%s) - start) / 60 ))
