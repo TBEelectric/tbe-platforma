@@ -64,8 +64,10 @@ export function useTimeline({
     savedIds.current = new Set(next.entries.map((e) => e.id));
     setDay(next);
     setEntries(next.entries);
+    // Copied now: the updater below runs later, after the map has been cleared.
+    const ids = new Map(idMap.current);
     setSelectedId((id) => {
-      const mapped = id ? (idMap.current.get(id) ?? id) : null;
+      const mapped = id ? (ids.get(id) ?? id) : null;
       return mapped && next.entries.some((e) => e.id === mapped)
         ? mapped
         : null;

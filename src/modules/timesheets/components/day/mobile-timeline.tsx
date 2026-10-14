@@ -228,7 +228,7 @@ export function MobileTimeline({
           line.day.blocked,
           g.id,
           g.action,
-          pxToMinutes(dy),
+          Math.round(pxToMinutes(dy)),
           { maxEnd: line.day.maxEnd, step: SNAP_TOUCH },
         );
         line.setEntries(next ?? g.base);
@@ -256,11 +256,16 @@ export function MobileTimeline({
             line.day.blocked,
             g.id,
             g.action,
-            pxToMinutes(dy),
+            Math.round(pxToMinutes(dy)),
             { maxEnd: line.day.maxEnd, step: SNAP_TOUCH },
           );
           if (next)
-            line.commitAdjust(g.id, g.action, pxToMinutes(dy), SNAP_TOUCH);
+            line.commitAdjust(
+              g.id,
+              g.action,
+              Math.round(pxToMinutes(dy)),
+              SNAP_TOUCH,
+            );
           else line.setEntries(g.base);
         }
         return;
