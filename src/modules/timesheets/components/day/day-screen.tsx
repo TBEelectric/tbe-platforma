@@ -131,7 +131,15 @@ export function DayScreen({
             label={t("timesheets.day.breaks")}
             value={formatMinutes(view.totals.breakMinutes)}
           />
-          <MobileStat label={t("timesheets.day.state")} value={status} accent />
+          <MobileStat
+            label={t("timesheets.day.fromTo")}
+            value={
+              view.totals.from
+                ? `${view.totals.from.replace(/^0/, "")}–${(view.totals.to ?? "").replace(/^0/, "")}`
+                : "–"
+            }
+            small
+          />
         </div>
       </div>
 
@@ -428,11 +436,11 @@ function StatCard({
 function MobileStat({
   label,
   value,
-  accent,
+  small,
 }: {
   label: string;
   value: string;
-  accent?: boolean;
+  small?: boolean;
 }) {
   return (
     <div className="flex flex-col gap-0.5 rounded-xl bg-white/10 px-3 py-2.5">
@@ -440,8 +448,8 @@ function MobileStat({
       <span
         className={cn(
           "font-bold tabular-nums",
-          accent
-            ? "text-base text-[#7fd6cc] first-letter:uppercase"
+          small
+            ? "text-[15px] leading-8 tracking-tight whitespace-nowrap"
             : "text-2xl",
         )}
       >

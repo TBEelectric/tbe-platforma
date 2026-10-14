@@ -230,6 +230,7 @@
       "worked": "Odpracováno",
       "workedToday": "Odpracováno dnes",
       "breaks": "Přestávky",
+      "fromTo": "Od – do",
       "state": "Stav",
       "writingFor": "Zapisujete za <strong>{name}</strong>. Každá změna vyžaduje důvod, uloží se do historie změn.",
       "backToOwn": "Zpět na můj den",
