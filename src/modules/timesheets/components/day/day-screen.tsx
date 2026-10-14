@@ -173,7 +173,7 @@ export function DayScreen({
             </>
           }
         />
-        <div className="grid grid-cols-4 items-start gap-4">
+        <div className="grid grid-cols-4 gap-4">
           <StatCard
             label={
               isToday
@@ -197,99 +197,43 @@ export function DayScreen({
               count: view.totals.breakCount,
             })}
           />
-          <Card size="sm">
-            <CardHeader>
-              <CardTitle>
-                {isToday
-                  ? t("timesheets.day.byJobToday")
-                  : t("timesheets.day.byJob")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3">
-              {view.byJob.length === 0 && (
-                <p className="text-[15px] text-muted-foreground">
-                  {t("timesheets.day.nothingYet")}
-                </p>
-              )}
-              {view.byJob.map((j) => (
-                <div key={j.jobId ?? "none"} className="flex flex-col gap-1.5">
-                  <div className="flex items-baseline justify-between gap-3 text-[15px]">
-                    <span className="flex min-w-0 items-center gap-2">
-                      <span
-                        aria-hidden
-                        className="size-2.5 shrink-0 rounded-full"
-                        style={{ background: j.color }}
-                      />
-                      <span className="truncate">
-                        {j.label ?? t("timesheets.day.noJob")}
-                      </span>
-                    </span>
-                    <span className="font-bold tabular-nums">
-                      {formatMinutes(j.minutes)}
-                    </span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-[#eef1f4]">
-                    <div
-                      className="h-full rounded-full"
-                      style={{
-                        background: j.color,
-                        width: `${(j.minutes / Math.max(view.totals.workMinutes, 1)) * 100}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card size="sm">
-            <CardHeader>
-              <CardTitle>{t("timesheets.day.checks")}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col gap-3 text-[15px]">
-              {view.warnings.length === 0 && view.totals.workMinutes > 0 && (
-                <Check
-                  badge={
-                    <Badge variant="success">{t("timesheets.day.ok")}</Badge>
-                  }
-                >
-                  {t("timesheets.day.allGood")}
-                </Check>
-              )}
-              {view.warnings.map((w) => (
-                <Check
-                  key={w.code}
-                  badge={
-                    <Badge variant="warning">
-                      {t("timesheets.day.attention")}
-                    </Badge>
-                  }
-                >
-                  {translate(t, w.message)}
-                </Check>
-              ))}
-              {view.missingDays.map((d) => (
-                <Check
-                  key={d}
-                  badge={
-                    <Badge variant="warning">
-                      {t("timesheets.day.missingBadge")}
-                    </Badge>
-                  }
-                >
-                  {t("timesheets.day.dayMissingFull", { day: weekday(d) })}{" "}
-                  <Link href={hrefFor(d)}>{t("timesheets.day.fill")}</Link>
-                </Check>
-              ))}
-              {view.warnings.length === 0 &&
-                view.totals.workMinutes === 0 &&
-                view.missingDays.length === 0 && (
-                  <p className="text-muted-foreground">
-                    {t("timesheets.day.nothingToCheck")}
-                  </p>
-                )}
-            </CardContent>
-          </Card>
+          <StatCard
+            label={t("timesheets.day.monthToDate", { month })}
+            value={formatMinutes(view.monthWorkMinutes)}
+            detail={
+              view.missingDays.length > 0
+                ? t("timesheets.day.missing", {
+                    days: view.missingDays
+                      .slice(0, 3)
+                      .map((d) => format.dateTime(calendarDate(d), "dayMonth"))
+                      .join(", "),
+                    more: view.missingDays.length > 3 ? "yes" : "no",
+                  })
+                : t("timesheets.day.noMissing")
+            }
+          />
+          <StatCard
+            label={t("timesheets.day.leaveRemaining")}
+            value={
+              view.leave
+                ? t("timesheets.absences.hours", {
+                    hours: view.leave.remainingHours,
+                  })
+                : "–"
+            }
+            detail={
+              view.leave
+                ? view.leave.remainingDays !== null
+                  ? t("timesheets.day.leaveDetailDays", {
+                      days: view.leave.remainingDays,
+                      total: view.leave.totalHours,
+                    })
+                  : t("timesheets.day.leaveDetail", {
+                      total: view.leave.totalHours,
+                    })
+                : t("timesheets.day.noEntitlement")
+            }
+          />
         </div>
       </div>
 
@@ -341,6 +285,118 @@ export function DayScreen({
             needsReason={forSomeoneElse}
           />
         </section>
+
+        <aside className="hidden gap-5 lg:grid lg:grid-cols-3 lg:items-start">
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                {isToday
+                  ? t("timesheets.day.byJobToday")
+                  : t("timesheets.day.byJob")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              {view.byJob.length === 0 && (
+                <p className="text-[15px] text-muted-foreground">
+                  {t("timesheets.day.nothingYet")}
+                </p>
+              )}
+              {view.byJob.map((j) => (
+                <div key={j.jobId ?? "none"} className="flex flex-col gap-1.5">
+                  <div className="flex items-baseline justify-between gap-3 text-[15px]">
+                    <span className="flex min-w-0 items-center gap-2">
+                      <span
+                        aria-hidden
+                        className="size-2.5 shrink-0 rounded-full"
+                        style={{ background: j.color }}
+                      />
+                      <span className="truncate">
+                        {j.label ?? t("timesheets.day.noJob")}
+                      </span>
+                    </span>
+                    <span className="font-bold tabular-nums">
+                      {formatMinutes(j.minutes)}
+                    </span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-[#eef1f4]">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        background: j.color,
+                        width: `${(j.minutes / Math.max(view.totals.workMinutes, 1)) * 100}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("timesheets.day.checks")}</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3 text-[15px]">
+              {view.warnings.length === 0 && view.totals.workMinutes > 0 && (
+                <Check
+                  badge={
+                    <Badge variant="success">{t("timesheets.day.ok")}</Badge>
+                  }
+                >
+                  {t("timesheets.day.allGood")}
+                </Check>
+              )}
+              {view.warnings.map((w) => (
+                <Check
+                  key={w.code}
+                  badge={
+                    <Badge variant="warning">
+                      {t("timesheets.day.attention")}
+                    </Badge>
+                  }
+                >
+                  {translate(t, w.message)}
+                </Check>
+              ))}
+              {view.missingDays.map((d) => (
+                <Check
+                  key={d}
+                  badge={
+                    <Badge variant="warning">
+                      {t("timesheets.day.missingBadge")}
+                    </Badge>
+                  }
+                >
+                  {t("timesheets.day.dayMissingFull", { day: weekday(d) })}{" "}
+                  <Link href={hrefFor(d)}>{t("timesheets.day.fill")}</Link>
+                </Check>
+              ))}
+              {view.warnings.length === 0 &&
+                view.totals.workMinutes === 0 &&
+                view.missingDays.length === 0 && (
+                  <p className="text-muted-foreground">
+                    {t("timesheets.day.nothingToCheck")}
+                  </p>
+                )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("timesheets.day.timesheet")}</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-2 text-[15px]">
+              <p>
+                {view.status === "open"
+                  ? t("timesheets.day.confirmLater", { month })
+                  : t("timesheets.day.monthIs", { month, status })}
+              </p>
+              <Link href="/timesheets/month">
+                {t("timesheets.day.showMonth")}
+              </Link>
+            </CardContent>
+          </Card>
+        </aside>
       </div>
     </>
   );
