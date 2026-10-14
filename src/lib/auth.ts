@@ -43,6 +43,13 @@ export const auth = betterAuth({
     additionalFields: {
       // Set by requireUser (by e-mail), never by the client.
       employeeId: { type: "string", required: false, input: false },
+      // Interface language; a switch in the profile comes with the second language.
+      locale: {
+        type: "string",
+        required: false,
+        input: false,
+        defaultValue: "cs",
+      },
     },
     // Runs when a user is created and on every Google sign-in (with the fresh Google e-mail):
     // only an active employee with this e-mail may sign in.

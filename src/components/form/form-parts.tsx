@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useId, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
@@ -96,10 +97,11 @@ export function SubmitButton({
   children: ReactNode;
   className?: string;
 }) {
+  const t = useTranslations("common");
   const { pending } = useFormStatus();
   return (
     <Button type="submit" disabled={pending} className={className}>
-      {pending ? "Ukládám…" : children}
+      {pending ? t("saving") : children}
     </Button>
   );
 }

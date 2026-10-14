@@ -1,0 +1,1 @@
+ALTER TABLE "core"."user" ADD COLUMN "locale" text DEFAULT 'cs' NOT NULL;

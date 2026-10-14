@@ -5,8 +5,6 @@ import type { ModuleInfo } from "@/lib/navigation";
 
 export const coreModule: ModuleInfo = {
   id: "core",
-  name: "Zakázky a zákazníci",
-  description: "Číselník zakázek pro docházku i vozidla",
   icon: Briefcase,
   status: "core",
 };
@@ -18,7 +16,7 @@ export {
   canManageEmployees,
   canManageJobs,
   isTeamLead,
-  roleLabel,
+  roleKey,
   rolesFromAssignments,
   type Actor,
   type RoleKey,

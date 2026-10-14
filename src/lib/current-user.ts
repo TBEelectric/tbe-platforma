@@ -10,7 +10,7 @@ import {
   findEmployeeByEmail,
   findEmployeeById,
   loadActor,
-  roleLabel,
+  roleKey,
   type Actor,
 } from "@/modules/core";
 import { user as userTable } from "@/modules/core/schema";
@@ -21,8 +21,8 @@ export type CurrentUser = {
   employee: { id: string; firstName: string; lastName: string };
   name: string;
   actor: Actor;
-  /** Second line under the name, e.g. "Vedoucí party". */
-  detail: string;
+  /** Role shown under the name (messages roles.*), e.g. "teamLead". */
+  role: ReturnType<typeof roleKey>;
 };
 
 /** Better Auth session of this request, or null. */
@@ -67,7 +67,7 @@ export const getCurrentUser = cache(async (): Promise<AccessResult> => {
       },
       name: `${emp.firstName} ${emp.lastName}`,
       actor,
-      detail: roleLabel(actor),
+      role: roleKey(actor),
     },
   };
 });
@@ -101,6 +101,6 @@ export function initials(name: string): string {
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
-    .map((part) => part.charAt(0).toLocaleUpperCase("cs-CZ"))
+    .map((part) => part.charAt(0).toLocaleUpperCase())
     .join("");
 }

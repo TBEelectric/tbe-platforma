@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { initials, requireUser } from "@/lib/current-user";
 import { cn } from "@/lib/utils";
 import { SignOutButton } from "./sign-out-button";
@@ -19,13 +20,14 @@ function UserAvatar({ name, className }: { name: string; className?: string }) {
 /** Current user in the sidebar footer: avatar, name and detail on two lines, sign-out button. */
 export async function SidebarUser() {
   const user = await requireUser();
+  const t = await getTranslations("roles");
   return (
     <div className="flex items-center gap-2.5 px-2">
       <UserAvatar name={user.name} />
       <div className="min-w-0 leading-tight">
         <div className="truncate font-bold text-white">{user.name}</div>
         <div className="truncate text-sm text-sidebar-foreground/80">
-          {user.detail}
+          {t(user.role)}
         </div>
       </div>
       <SignOutButton className="ml-auto shrink-0" />

@@ -49,9 +49,12 @@ export function isTeamLead(actor: Actor): boolean {
 }
 
 /** Label under the user's name in the sidebar. */
-export function roleLabel(actor: Actor): string {
-  if (actor.isAdmin) return "Administrátor";
-  if (actor.isTimesheetsManager) return "Správce docházky";
-  if (isTeamLead(actor)) return "Vedoucí party";
-  return "Zaměstnanec";
+/** The highest role of the actor, for the label under the name (messages roles.*). */
+export function roleKey(
+  actor: Actor,
+): "admin" | "timesheetsManager" | "teamLead" | "employee" {
+  if (actor.isAdmin) return "admin";
+  if (actor.isTimesheetsManager) return "timesheetsManager";
+  if (isTeamLead(actor)) return "teamLead";
+  return "employee";
 }

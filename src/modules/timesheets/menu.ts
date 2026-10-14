@@ -23,60 +23,60 @@ import {
 
 export const timesheetsMenu: MenuItem[] = [
   {
-    label: "Můj den",
-    shortLabel: "Den",
+    label: "timesheets.menu.day",
+    shortLabel: "timesheets.menu.dayShort",
     href: "/timesheets/day",
     icon: Clock,
     visible: canRecordOwnTime,
   },
   {
     // Accounts without own attendance (e.g. the administrator) reach writing for others here.
-    label: "Zápis za jiné",
+    label: "timesheets.menu.someone",
     href: "/timesheets/day/someone",
     icon: UserPen,
     visible: (actor) =>
       !canRecordOwnTime(actor) && canWriteForSomeoneElse(actor),
   },
   {
-    label: "Můj měsíc",
-    shortLabel: "Měsíc",
+    label: "timesheets.menu.month",
+    shortLabel: "timesheets.menu.monthShort",
     href: "/timesheets/month",
     icon: CalendarDays,
     visible: canRecordOwnTime,
   },
   {
-    label: "Absence",
-    shortLabel: "Absence",
+    label: "timesheets.menu.absences",
+    shortLabel: "timesheets.menu.absencesShort",
     href: "/timesheets/absences",
     icon: Umbrella,
     visible: canOpenAbsences,
   },
   {
-    label: "Schvalování",
+    label: "timesheets.menu.approval",
     href: "/timesheets/approval",
     icon: SquareCheck,
     visible: canApproveTimesheets,
   },
   {
-    label: "Uzávěrka",
+    label: "timesheets.menu.close",
     href: "/timesheets/close",
     icon: Lock,
     visible: canCloseTimesheetPeriod,
   },
   {
-    label: "Zakázky",
+    label: "timesheets.menu.jobs",
     href: "/timesheets/jobs",
     icon: Briefcase,
     visible: canManageJobs,
   },
   {
-    label: "Zaměstnanci",
+    label: "timesheets.menu.employees",
     href: "/timesheets/employees",
     icon: Users,
     visible: canManageEmployees,
   },
   {
-    label: "Nastavení",
+    label: "timesheets.menu.settings",
     href: "/timesheets/settings",
     icon: Settings,
     placement: "bottom",

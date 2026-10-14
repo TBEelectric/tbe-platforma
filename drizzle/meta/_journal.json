@@ -43,6 +43,13 @@
       "when": 1791923135323,
       "tag": "0005_timesheets_exclusion_constraints",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791971908112,
+      "tag": "0006_user_locale",
+      "breakpoints": true
     }
   ]
 }

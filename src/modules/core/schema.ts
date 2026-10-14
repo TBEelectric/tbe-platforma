@@ -44,6 +44,8 @@ export const user = coreSchema.table("user", {
   employeeId: uuid()
     .unique()
     .references(() => employee.id),
+  /** Interface language (docs/architektura.md, Jazyky rozhraní). */
+  locale: text().notNull().default("cs"),
   ...timestamps,
 });
 

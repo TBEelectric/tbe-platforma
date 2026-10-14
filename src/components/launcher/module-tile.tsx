@@ -1,16 +1,17 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import type { ModuleInfo, ModuleStatus } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
-const statusBadge: Record<
+const badgeVariant: Record<
   ModuleStatus,
-  { label: string; variant: "soft" | "info" | "warning" | "neutral" }
+  "soft" | "info" | "warning" | "neutral"
 > = {
-  active: { label: "Aktivní", variant: "soft" },
-  core: { label: "Součást jádra", variant: "info" },
-  "in-development": { label: "Ve vývoji", variant: "warning" },
-  planned: { label: "Plánováno", variant: "neutral" },
+  active: "soft",
+  core: "info",
+  "in-development": "warning",
+  planned: "neutral",
 };
 
 const iconBox: Record<ModuleStatus, string> = {
@@ -21,8 +22,8 @@ const iconBox: Record<ModuleStatus, string> = {
 };
 
 export function ModuleTile({ module }: { module: ModuleInfo }) {
+  const t = useTranslations("modules");
   const Icon = module.icon;
-  const badge = statusBadge[module.status];
   const content = (
     <>
       <span
@@ -34,13 +35,13 @@ export function ModuleTile({ module }: { module: ModuleInfo }) {
         <Icon className="size-[22px]" strokeWidth={1.8} aria-hidden />
       </span>
       <span className="mt-4 text-[19px] font-bold text-foreground">
-        {module.name}
+        {t(`${module.id}.name`)}
       </span>
       <span className="mt-1 text-[15px] text-muted-foreground">
-        {module.description}
+        {t(`${module.id}.description`)}
       </span>
-      <Badge variant={badge.variant} className="mt-3">
-        {badge.label}
+      <Badge variant={badgeVariant[module.status]} className="mt-3">
+        {t(`status.${module.status}`)}
       </Badge>
     </>
   );

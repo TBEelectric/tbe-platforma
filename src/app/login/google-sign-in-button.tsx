@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
@@ -28,6 +29,7 @@ function GoogleIcon() {
 }
 
 export function GoogleSignInButton() {
+  const t = useTranslations("login");
   const [pending, setPending] = useState(false);
   return (
     <Button
@@ -46,7 +48,7 @@ export function GoogleSignInButton() {
       }}
     >
       <GoogleIcon />
-      {pending ? "Přesměrovávám na Google…" : "Přihlásit se přes Google"}
+      {pending ? t("redirecting") : t("signInWithGoogle")}
     </Button>
   );
 }

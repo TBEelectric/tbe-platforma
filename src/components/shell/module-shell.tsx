@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import type { MenuItem, ModuleInfo } from "@/lib/navigation";
 import { MobileNav } from "./mobile-nav";
@@ -13,6 +14,7 @@ export function ModuleShell({
   menu: MenuItem[];
   children: ReactNode;
 }) {
+  const t = useTranslations();
   return (
     <div className="flex min-h-dvh flex-col lg:flex-row">
       <aside className="sticky top-0 hidden h-dvh w-[248px] shrink-0 lg:block">
@@ -22,7 +24,7 @@ export function ModuleShell({
         tabs={menu
           .filter((item) => item.shortLabel)
           .map(({ shortLabel, href, icon: Icon }) => ({
-            label: shortLabel!,
+            label: t(shortLabel!),
             href,
             icon: <Icon aria-hidden />,
           }))}

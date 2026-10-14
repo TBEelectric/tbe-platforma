@@ -1,6 +1,7 @@
 // Placeholder for timesheets screens that are not built yet.
 // A real screen is a static route (e.g. app/timesheets/day/page.tsx), which takes precedence over this one.
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/shell/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { requirePermission } from "@/lib/current-user";
@@ -37,14 +38,19 @@ export default async function PlaceholderPage({
   const item = findItem(section);
   if (!item) notFound();
   await requirePermission(item.visible);
+  const t = await getTranslations();
 
   return (
     <>
-      <PageHeader title={item.label} subtitle="Připravujeme" />
+      <PageHeader
+        title={t(item.label)}
+        subtitle={t("timesheets.placeholder.subtitle")}
+      />
       <Card>
         <CardContent className="text-[15px] text-muted-foreground">
-          Tato obrazovka vznikne v milníku {plannedMilestone[section]} podle
-          plánu vývoje.
+          {t("timesheets.placeholder.text", {
+            milestone: plannedMilestone[section],
+          })}
         </CardContent>
       </Card>
     </>

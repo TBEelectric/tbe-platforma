@@ -15,8 +15,6 @@ export * from "./rules/absence";
 
 export const timesheetsModule: ModuleInfo = {
   id: "timesheets",
-  name: "Docházka",
-  description: "Pracovní doba, hodiny na zakázky, absence",
   icon: Clock,
   status: "active",
   href: "/timesheets/day",

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { Brand } from "@/components/shell/brand";
 import { SignOutButton } from "@/components/shell/sign-out-button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -7,23 +8,24 @@ import { getCurrentUser } from "@/lib/current-user";
 import { ACCOUNT_NOT_ALLOWED } from "@/modules/core";
 import { GoogleSignInButton } from "./google-sign-in-button";
 
-export const metadata: Metadata = { title: "Přihlášení · TBE platforma" };
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("login");
+  return { title: t("pageTitle") };
+}
 
 // Reads the session and the error from the URL; renders on the server per request.
 export const instant = false;
 
-function errorMessage(code: string | undefined): string | null {
-  if (!code) return null;
-  if (code === ACCOUNT_NOT_ALLOWED) {
-    return "Tento účet nemá do aplikace přístup. Přihlásit se může aktivní zaměstnanec, kterému správce zadal tento e-mail. Obraťte se na administrátora.";
-  }
-  return "Přihlášení se nepovedlo. Zkuste to prosím znovu.";
-}
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const { error } = await searchParams;
   const code = typeof error === "string" ? error : undefined;
-  const message = errorMessage(code);
+  const t = await getTranslations("login");
+  const message = !code
+    ? null
+    : code === ACCOUNT_NOT_ALLOWED
+      ? t("accountNotAllowed")
+      : t("failed");
 
   // Signed in and allowed: nothing to do here.
   if (!code && (await getCurrentUser()).ok) redirect("/");
@@ -37,9 +39,9 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
         <Card className="w-full max-w-md">
           <CardContent className="flex flex-col gap-5">
             <div>
-              <h1 className="text-2xl font-bold">Přihlášení</h1>
+              <h1 className="text-2xl font-bold">{t("title")}</h1>
               <p className="mt-1.5 text-[15px] text-muted-foreground">
-                Přihlaste se firemním Google účtem.
+                {t("intro")}
               </p>
             </div>
             {message && (
@@ -53,7 +55,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
             <GoogleSignInButton />
             {code === ACCOUNT_NOT_ALLOWED && (
               <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
-                Přihlásit se jiným účtem? Nejdřív se odhlaste.
+                {t("otherAccount")}
                 <SignOutButton className="text-foreground hover:bg-muted hover:text-foreground" />
               </div>
             )}

@@ -3,7 +3,7 @@ import {
   canManageAccess,
   canManageEmployees,
   canManageJobs,
-  roleLabel,
+  roleKey,
   rolesFromAssignments,
   type Actor,
 } from "./permissions";
@@ -45,11 +45,11 @@ describe("permissions", () => {
   });
 
   it("labels the highest role", () => {
-    expect(roleLabel({ ...admin, isTimesheetsManager: true })).toBe(
-      "Administrátor",
+    expect(roleKey({ ...admin, isTimesheetsManager: true })).toBe(
+      "admin",
     );
-    expect(roleLabel(manager)).toBe("Správce docházky");
-    expect(roleLabel(lead)).toBe("Vedoucí party");
-    expect(roleLabel(employee)).toBe("Zaměstnanec");
+    expect(roleKey(manager)).toBe("timesheetsManager");
+    expect(roleKey(lead)).toBe("teamLead");
+    expect(roleKey(employee)).toBe("employee");
   });
 });

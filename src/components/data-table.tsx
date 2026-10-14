@@ -16,10 +16,12 @@ import {
   type SortFn,
 } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ArrowUpDown, Search } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
+// Data (names, jobs) is Czech whatever the interface language, so it sorts the Czech way.
 const collator = new Intl.Collator("cs", {
   numeric: true,
   sensitivity: "base",
@@ -69,9 +71,9 @@ export function dataTableColumns<TData extends RowData>() {
 export function DataTable<TData extends RowData & { id: string }>({
   data,
   columns,
-  searchPlaceholder = "Hledat…",
+  searchPlaceholder,
   toolbar,
-  empty = "Žádné záznamy.",
+  empty,
   rowClassName,
 }: {
   data: TData[];
@@ -82,6 +84,9 @@ export function DataTable<TData extends RowData & { id: string }>({
   empty?: string;
   rowClassName?: (row: TData) => string | undefined;
 }) {
+  const t = useTranslations("common");
+  searchPlaceholder ??= t("search");
+  empty ??= t("noRecords");
   const table = useTable(
     {
       features,

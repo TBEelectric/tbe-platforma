@@ -2,6 +2,7 @@
 
 import { Menu } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import {
@@ -19,7 +20,7 @@ const tabClass =
 
 /**
  * Phone/tablet navigation at the bottom (docs/design/screens/06-mobil-den): the module's main tabs
- * and „Více“, which opens the whole module menu in a sheet.
+ * and "more", which opens the whole module menu in a sheet.
  */
 export function MobileNav({
   tabs,
@@ -28,11 +29,12 @@ export function MobileNav({
   tabs: TabItem[];
   children: ReactNode;
 }) {
+  const t = useTranslations("common");
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   return (
     <nav
-      aria-label="Hlavní navigace"
+      aria-label={t("mainNavigation")}
       className="fixed inset-x-0 bottom-0 z-40 flex border-t border-border bg-card pb-[env(safe-area-inset-bottom)] lg:hidden"
     >
       {tabs.map((tab) => {
@@ -56,13 +58,13 @@ export function MobileNav({
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger className={cn(tabClass, "text-muted-foreground")}>
           <Menu aria-hidden />
-          Více
+          {t("more")}
         </SheetTrigger>
         <SheetContent
           side="left"
           className="w-[280px] gap-0 border-none bg-sidebar p-0 [&>[data-slot=sheet-close]]:text-white"
         >
-          <SheetTitle className="sr-only">Menu</SheetTitle>
+          <SheetTitle className="sr-only">{t("menu")}</SheetTitle>
           {/* Close the sheet when any link inside is followed. */}
           <div
             className="h-full"

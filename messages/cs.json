@@ -1,0 +1,104 @@
+{
+  "common": {
+    "appName": "TBE platforma",
+    "appDescription": "Interní aplikace TBE electric",
+    "saved": "Uloženo.",
+    "saving": "Ukládám…",
+    "search": "Hledat…",
+    "noRecords": "Žádné záznamy.",
+    "close": "Zavřít",
+    "menu": "Menu",
+    "more": "Více",
+    "mainNavigation": "Hlavní navigace",
+    "signOut": "Odhlásit se",
+    "switchModule": "Přepnout",
+    "moduleMenu": "Menu modulu {module}",
+    "dateRange": "{from} – {to}",
+    "ongoing": "trvá"
+  },
+  "validation": {
+    "required": "Povinné",
+    "maxLength": "Nejvýše {maximum} znaků",
+    "invalidDate": "Neplatné datum",
+    "enterDate": "Zadejte datum",
+    "enterTime": "Zadejte čas",
+    "invalidEmail": "Neplatný formát e-mailu",
+    "choose": "Vyberte",
+    "numberRange": "Číslo {minimum}–{maximum}",
+    "ico": "IČO má 8 číslic",
+    "invalid": "Neplatná hodnota"
+  },
+  "roles": {
+    "admin": "Administrátor",
+    "timesheetsManager": "Správce docházky",
+    "teamLead": "Vedoucí party",
+    "employee": "Zaměstnanec"
+  },
+  "modules": {
+    "status": {
+      "active": "Aktivní",
+      "core": "Součást jádra",
+      "in-development": "Ve vývoji",
+      "planned": "Plánováno"
+    },
+    "timesheets": {
+      "name": "Docházka",
+      "description": "Pracovní doba, hodiny na zakázky, absence"
+    },
+    "core": {
+      "name": "Zakázky a zákazníci",
+      "description": "Číselník zakázek pro docházku i vozidla"
+    },
+    "fleet": {
+      "name": "Vozový park",
+      "description": "Vozidla, kniha jízd, živá mapa, termíny"
+    },
+    "properties": {
+      "name": "Nemovitosti",
+      "description": "Objekty, smlouvy, revize a náklady"
+    },
+    "inventory": {
+      "name": "Sklad",
+      "description": "Materiál, příjem a výdej na zakázky"
+    },
+    "tools": {
+      "name": "Nářadí a technika",
+      "description": "Evidence kusů, výdej lidem, revize"
+    }
+  },
+  "launcher": {
+    "greeting": "Dobrý den",
+    "today": "Dnes",
+    "chooseModule": "vyberte, s čím chcete pracovat"
+  },
+  "login": {
+    "pageTitle": "Přihlášení · TBE platforma",
+    "title": "Přihlášení",
+    "intro": "Přihlaste se firemním Google účtem.",
+    "signInWithGoogle": "Přihlásit se přes Google",
+    "redirecting": "Přesměrovávám na Google…",
+    "accountNotAllowed": "Tento účet nemá do aplikace přístup. Přihlásit se může aktivní zaměstnanec, kterému správce zadal tento e-mail. Obraťte se na administrátora.",
+    "failed": "Přihlášení se nepovedlo. Zkuste to prosím znovu.",
+    "otherAccount": "Přihlásit se jiným účtem? Nejdřív se odhlaste."
+  },
+  "timesheets": {
+    "menu": {
+      "day": "Můj den",
+      "dayShort": "Den",
+      "someone": "Zápis za jiné",
+      "month": "Můj měsíc",
+      "monthShort": "Měsíc",
+      "absences": "Absence",
+      "absencesShort": "Absence",
+      "approval": "Schvalování",
+      "close": "Uzávěrka",
+      "jobs": "Zakázky",
+      "employees": "Zaměstnanci",
+      "settings": "Nastavení"
+    },
+    "placeholder": {
+      "subtitle": "Připravujeme",
+      "text": "Tato obrazovka vznikne v milníku {milestone} podle plánu vývoje."
+    }
+  }
+}
