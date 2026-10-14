@@ -35,7 +35,7 @@ Docházka má prioritu. Vozový park se připravuje souběžně (Traccar, ověř
       (přestávka, 12 h, odpočinek), interval přes půlnoc a změna času
 - [x] Obrazovka Můj den (desktop i mobil), „Pokračovat od …“
 - [x] Zápis za jiného zaměstnance s důvodem
-- [ ] Absence a dovolená, zůstatek; žádost zaměstnance, schválení vedoucím nebo správcem
+- [x] Absence a dovolená, zůstatek; žádost zaměstnance, schválení vedoucím nebo správcem
 - [ ] Seed: intervaly za aktuální měsíc pro ukázkové zaměstnance (jeden den Jana Nováka prázdný)
 
 ## Milník 4 – Měsíc, schválení, uzávěrka

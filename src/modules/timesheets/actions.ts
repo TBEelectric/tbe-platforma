@@ -8,8 +8,14 @@ import {
   leaveFormSchema,
   type Actor,
 } from "../core/shared";
+import { cancelAbsence, createAbsence, decideAbsence } from "./absences";
 import { setLeaveEntitlement } from "./leave";
-import { canRecordOwnTime, canWriteForSomeoneElse } from "./permissions";
+import {
+  canOpenAbsences,
+  canRecordOwnTime,
+  canWriteForSomeoneElse,
+} from "./permissions";
+import { absenceFormSchema, type AbsenceDecision } from "./rules/absence";
 import { timeEntryFormSchema } from "./rules/forms";
 import {
   createTimeEntry,
@@ -95,5 +101,71 @@ export async function setLeaveAction(
     (user, data) =>
       setLeaveEntitlement({ userId: user.userId }, employeeId, data),
     "/timesheets/employees",
+  );
+}
+
+// ── Absences ──
+
+const ABSENCES = "/timesheets/absences";
+
+export async function createAbsenceAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  return handleFormAction(
+    canOpenAbsences,
+    absenceFormSchema,
+    formData,
+    async (user, data) => {
+      await createAbsence(writerOf(user), data);
+      return {
+        ok: true,
+        message:
+          data.employeeId === user.employee.id
+            ? "Žádost odeslána ke schválení."
+            : "Absence zapsána a schválena.",
+      };
+    },
+    ABSENCES,
+  );
+}
+
+const reasonSchema = absenceFormSchema.pick({ reason: true });
+
+export async function decideAbsenceAction(
+  id: string,
+  decision: AbsenceDecision,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  return handleFormAction(
+    canOpenAbsences,
+    reasonSchema,
+    formData,
+    async (user, data) => {
+      await decideAbsence(writerOf(user), id, decision, data.reason);
+      return {
+        ok: true,
+        message: decision === "approve" ? "Schváleno." : "Zamítnuto.",
+      };
+    },
+    ABSENCES,
+  );
+}
+
+export async function cancelAbsenceAction(
+  id: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  return handleFormAction(
+    canOpenAbsences,
+    reasonSchema,
+    formData,
+    async (user, data) => {
+      await cancelAbsence(writerOf(user), id, data.reason);
+      return { ok: true, message: "Absence zrušena." };
+    },
+    ABSENCES,
   );
 }

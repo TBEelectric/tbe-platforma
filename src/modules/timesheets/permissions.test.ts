@@ -4,6 +4,7 @@ import {
   canApproveTimesheets,
   canCloseTimesheetPeriod,
   canDecideAbsence,
+  canOpenAbsences,
   canRecordOwnTime,
   canWriteForSomeoneElse,
   canWriteTimeFor,
@@ -112,5 +113,22 @@ describe("deciding absences", () => {
         { employeeId: "y", teamId: null },
       ),
     ).toBe(false);
+  });
+});
+
+describe("absence screen", () => {
+  it("is open to employees with attendance and to deciders", () => {
+    expect(canOpenAbsences(base)).toBe(true);
+    expect(canOpenAbsences({ ...base, tracksTime: false })).toBe(false);
+    expect(
+      canOpenAbsences({
+        ...base,
+        tracksTime: false,
+        isTimesheetsManager: true,
+      }),
+    ).toBe(true);
+    expect(canOpenAbsences({ ...base, tracksTime: false, isAdmin: true })).toBe(
+      false,
+    );
   });
 });

@@ -4,3 +4,11 @@ export { listLeaveEntitlements, setLeaveEntitlement } from "./leave";
 export { loadDay, type DayEntryView, type DayView } from "./day";
 export { listWritableEmployees, type WritableEmployee } from "./writable";
 export { teamOn } from "./time-entries";
+export { listDecidableEmployees } from "./writable";
+export { loadLeaveSummary, type LeaveSummary } from "./leave";
+export {
+  listAbsences,
+  listPendingDecisions,
+  listRecentDecisions,
+  type AbsenceRow,
+} from "./absences";

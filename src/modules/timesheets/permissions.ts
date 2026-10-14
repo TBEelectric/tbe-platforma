@@ -56,4 +56,11 @@ export function canDecideAbsence(actor: Actor, owner: TimeOwner): boolean {
   );
 }
 
+/** The Absence screen: own absences, or deciding for others (team lead, timesheets manager). */
+export function canOpenAbsences(actor: Actor): boolean {
+  return (
+    canRecordOwnTime(actor) || actor.isTimesheetsManager || isTeamLead(actor)
+  );
+}
+
 export { canManageEmployees, canManageJobs };

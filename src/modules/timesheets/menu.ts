@@ -16,6 +16,7 @@ import {
   canCloseTimesheetPeriod,
   canManageEmployees,
   canManageJobs,
+  canOpenAbsences,
   canRecordOwnTime,
   canWriteForSomeoneElse,
 } from "./permissions";
@@ -48,7 +49,7 @@ export const timesheetsMenu: MenuItem[] = [
     shortLabel: "Absence",
     href: "/timesheets/absences",
     icon: Umbrella,
-    visible: canRecordOwnTime,
+    visible: canOpenAbsences,
   },
   {
     label: "Schvalování",

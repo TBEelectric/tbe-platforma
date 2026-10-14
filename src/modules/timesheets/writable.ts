@@ -17,7 +17,25 @@ export async function listWritableEmployees(
   actor: Actor,
   date: string,
 ): Promise<WritableEmployee[]> {
-  const everyone = actor.isAdmin || actor.isTimesheetsManager;
+  return listOthers(actor, date, actor.isAdmin || actor.isTimesheetsManager);
+}
+
+/**
+ * Employees for whom the actor may enter or decide absences (canDecideAbsence): everyone for the
+ * timesheets manager, the own team for a team lead; not the administrator role.
+ */
+export async function listDecidableEmployees(
+  actor: Actor,
+  date: string,
+): Promise<WritableEmployee[]> {
+  return listOthers(actor, date, actor.isTimesheetsManager);
+}
+
+async function listOthers(
+  actor: Actor,
+  date: string,
+  everyone: boolean,
+): Promise<WritableEmployee[]> {
   if (!everyone && actor.ledTeamIds.length === 0) return [];
   const rows = await db
     .select({

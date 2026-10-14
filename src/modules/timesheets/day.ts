@@ -1,4 +1,4 @@
-import { and, asc, eq, gte, inArray, isNull, lte, or } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, isNull, lte } from "drizzle-orm";
 import {
   addDays,
   monthStart,
@@ -16,7 +16,7 @@ import {
   periodOn,
   publicHoliday,
 } from "../core";
-import { absenceHours, dailyHours, leaveBalance } from "./rules/leave";
+import { loadLeaveSummary } from "./leave";
 import { isPeriodClosed, monthLabel, weekStart } from "./rules/month";
 import { resolveSettings } from "./rules/settings";
 import {
@@ -36,7 +36,6 @@ import {
 } from "./rules/warnings";
 import {
   absence,
-  leaveEntitlement,
   periodClose,
   timeEntry,
   timesheet,
@@ -138,7 +137,7 @@ export async function loadDay(
     close,
     settingRows,
     holidays,
-    entitlement,
+    leave,
     workTypes,
     activeJobs,
   ] = await Promise.all([
@@ -177,14 +176,8 @@ export async function loadDay(
         and(
           eq(absence.employeeId, employeeId),
           isNull(absence.archivedAt),
-          or(
-            and(lte(absence.dateFrom, monthEnd), gte(absence.dateTo, month)),
-            and(
-              lte(absence.dateFrom, `${year}-12-31`),
-              gte(absence.dateTo, `${year}-01-01`),
-              eq(absence.type, "vacation"),
-            ),
-          ),
+          lte(absence.dateFrom, monthEnd),
+          gte(absence.dateTo, month),
         ),
       ),
     db
@@ -204,15 +197,7 @@ export async function loadDay(
           lte(publicHoliday.date, `${Number(year) + 1}-01-31`),
         ),
       ),
-    db
-      .select()
-      .from(leaveEntitlement)
-      .where(
-        and(
-          eq(leaveEntitlement.employeeId, employeeId),
-          eq(leaveEntitlement.year, Number(year)),
-        ),
-      ),
+    loadLeaveSummary(employeeId, Number(year), date),
     db
       .select()
       .from(workType)
@@ -293,35 +278,6 @@ export async function loadDay(
     .reduce((sum, e) => sum + entryDurationMinutes(e), 0);
 
   const current = periodOn(employments, date);
-  const dailyHoursOn = (d: string) => {
-    const e = periodOn(employments, d);
-    return e ? dailyHours(e) : 0;
-  };
-  const yearRange = { from: `${year}-01-01`, to: `${year}-12-31` };
-  const vacationHours = (statusFilter: AbsenceStatus) =>
-    absences
-      .filter((a) => a.type === "vacation" && a.status === statusFilter)
-      .reduce(
-        (sum, a) =>
-          sum +
-          absenceHours(a, {
-            holidays: holidayDates,
-            dailyHoursOn,
-            within: yearRange,
-          }),
-        0,
-      );
-  const ent = entitlement[0];
-  const balance = ent
-    ? leaveBalance({
-        entitled: ent.hoursEntitled,
-        carriedOver: ent.hoursCarriedOver,
-        takenHours: vacationHours("approved"),
-        requestedHours: vacationHours("requested"),
-        dailyHours: current ? dailyHours(current) : 0,
-      })
-    : null;
-
   // Closed jobs used on the day stay selectable for editing those entries.
   const usedJobIds = day
     .map((e) => e.jobId)
@@ -392,14 +348,11 @@ export async function loadDay(
       )
       .map((a) => ({ type: a.type, status: a.status, hours: a.hours })),
     monthWorkMinutes,
-    leave:
-      balance && ent
-        ? {
-            remainingHours: balance.remainingHours,
-            remainingDays: balance.remainingDays,
-            totalHours: ent.hoursEntitled + ent.hoursCarriedOver,
-          }
-        : null,
+    leave: leave && {
+      remainingHours: leave.remainingHours,
+      remainingDays: leave.remainingDays,
+      totalHours: leave.entitled + leave.carriedOver,
+    },
     continueFrom: continueFrom(day, date),
     jobs: [...activeJobs, ...usedJobs],
     workTypes: workTypes.map((w) => ({

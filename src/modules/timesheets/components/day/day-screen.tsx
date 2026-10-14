@@ -14,6 +14,7 @@ import {
 import { formatMinutes } from "@/lib/duration";
 import { cn } from "@/lib/utils";
 import type { DayView } from "../../day";
+import { formatDays } from "../../rules/leave";
 import { TIMESHEET_STATUS_LABELS } from "../../rules/month";
 import { ABSENCE_TYPE_LABELS } from "../../rules/time-entry";
 import { DayEntries } from "./day-entries";
@@ -24,14 +25,6 @@ function breaksLabel(count: number): string {
   if (count === 1) return "1 přestávka";
   if (count < 5) return `${count} přestávky`;
   return `${count} přestávek`;
-}
-
-function daysLabel(days: number): string {
-  const text = String(days).replace(".", ",");
-  if (!Number.isInteger(days)) return `${text} dne`;
-  if (days === 1) return "1 den";
-  if (days >= 2 && days <= 4) return `${text} dny`;
-  return `${text} dní`;
 }
 
 const ABSENCE_STATUS_LABELS = {
@@ -217,7 +210,7 @@ export function DayScreen({
             }
             detail={
               view.leave
-                ? `${view.leave.remainingDays !== null ? `${daysLabel(view.leave.remainingDays)} ` : ""}z nároku ${String(view.leave.totalHours).replace(".", ",")} h`
+                ? `${view.leave.remainingDays !== null ? `${formatDays(view.leave.remainingDays)} ` : ""}z nároku ${String(view.leave.totalHours).replace(".", ",")} h`
                 : "nárok není zadaný"
             }
           />
