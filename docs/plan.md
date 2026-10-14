@@ -113,10 +113,16 @@ hotových krocích před ním. Značky: `[ručně]` = skript krok nespustí, ud�
       na existující DB pustit `pnpm db:seed`; „Obvyklý den“ bez historie vezme první zakázku party; „Jako včera“ s uzavřenou
       zakázkou skončí hláškou (nepřeskočí ji); smazání v den celodenní absence je povolené.
 
-- [ ] **3b.6 – Testování na telefonu** [ručně]
-      Dočasný tunel (např. Cloudflare Tunnel) s veřejnou HTTPS adresou, adresa v Google OAuth a `BETTER_AUTH_URL`,
-      skript `pnpm tunnel`, postup v `CLAUDE.md`. Vyžaduje instalaci nástroje a nastavení v Google Cloud Console.
-      Hotovo, když: aplikace se otevře a přihlásí na telefonu.
+- [ ] **3b.6 – Vývojové přihlášení a přístup z telefonu v domácí síti**
+      Bez tunelu a bez Google Console. (1) **Vývojové přihlášení:** na přihlašovací stránce navíc „Přihlásit jako…“
+      se seznamem aktivních zaměstnanců (jméno, role); vytvoří normální Better Auth session daného uživatele. Funguje jen
+      při `NODE_ENV=development` **a** `DEV_LOGIN=true` v `.env` (do `.env.example` zakomentovaně); jinak route i tlačítko
+      neexistují / vrací 404. Test, který ověří, že bez obou podmínek přihlášení nejde. (2) **Přístup z telefonu:**
+      skript `pnpm dev:lan` spustí Next.js na `0.0.0.0` a vypíše adresu `http://<IP Macu>:3000`; `BETTER_AUTH_URL`
+      / povolené originy Better Auth upravit tak, aby fungovaly i z IP adresy v síti (jen ve vývoji). Postup do `CLAUDE.md`.
+      PWA instalace a HTTPS až s nasazením na VPS (milník 5).
+      Hotovo, když: na telefonu ve stejné Wi-Fi jde otevřít aplikaci a přihlásit se „jako“ ukázkový zaměstnanec;
+      v produkčním buildu vývojové přihlášení neexistuje.
 
 - [ ] **3b.7 – Mobil I: osa a úpravy**
       Mobile-first obrazovka Můj den (< 768 px) podle `MobilOsa.dc.html`: svislá osa celého dne s automatickým posunem na
