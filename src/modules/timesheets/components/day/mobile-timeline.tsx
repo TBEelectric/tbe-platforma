@@ -541,6 +541,7 @@ export function MobileTimeline({
           {entries.map((e) => {
             const isBreak = e.kind === "break";
             const j = e.jobId ? jobsById.get(e.jobId) : null;
+            const fill = isBreak ? BREAK_COLOR : (j?.color ?? "#5b6877");
             const height = blockHeightPx(e);
             const lines = blockLines(height);
             const active = e.id === selectedId;
@@ -575,15 +576,14 @@ export function MobileTimeline({
                   }
                 }}
                 className={cn(
-                  "absolute inset-x-0 flex cursor-grab flex-col justify-center overflow-hidden rounded-[10px]",
+                  "absolute inset-x-0 flex cursor-grab flex-col justify-center overflow-hidden rounded-[10px] border",
                   active && "z-10 ring-[3px] ring-foreground",
                 )}
                 style={{
                   top: minuteToPx(e.start),
                   height,
-                  backgroundColor: isBreak
-                    ? BREAK_COLOR
-                    : (j?.color ?? "#5b6877"),
+                  backgroundColor: fill,
+                  borderColor: `color-mix(in srgb, ${fill} 78%, black)`,
                   backgroundImage: isBreak ? BREAK_HATCH : undefined,
                   color: isBreak ? "#6e3604" : "#fff",
                 }}
