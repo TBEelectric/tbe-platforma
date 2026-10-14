@@ -138,18 +138,6 @@ hotových krocích před ním. Značky: `[ručně]` = skript krok nespustí, ud�
       Hotovo, když: celý mobilní zápis odpovídá prototypu (ověřeno v náhledu telefonu v prohlížeči).
       Výsledek: panel má přestávku, tlačítka zakázek a druhů práce; „Další zakázky…“ je celá obrazovka s hledáním a sekcemi, špendlík pro vedoucího (akce `pinTeamJobAction`); prázdný den má „Obvyklý den“ / „Jako včera“; „Uložit jako můj obvyklý den“ s potvrzením; den bez parametru se otevře na nejstarším nevyplněném dni. Špendlík jsem v náhledu neviděl (testovací účet nevede žádnou partu), ověřeno jen typově.
 
-- [ ] **3b.8 – Vývojové přihlášení a přístup z telefonu v domácí síti** [zastavit po]
-      Bez tunelu a bez Google Console. (1) **Vývojové přihlášení:** na přihlašovací stránce navíc „Přihlásit jako…“
-      se seznamem aktivních zaměstnanců (jméno, role); vytvoří normální Better Auth session daného uživatele. Funguje jen
-      při `NODE_ENV=development` **a** `DEV_LOGIN=true` v `.env` (do `.env.example` zakomentovaně); jinak route i tlačítko
-      neexistují / vrací 404. Test, který ověří, že bez obou podmínek přihlášení nejde. (2) **Přístup z telefonu:**
-      skript `pnpm dev:lan` spustí Next.js na `0.0.0.0` a vypíše adresu `http://<IP Macu>:3000`; `BETTER_AUTH_URL`
-      / povolené originy Better Auth upravit tak, aby fungovaly i z IP adresy v síti (jen ve vývoji). Postup do `CLAUDE.md`.
-      PWA instalace a HTTPS až s nasazením na VPS (milník 5).
-      Hotovo, když: na telefonu ve stejné Wi-Fi jde otevřít aplikaci a přihlásit se „jako“ ukázkový zaměstnanec;
-      v produkčním buildu vývojové přihlášení neexistuje. Po kroku člověk vyzkouší mobilní
-      zápis (kroky 3b.6–3b.7) na skutečném telefonu.
-
 - [ ] **3b.9 – Desktop: Můj den**
       Obrazovka Můj den (≥ 1024 px) podle `Den.dc.html`: vodorovná osa nad stejnou logikou, přepínač
       „Pracovní doba / Celý den“, čára „teď“, hover s časem, kartičky intervalů propojené s osou, panel vybraného intervalu
@@ -174,6 +162,17 @@ hotových krocích před ním. Značky: `[ručně]` = skript krok nespustí, ud�
 
 ## Milník 5 – Pilot
 
+- [ ] **Vývojové přihlášení a přístup z telefonu v domácí síti** (přesunuto z 3b.8; mobil se zatím testuje v náhledu telefonu v Chromu)
+      Bez tunelu a bez Google Console. (1) **Vývojové přihlášení:** na přihlašovací stránce navíc „Přihlásit jako…“
+      se seznamem aktivních zaměstnanců (jméno, role); vytvoří normální Better Auth session daného uživatele. Funguje jen
+      při `NODE_ENV=development` **a** `DEV_LOGIN=true` v `.env` (do `.env.example` zakomentovaně); jinak route i tlačítko
+      neexistují / vrací 404. Test, který ověří, že bez obou podmínek přihlášení nejde. (2) **Přístup z telefonu:**
+      skript `pnpm dev:lan` spustí Next.js na `0.0.0.0` a vypíše adresu `http://<IP Macu>:3000`; `BETTER_AUTH_URL`
+      / povolené originy Better Auth upravit tak, aby fungovaly i z IP adresy v síti (jen ve vývoji). Postup do `CLAUDE.md`.
+      PWA instalace a HTTPS až s nasazením na VPS (milník 5).
+      Hotovo, když: na telefonu ve stejné Wi-Fi jde otevřít aplikaci a přihlásit se „jako“ ukázkový zaměstnanec;
+      v produkčním buildu vývojové přihlášení neexistuje. Po kroku člověk vyzkouší mobilní
+      zápis (kroky 3b.6–3b.7) na skutečném telefonu.
 - [ ] Nasazení na VPS (Docker Compose, Caddy, zálohy, ověřená obnova)
 - [ ] PWA (instalace na plochu firemních telefonů)
 - [ ] Playwright testy hlavních scénářů (zápis dne, potvrzení, schválení, uzávěrka)
