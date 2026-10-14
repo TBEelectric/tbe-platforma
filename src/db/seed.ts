@@ -1,12 +1,20 @@
 // Sample data for local development (pnpm db:seed), matching the screen references and the
 // import template (same personal numbers, so importing the template updates these records).
 // Safe to run repeatedly: existing records are left as they are.
-import { and, eq } from "drizzle-orm";
+import { and, eq, gte, inArray, lte } from "drizzle-orm";
 import { writeAudit } from "@/lib/audit";
+import {
+  addDays,
+  isWeekend,
+  monthStart,
+  pragueInstant,
+  todayInPrague,
+} from "@/lib/dates";
 import { closeDb, db, type DbOrTx } from "@/lib/db";
 import { ensureAdmin, syncPublicHolidays } from "@/modules/core";
 import {
   customer,
+  publicHoliday,
   employee,
   employment,
   job,
@@ -14,7 +22,10 @@ import {
   teamMember,
 } from "@/modules/core/schema";
 import {
+  absence,
   leaveEntitlement,
+  timeEntry,
+  timesheet,
   timesheetSettings,
   workType,
 } from "@/modules/timesheets/schema";
@@ -360,6 +371,233 @@ async function seedTimesheetCatalogues(tx: DbOrTx) {
   }
 }
 
+// ── Time entries of the current month ──
+
+type Slot = [
+  from: string,
+  to: string,
+  job: string | null,
+  workType: string | null,
+  note?: string,
+];
+
+/** Day patterns; null work type = break. Pattern 0 is the day from the screen reference. */
+const DAY_PATTERNS: Slot[][] = [
+  [
+    ["06:30", "08:15", "250147", "montaz"],
+    ["08:15", "08:30", null, null],
+    ["08:30", "11:00", "250162", "montaz", "Zapojení"],
+    ["11:00", "11:15", null, null],
+    ["11:15", "12:00", "250147", "cesta", "Přejezd na halu"],
+    ["12:00", "15:15", "250147", "montaz", "Dokončení montáže"],
+  ],
+  [
+    ["07:00", "10:00", "250147", "montaz"],
+    ["10:00", "10:30", null, null],
+    ["10:30", "15:30", "250147", "montaz"],
+  ],
+  [
+    ["06:00", "07:00", "250201", "cesta"],
+    ["07:00", "11:30", "250201", "revize"],
+    ["11:30", "12:00", null, null],
+    ["12:00", "14:30", "250201", "revize", "Protokoly"],
+    ["14:30", "15:30", null, "rezie", "Sklad"],
+  ],
+];
+
+/** The working day before `date` (skips weekends and public holidays). */
+function previousWorkday(date: string, holidays: Set<string>): string {
+  let day = addDays(date, -1);
+  while (isWeekend(day) || holidays.has(day)) day = addDays(day, -1);
+  return day;
+}
+
+/**
+ * Entries for the seed employees on working days from the 1st of the current month to today.
+ * Replaces their entries of this month on every run (open months only). Jan Novák has today as in
+ * the screen reference and the previous working day empty (shown as missing).
+ */
+async function seedMonthEntries(tx: DbOrTx) {
+  const today = todayInPrague();
+  const month = monthStart(today);
+  const holidays = new Set(
+    (
+      await tx
+        .select({ date: publicHoliday.date })
+        .from(publicHoliday)
+        .where(gte(publicHoliday.date, month))
+    ).map((h) => h.date),
+  );
+  const jobIds = new Map(
+    (await tx.select().from(job)).map((j) => [j.code, j.id] as const),
+  );
+  const workTypeIds = new Map(
+    (await tx.select().from(workType)).map((w) => [w.code, w.id] as const),
+  );
+  const people = await tx
+    .select()
+    .from(employee)
+    .where(
+      inArray(
+        employee.personalNumber,
+        employees.map((e) => e.personalNumber),
+      ),
+    );
+  const janEmptyDay = previousWorkday(today, holidays);
+
+  let count = 0;
+  for (const [index, seedEmployee] of employees.entries()) {
+    const emp = people.find(
+      (p) => p.personalNumber === seedEmployee.personalNumber,
+    );
+    if (!emp) continue;
+    const [sheet] = await tx
+      .select()
+      .from(timesheet)
+      .where(and(eq(timesheet.employeeId, emp.id), eq(timesheet.month, month)));
+    if (sheet && sheet.status !== "open") continue;
+
+    const old = await tx
+      .delete(timeEntry)
+      .where(
+        and(
+          eq(timeEntry.employeeId, emp.id),
+          gte(timeEntry.workDate, month),
+          lte(timeEntry.workDate, addDays(monthStart(addDays(month, 31)), -1)),
+        ),
+      )
+      .returning();
+    for (const row of old)
+      await writeAudit(tx, {
+        actorUserId: null,
+        entity: "time_entry",
+        entityId: row.id,
+        action: "delete",
+        before: row,
+        after: null,
+        reason: "Seed: nová ukázková data",
+      });
+
+    const absences = await tx
+      .select()
+      .from(absence)
+      .where(eq(absence.employeeId, emp.id));
+    for (
+      let day = month, dayIndex = 0;
+      day <= today;
+      day = addDays(day, 1), dayIndex++
+    ) {
+      if (isWeekend(day) || holidays.has(day)) continue;
+      if (seedEmployee.personalNumber === "1001" && day === janEmptyDay)
+        continue;
+      // DPP works only on Tuesdays and Thursdays.
+      const weekday = new Date(`${day}T12:00:00Z`).getUTCDay();
+      if (seedEmployee.type === "dpp" && weekday !== 2 && weekday !== 4)
+        continue;
+      if (
+        absences.some(
+          (a) =>
+            a.status !== "rejected" &&
+            !a.archivedAt &&
+            a.dateFrom <= day &&
+            day <= a.dateTo,
+        )
+      )
+        continue;
+      const pattern =
+        seedEmployee.personalNumber === "1001" && day === today
+          ? DAY_PATTERNS[0]
+          : DAY_PATTERNS[(dayIndex + index) % DAY_PATTERNS.length];
+      for (const [from, to, jobCode, workTypeCode, note] of pattern) {
+        const [row] = await tx
+          .insert(timeEntry)
+          .values({
+            employeeId: emp.id,
+            workDate: day,
+            startAt: pragueInstant(day, from)!,
+            endAt: pragueInstant(day, to)!,
+            kind: workTypeCode ? "work" : "break",
+            jobId: jobCode ? jobIds.get(jobCode)! : null,
+            workTypeId: workTypeCode ? workTypeIds.get(workTypeCode)! : null,
+            note: note ?? null,
+          })
+          .returning();
+        await writeAudit(tx, {
+          actorUserId: null,
+          entity: "time_entry",
+          entityId: row.id,
+          action: "create",
+          before: null,
+          after: row,
+        });
+        count++;
+      }
+    }
+  }
+  return count;
+}
+
+/** One approved vacation this month (Petr Svoboda) and one pending request next month (Martin Dvořák). */
+async function seedAbsences(tx: DbOrTx) {
+  const today = todayInPrague();
+  const month = monthStart(today);
+  const nextMonth = monthStart(addDays(month, 31));
+  const samples = [
+    {
+      personalNumber: "1002",
+      type: "vacation" as const,
+      dateFrom: addDays(month, 7),
+      dateTo: addDays(month, 8),
+      status: "approved" as const,
+      note: "Rodinná akce",
+    },
+    {
+      personalNumber: "1003",
+      type: "vacation" as const,
+      dateFrom: addDays(nextMonth, 9),
+      dateTo: addDays(nextMonth, 13),
+      status: "requested" as const,
+      note: null,
+    },
+  ];
+  for (const sample of samples) {
+    const [emp] = await tx
+      .select()
+      .from(employee)
+      .where(eq(employee.personalNumber, sample.personalNumber));
+    if (!emp) continue;
+    const [found] = await tx
+      .select()
+      .from(absence)
+      .where(
+        and(
+          eq(absence.employeeId, emp.id),
+          eq(absence.dateFrom, sample.dateFrom),
+        ),
+      );
+    await upsertAudited(
+      tx,
+      "absence",
+      found,
+      async () =>
+        (
+          await tx
+            .insert(absence)
+            .values({
+              employeeId: emp.id,
+              type: sample.type,
+              dateFrom: sample.dateFrom,
+              dateTo: sample.dateTo,
+              status: sample.status,
+              note: sample.note,
+              decidedAt: sample.status === "approved" ? new Date() : null,
+            })
+            .returning()
+        )[0],
+    );
+  }
+}
+
 async function main() {
   const holidays = await syncPublicHolidays(db, YEAR - 1, YEAR + 5);
   await db.transaction(async (tx) => {
@@ -367,6 +605,9 @@ async function main() {
     await seedJobs(tx);
     await seedTimesheetCatalogues(tx);
   });
+  // Absences first: days with an absence get no entries.
+  await db.transaction(seedAbsences);
+  const entries = await db.transaction(seedMonthEntries);
   await ensureAdmin(db, {
     email: "marketing@tbeelectric.cz",
     firstName: "Marketing",
@@ -374,7 +615,9 @@ async function main() {
     personalNumber: "A001",
     tracksTime: false,
   });
-  console.log(`Seed done (${holidays} public holidays added).`);
+  console.log(
+    `Seed done (${holidays} public holidays added, ${entries} time entries this month).`,
+  );
 }
 
 main()
