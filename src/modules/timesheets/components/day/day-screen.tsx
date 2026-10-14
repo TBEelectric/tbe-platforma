@@ -102,7 +102,7 @@ export function DayScreen({
           <Link
             href={hrefFor(addDays(view.date, -1))}
             aria-label={t("timesheets.day.previousDay")}
-            className="flex size-11 items-center justify-center rounded-lg bg-white/10"
+            className="flex size-11 items-center justify-center rounded-lg bg-white/10 text-white"
           >
             <ChevronLeft className="size-5" />
           </Link>
@@ -119,7 +119,7 @@ export function DayScreen({
           <Link
             href={hrefFor(addDays(view.date, 1))}
             aria-label={t("timesheets.day.nextDay")}
-            className="flex size-11 items-center justify-center rounded-lg bg-white/10"
+            className="flex size-11 items-center justify-center rounded-lg bg-white/10 text-white"
           >
             <ChevronRight className="size-5" />
           </Link>
