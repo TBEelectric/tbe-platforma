@@ -293,7 +293,7 @@ export function useTimeline({
   /**
    * Quick buttons of an entry: the last used jobs plus its own (see `jobChipIds`). The order is
    * fixed while the panel is open, so choosing a job does not make the buttons jump around;
-   * a job chosen from the full list is added at the end.
+   * a job chosen from the full list is added at the top.
    */
   const chipIdsRef = useRef<string[] | null>(null);
   useEffect(() => {
@@ -310,7 +310,7 @@ export function useTimeline({
       });
       const ids = chipIdsRef.current;
       if (entry.kind === "work" && entry.jobId && !ids.includes(entry.jobId))
-        ids.push(entry.jobId);
+        ids.unshift(entry.jobId);
       return ids.map((id) => byId.get(id)).filter((j) => j !== undefined);
     },
     [day],
