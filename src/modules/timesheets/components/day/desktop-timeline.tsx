@@ -364,8 +364,6 @@ export function DesktopTimeline({
         </p>
       )}
 
-      <p className="text-[13px] text-muted-foreground">{t("desktop.hint")}</p>
-
       {/* Axis: night arrows in the margins, outside the drawing area */}
       <div className="flex items-start gap-1 pt-8">
         <div className="flex h-16 w-6 shrink-0 items-center">

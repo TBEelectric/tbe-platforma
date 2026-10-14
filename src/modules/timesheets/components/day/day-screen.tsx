@@ -269,9 +269,7 @@ export function DayScreen({
       <div className="grid gap-5">
         <section className="flex flex-col gap-4 lg:rounded-xl lg:border lg:border-border lg:bg-card lg:p-5">
           <div className="hidden items-center justify-between gap-3 lg:flex">
-            <h2 className="text-lg font-bold">
-              {t("timesheets.day.entriesTitle")}
-            </h2>
+            <h2 className="text-lg font-bold">{longDate}</h2>
             <Badge variant={lockedOrOpen}>
               <span aria-hidden className="size-2 rounded-full bg-current" />
               {statusText}

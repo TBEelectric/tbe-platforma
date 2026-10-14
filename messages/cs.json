@@ -246,7 +246,6 @@
       "dayMissing": "{day} nemá záznam",
       "dayMissingFull": "{day} nemá záznam ani absenci.",
       "fill": "Doplnit",
-      "entriesTitle": "Intervaly dne",
       "byJobToday": "Dnes podle zakázek",
       "byJob": "Podle zakázek",
       "nothingYet": "Zatím nic.",
@@ -305,7 +304,6 @@
       },
       "desktop": {
         "title": "Intervaly dne",
-        "hint": "Táhnutím po ose nakreslete interval · klik do mezery ji vyplní · tažením okrajů upravíte · šipky ±5 min (Shift = začátek) · Delete smaže",
         "emptyHint": "Den je prázdný. Nakreslete interval na ose, nebo:",
         "jobOrBreak": "Zakázka nebo přestávka",
         "workType": "Druh práce",
