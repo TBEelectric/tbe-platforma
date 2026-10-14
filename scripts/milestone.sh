@@ -8,7 +8,8 @@
 #   scripts/milestone.sh 3b --steps 2       # nejvýš 2 kroky
 #   scripts/milestone.sh 3b --plan-only     # jen ukáže plán dalšího kroku, nic nemění
 #   scripts/milestone.sh 3b --dry-run       # vypíše, který krok by se spustil, a příkaz
-# Volby: --model <alias>  --effort <low|medium|high|xhigh|max>  --max-turns <n> (výchozí 300)
+# Model: výchozí sonnet; krok se značkou [opus] v plánu jede na opus; --model přebije obojí.
+# Volby: --model <alias>  --effort <low|medium|high|xhigh|max>  --max-turns <n> (výchozí 150)
 #        --budget <usd>   --auto (permission mode auto místo seznamu povolených příkazů)
 #
 # Kompatibilní s bash 3.2 (macOS). Volitelně jq pro čitelný průběh (brew install jq).
@@ -21,7 +22,8 @@ if [ -z "$MILESTONE" ] || [ "${MILESTONE#-}" != "$MILESTONE" ]; then
 fi
 shift
 
-YES=0; MAX_STEPS=999; PLAN_ONLY=0; DRY_RUN=0; MODEL=""; EFFORT=""; MAX_TURNS=300; BUDGET=""; AUTO=0
+YES=0; MAX_STEPS=999; PLAN_ONLY=0; DRY_RUN=0; MODEL=""; EFFORT=""; MAX_TURNS=150; BUDGET=""; AUTO=0
+DEFAULT_MODEL="${MILESTONE_MODEL:-sonnet}"   # kroky se značkou [opus] v plánu jedou na opus
 while [ $# -gt 0 ]; do
   case "$1" in
     --yes|-y) YES=1 ;;
@@ -123,7 +125,7 @@ progress() {
 }
 
 run_step() {
-  local id="$1" log="$2" note="$3" prompt mode_args
+  local id="$1" log="$2" note="$3" prompt mode_args   # $5 = řádek kroku z plánu
   prompt="$(sed -e "s/{{MILESTONE}}/${MILESTONE}/g" -e "s/{{STEP}}/${id}/g" "$PROMPT_TPL")"
   prompt="${prompt//\{\{DIRTY_NOTE\}\}/$note}"
   if [ $PLAN_ONLY -eq 1 ]; then
@@ -134,13 +136,16 @@ run_step() {
   else
     mode_args=(--permission-mode acceptEdits --permission-prompts none --allowedTools "${ALLOWED[@]}")
   fi
-  local extra=()
-  [ -n "$MODEL" ]  && extra+=(--model "$MODEL")
+  local extra=() model="$DEFAULT_MODEL"
+  printf '%s' "$5" | grep -q '\[opus\]' && model="opus"
+  [ -n "$MODEL" ] && model="$MODEL"
+  extra+=(--model "$model")
+  STEP_MODEL="$model"
   [ -n "$EFFORT" ] && extra+=(--effort "$EFFORT")
   [ -n "$BUDGET" ] && extra+=(--max-budget-usd "$BUDGET")
 
   if [ $DRY_RUN -eq 1 ]; then
-    printf '%s\n' "$CLAUDE -p --append-system-prompt-file $RULES --output-format stream-json --verbose --max-turns $MAX_TURNS ${mode_args[*]} ${extra[*]} <<< \"<prompt>\""
+    printf '%s\n' "$CLAUDE -p --append-system-prompt-file $RULES --output-format stream-json --verbose --max-turns $MAX_TURNS --strict-mcp-config ${mode_args[*]} ${extra[*]} <<< \"<prompt>\""
     printf '%s\n%s\n' "--- prompt ---" "$prompt"
     return 0
   fi
@@ -150,10 +155,17 @@ run_step() {
       --output-format stream-json --verbose \
       --max-turns "$MAX_TURNS" \
       --name "${MILESTONE}-${id}" \
+      --strict-mcp-config \
       ${extra[@]+"${extra[@]}"} \
       "${mode_args[@]}" \
     | tee "$log" | progress
   return "${PIPESTATUS[1]}"
+}
+
+# Shrnutí spotřeby z události "result".
+cost_info() {
+  [ $HAVE_JQ -eq 1 ] || return 0
+  jq -r 'select(.type=="result") | ", tahů \(.num_turns // 0), kontext max ~\(((.usage.iterations[-1].cache_read_input_tokens // 0)/1000)|floor)k, odhad $\(((.total_cost_usd // 0)*100|round)/100)"' "$1" 2>/dev/null | tail -1
 }
 
 # Poslední řádek STATUS z finální odpovědi (událost "result"), ne z průběžného textu.
@@ -207,7 +219,7 @@ while [ $count -lt "$MAX_STEPS" ]; do
   say "Krok $title  ${c_dim}(log: $log)${c_0}"
   [ $first -eq 1 ] && printf '%s\n' "${c_dim}  Claude Code: $CLAUDE ($("$CLAUDE" --version 2>/dev/null | head -1))${c_0}"
   start=$(date +%s)
-  run_step "$id" "$log" "$note"; rc=$?
+  run_step "$id" "$log" "$note" "" "$line"; rc=$?
   mins=$(( ($(date +%s) - start) / 60 ))
   [ $DRY_RUN -eq 1 ] && exit 0
   if [ $PLAN_ONLY -eq 1 ]; then ok "Plán kroku $id je výše (celý v $log)."; exit 0; fi
@@ -224,7 +236,7 @@ while [ $count -lt "$MAX_STEPS" ]; do
   dirty    && fail "Po kroku $id zůstaly necommitnuté změny."
   unpushed && fail "Krok $id má nepushnuté commity."
 
-  ok "Krok $id hotový za $mins min."
+  ok "Krok $id hotový za $mins min (model ${STEP_MODEL:-?}$(cost_info "$log"))."
   grep -A12 -E "^- \[x\] \*\*$(printf '%s' "$id" | sed 's/\./\\./g')[^0-9]" "$PLAN" | grep -m1 'Výsledek:' | sed 's/^ */   /'
   notify "Krok $id hotový"
   count=$((count+1)); first=0

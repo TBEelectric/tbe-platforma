@@ -47,7 +47,7 @@ Reference: prototypy `docs/design/prototypes/MobilOsa.dc.html` (mobil, primárn�
 
 Kroky jdou po sobě; každý se pouští v nové session (ručně nebo `scripts/milestone.sh 3b`). Každý krok staví jen na
 hotových krocích před ním. Značky: `[ručně]` = skript krok nespustí, udělá ho člověk s Claude Code interaktivně;
-`[zastavit po]` = skript po kroku zastaví, aby člověk výsledek vyzkoušel.
+`[zastavit po]` = skript po kroku zastaví, aby člověk výsledek vyzkoušel; `[opus]` = krok běží na modelu Opus (jinak Sonnet).
 
 - [x] **3b.1 – Jazyky**
       next-intl, texty milníků 1–3 na klíčích v `messages/cs.json`, `user.locale` (výchozí `cs`). Bez překladu.
@@ -72,7 +72,7 @@ hotových krocích před ním. Značky: `[ručně]` = skript krok nespustí, ud�
       Jednoduché UI ve správě: přehled připnutých zakázek v detailu party, šablona v detailu zaměstnance (zobrazit, smazat).
       Hotovo, když: akce a oprávnění jsou otestované, správa funguje; nová osa zatím není.
 
-- [ ] **3b.4 – Logika osy (čisté funkce)**
+- [ ] **3b.4 – Logika osy (čisté funkce)** [opus]
       Jen `src/modules/timesheets/rules` + testy, převzato z výpočtů v prototypech: přichytávání (15 min tažení na mobilu,
       5 min jinak), zarážky o sousedy, společná hranice navazujících intervalů (soused min. 5 min, nezmizí), kreslení
       tažením, klik do mezery = celá mezera / jinde 1 h, ne do budoucna, rozsah osy 0:00 až 6:00 +1 a interval přes půlnoc,
@@ -80,7 +80,7 @@ hotových krocích před ním. Značky: `[ručně]` = skript krok nespustí, ud�
       sekce výběru zakázky, hledání bez diakritiky (číslo, název, firma, místo), výchozí den = nejstarší nevyplněný pracovní den.
       Hotovo, když: testy pokrývají všechna pravidla a prochází; žádné UI.
 
-- [ ] **3b.5 – Server pro osu**
+- [ ] **3b.5 – Server pro osu** [opus]
       Jedno načtení dat dne (intervaly, naposledy použité zakázky, zakázky party, šablona, stav měsíce). Server akce
       vytvořit / upravit / smazat interval a použít šablonu; úprava hranice upraví i souseda v jedné transakci; validace
       přes pravidla z 3b.4, audit, zamčený měsíc, zápis za jiného s důvodem. Odpovědi vhodné pro optimistickou aktualizaci

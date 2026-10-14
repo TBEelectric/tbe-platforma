@@ -13,3 +13,15 @@
   s časovým limitem a po ověření ukonči.
 - Drž se rozsahu kroku. Hotové kroky a jejich kód měň jen kvůli nutné opravě; uveď to ve „Výsledek:“.
 - Na konci nesmí v gitu zůstat necommitnuté změny a vše musí být pushnuté.
+
+# Úspornost (každý tah znovu posílá celou historii – méně tahů a menší výstupy = levnější běh)
+
+- Soubor, který budeš měnit, si přečti jednou celý (Read), místo opakovaného `grep -n` / `sed -n` po kouscích.
+- Změny v jednom souboru dělej najednou: jeden větší Edit nebo Write celého souboru místo série drobných editů.
+- Nové soubory piš rovnou celé (Write).
+- Během práce pouštěj jen související testy (`pnpm vitest run <soubor>`); celé `pnpm test`, `pnpm typecheck`,
+  `pnpm lint` a `pnpm build` až na konci (a po opravě znovu jen to, co selhalo).
+- Výstupy příkazů zkracuj: `… 2>&1 | tail -40`; diffy jen `git diff --stat`, celý diff jen u konkrétního souboru.
+- Nevytvářej dočasné ladicí soubory a skripty, pokud to jde jinak; když ano, smaž je před commitem.
+- Plán i průběžné komentáře piš stručně; nevypisuj obsah souborů ani shrnutí změn, které jsou vidět v commitech.
+- Nečti podklady, které krok nepotřebuje (prototypy jen u UI kroků, import jen u kroků s importem).
