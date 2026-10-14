@@ -266,6 +266,7 @@
       "noJob": "Bez zakázky"
     },
     "timeline": {
+      "monthClosedBanner": "Měsíc je uzavřený",
       "axisLabel": "Časová osa dne",
       "nextDayMark": "{time} +1",
       "entryLabel": "{from}–{to}, {title}, {duration}",

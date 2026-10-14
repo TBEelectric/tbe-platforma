@@ -44,6 +44,7 @@ import {
   type AdjustAction,
   type CreateStart,
   type TimelineEntry,
+  dayEditability,
 } from "../../shared";
 import { JobPickerScreen } from "./job-picker-screen";
 import { NightToggle } from "./night-toggle";
@@ -107,7 +108,7 @@ export function MobileTimeline({
     reason: needsReason ? reason.trim() || null : null,
   });
   const { day, entries, selectedId } = tl;
-  const readOnly = day.locked || day.absenceOnDay;
+  const readOnly = !dayEditability(day).editable;
   const colRef = useRef<HTMLDivElement>(null);
   const gesture = useRef<Active | null>(null);
   const { message, setMessage, select } = tl;
@@ -429,7 +430,7 @@ export function MobileTimeline({
         <p className="flex items-center gap-2 rounded-lg bg-neutral px-4 py-3 text-[15px] text-neutral-foreground">
           <Lock className="size-4 shrink-0" aria-hidden />
           {day.locked
-            ? t("timesheets.errors.monthLocked")
+            ? t("timesheets.timeline.monthClosedBanner")
             : t("timesheets.errors.absenceBlocksDay")}
         </p>
       )}

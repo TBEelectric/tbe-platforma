@@ -34,6 +34,7 @@ import {
   type AdjustAction,
   type CreateStart,
   type TimelineEntry,
+  dayEditability,
 } from "../../shared";
 import { JobCombobox } from "./job-combobox";
 import { NightToggle } from "./night-toggle";
@@ -91,7 +92,7 @@ export function DesktopTimeline({
     reason: needsReason ? reason.trim() || null : null,
   });
   const { day, entries, selectedId, message, setMessage, select } = tl;
-  const readOnly = day.locked || day.absenceOnDay;
+  const readOnly = !dayEditability(day).editable;
   const { night, range, toggleTop, toggleBottom } = useNight(entries);
   const trackRef = useRef<HTMLDivElement>(null);
   const gesture = useRef<Active | null>(null);
@@ -359,7 +360,7 @@ export function DesktopTimeline({
         <p className="flex items-center gap-2 rounded-lg bg-neutral px-4 py-3 text-[15px] text-neutral-foreground">
           <Lock className="size-4 shrink-0" aria-hidden />
           {day.locked
-            ? root("timesheets.errors.monthLocked")
+            ? root("timesheets.timeline.monthClosedBanner")
             : root("timesheets.errors.absenceBlocksDay")}
         </p>
       )}
