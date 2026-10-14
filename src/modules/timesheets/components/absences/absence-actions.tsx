@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { FormMessage } from "@/components/form/form-parts";
@@ -37,6 +38,7 @@ function ActionButton({
 
 /** Approve / reject a request; rejecting needs a reason. */
 export function DecideAbsence({ id }: { id: string }) {
+  const t = useTranslations("timesheets.absences");
   const [approveState, approve] = useActionState(
     decideAbsenceAction.bind(null, id, "approve"),
     initialFormState,
@@ -52,13 +54,13 @@ export function DecideAbsence({ id }: { id: string }) {
       <div className="flex flex-wrap gap-2">
         <Input
           name="reason"
-          aria-label="Důvod (povinný při zamítnutí)"
-          placeholder="Důvod (při zamítnutí povinný)"
+          aria-label={t("decisionReason")}
+          placeholder={t("decisionReason")}
           className="min-w-48 flex-1"
         />
-        <ActionButton formAction={approve}>Schválit</ActionButton>
+        <ActionButton formAction={approve}>{t("approve")}</ActionButton>
         <ActionButton formAction={reject} variant="outline">
-          Zamítnout
+          {t("reject")}
         </ActionButton>
       </div>
     </form>
@@ -73,6 +75,7 @@ export function CancelAbsence({
   id: string;
   needsReason: boolean;
 }) {
+  const t = useTranslations("timesheets.absences");
   const [state, cancel] = useActionState(
     cancelAbsenceAction.bind(null, id),
     initialFormState,
@@ -84,17 +87,17 @@ export function CancelAbsence({
         {needsReason && (
           <Input
             name="reason"
-            aria-label="Důvod zrušení"
-            placeholder="Důvod zrušení"
+            aria-label={t("cancelReason")}
+            placeholder={t("cancelReason")}
             className="min-w-48 flex-1"
           />
         )}
         <ActionButton
           formAction={cancel}
           variant="outline"
-          confirm="Zrušit absenci?"
+          confirm={t("confirmCancel")}
         >
-          Zrušit
+          {t("cancel")}
         </ActionButton>
       </div>
     </form>

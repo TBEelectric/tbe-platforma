@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import type { PgColumn, PgTable, PgUpdateSetSource } from "drizzle-orm/pg-core";
+import { msg, type MessageKey } from "@/i18n/messages";
 import { writeAudit, type AuditAction } from "@/lib/audit";
 import type { DbOrTx } from "@/lib/db";
 import { UserError, pgError } from "@/lib/form-state";
@@ -51,7 +52,7 @@ export async function deleteAudited<T extends TableWithId>(
     .delete(table)
     .where(eq(table.id, id))
     .returning()) as T["$inferSelect"][];
-  if (!before) throw new UserError("Záznam nenalezen.");
+  if (!before) throw new UserError(msg("errors.notFound"));
   await writeAudit(tx, {
     actorUserId: ctx.userId,
     entity,
@@ -79,7 +80,7 @@ export async function updateAudited<T extends TableWithId>(
     .select()
     .from(table as PgTable)
     .where(eq(table.id, id))) as T["$inferSelect"][];
-  if (!before) throw new UserError("Záznam nenalezen.");
+  if (!before) throw new UserError(msg("errors.notFound"));
   const [after] = (await tx
     .update(table)
     .set(values)
@@ -97,35 +98,23 @@ export async function updateAudited<T extends TableWithId>(
   return after;
 }
 
-const CONSTRAINT_MESSAGES: Record<string, { field: string; message: string }> =
+const CONSTRAINT_MESSAGES: Record<string, { field: string; key: MessageKey }> =
   {
     employee_personalNumber_unique: {
       field: "personalNumber",
-      message: "Osobní číslo už má jiný zaměstnanec.",
+      key: "core.errors.personalNumberTaken",
     },
-    employee_email_unique: {
-      field: "email",
-      message: "Tento e-mail už má jiný zaměstnanec.",
-    },
-    job_code_unique: {
-      field: "code",
-      message: "Zakázka s tímto číslem už existuje.",
-    },
-    customer_ico_unique: {
-      field: "ico",
-      message: "Zákazník s tímto IČO už existuje.",
-    },
-    team_name_unique: {
-      field: "name",
-      message: "Parta s tímto názvem už existuje.",
-    },
+    employee_email_unique: { field: "email", key: "core.errors.emailTaken" },
+    job_code_unique: { field: "code", key: "core.errors.jobCodeTaken" },
+    customer_ico_unique: { field: "ico", key: "core.errors.icoTaken" },
+    team_name_unique: { field: "name", key: "core.errors.teamNameTaken" },
     employment_no_overlap: {
       field: "validFrom",
-      message: "Úvazek se překrývá s jiným úvazkem.",
+      key: "core.errors.employmentOverlap",
     },
     team_member_no_overlap: {
       field: "validFrom",
-      message: "Zaměstnanec je v tu dobu už v jiné partě.",
+      key: "core.errors.teamOverlap",
     },
   };
 
@@ -134,6 +123,6 @@ export function rethrowAsUserError(error: unknown): never {
   if (error instanceof UserError) throw error;
   const { constraint } = pgError(error);
   const known = constraint ? CONSTRAINT_MESSAGES[constraint] : undefined;
-  if (known) throw new UserError(known.message, known.field);
+  if (known) throw new UserError(msg(known.key), known.field);
   throw error;
 }

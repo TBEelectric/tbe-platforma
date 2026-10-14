@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useActionState, useEffect, useState } from "react";
 import {
   Field,
@@ -56,6 +57,7 @@ export function EntryForm({
   onDone: () => void;
   onCancel?: () => void;
 }) {
+  const t = useTranslations("timesheets.entries");
   const [state, formAction] = useActionState(
     entry ? updateTimeEntryAction.bind(null, entry.id) : createTimeEntryAction,
     initialFormState,
@@ -101,14 +103,14 @@ export function EntryForm({
           !compact && "lg:grid-cols-[8.5rem_8.5rem_10rem_minmax(0,1fr)]",
         )}
       >
-        <Field {...f.field("from")} label="Od">
+        <Field {...f.field("from")} label={t("from")}>
           <Input
             {...f.control("from")}
             type="time"
             defaultValue={valueOf(state, "from", initial.from)}
           />
         </Field>
-        <Field {...f.field("to")} label="Do">
+        <Field {...f.field("to")} label={t("to")}>
           <Input
             {...f.control("to")}
             type="time"
@@ -117,7 +119,7 @@ export function EntryForm({
         </Field>
         <Field
           {...f.field("kind")}
-          label="Typ"
+          label={t("kind")}
           className="col-span-2 lg:col-span-1"
         >
           <NativeSelect
@@ -125,14 +127,14 @@ export function EntryForm({
             value={kind}
             onChange={(e) => setKind(e.target.value)}
           >
-            <option value="work">Práce</option>
-            <option value="break">Přestávka</option>
+            <option value="work">{t("work")}</option>
+            <option value="break">{t("break")}</option>
           </NativeSelect>
         </Field>
         {isWork && (
           <Field
             {...f.field("jobId")}
-            label="Zakázka"
+            label={t("job")}
             className={cn("col-span-2", !compact && "lg:col-span-1")}
           >
             <NativeSelect
@@ -140,7 +142,7 @@ export function EntryForm({
               defaultValue={valueOf(state, "jobId", initial.jobId ?? "")}
             >
               <option value="">
-                {requiresJob ? "Vyberte zakázku" : "Bez zakázky"}
+                {requiresJob ? t("chooseJob") : t("noJob")}
               </option>
               {view.jobs.map((j) => (
                 <option key={j.id} value={j.id}>
@@ -158,13 +160,13 @@ export function EntryForm({
         )}
       >
         {isWork ? (
-          <Field {...f.field("workTypeId")} label="Druh práce">
+          <Field {...f.field("workTypeId")} label={t("workType")}>
             <NativeSelect
               {...f.control("workTypeId")}
               value={workTypeId}
               onChange={(e) => setWorkTypeId(e.target.value)}
             >
-              <option value="">Vyberte</option>
+              <option value="">{t("choose")}</option>
               {view.workTypes.map((w) => (
                 <option key={w.id} value={w.id}>
                   {w.name}
@@ -175,10 +177,10 @@ export function EntryForm({
         ) : (
           <div className="hidden lg:block" />
         )}
-        <Field {...f.field("note")} label="Poznámka">
+        <Field {...f.field("note")} label={t("note")}>
           <Input
             {...f.control("note")}
-            placeholder="Volitelné"
+            placeholder={t("optional")}
             defaultValue={valueOf(state, "note", initial.note)}
           />
         </Field>
@@ -193,8 +195,8 @@ export function EntryForm({
       {needsReason && (
         <Field
           {...f.field("reason")}
-          label="Důvod zápisu za zaměstnance"
-          hint="Povinné, uloží se do historie změn."
+          label={t("reason")}
+          hint={t("reasonHint")}
         >
           <Input
             {...f.control("reason")}
@@ -225,6 +227,7 @@ function Buttons({
   onCancel?: () => void;
   full?: boolean;
 }) {
+  const t = useTranslations("timesheets.entries");
   return (
     <div className={cn("flex flex-wrap gap-2", full && "flex-col-reverse")}>
       {editing && deleteAction && (
@@ -234,11 +237,10 @@ function Buttons({
           formAction={deleteAction}
           className={cn(full && "w-full")}
           onClick={(event) => {
-            if (!window.confirm("Smazat interval? Zůstane v historii změn."))
-              event.preventDefault();
+            if (!window.confirm(t("confirmDelete"))) event.preventDefault();
           }}
         >
-          Smazat
+          {t("delete")}
         </Button>
       )}
       {onCancel && (
@@ -248,11 +250,11 @@ function Buttons({
           onClick={onCancel}
           className={cn(full && "w-full")}
         >
-          Zrušit
+          {t("cancel")}
         </Button>
       )}
       <SubmitButton className={cn(full && "w-full")}>
-        {editing ? "Uložit" : "Přidat"}
+        {editing ? t("save") : t("add")}
       </SubmitButton>
     </div>
   );

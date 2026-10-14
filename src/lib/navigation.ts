@@ -24,12 +24,7 @@ export type MenuItem = {
 export type ModuleStatus = "active" | "core" | "in-development" | "planned";
 
 export type ModuleId =
-  | "timesheets"
-  | "core"
-  | "fleet"
-  | "properties"
-  | "inventory"
-  | "tools";
+  "timesheets" | "core" | "fleet" | "properties" | "inventory" | "tools";
 
 /** A module tile on the launcher and an entry in the module switcher; texts in modules.<id>.* */
 export type ModuleInfo = {

@@ -12,7 +12,9 @@ import { platformModules } from "@/modules/registry";
 async function Today() {
   await io();
   const format = await getFormatter();
-  return <>{capitalize(format.dateTime(new Date(), "long"), await getLocale())}</>;
+  return (
+    <>{capitalize(format.dateTime(new Date(), "long"), await getLocale())}</>
+  );
 }
 
 // Auth check blocks the page on the server; layouts do not protect pages, so every page checks itself.
@@ -36,9 +38,7 @@ export default async function LauncherPage() {
           {t("greeting")}
         </h1>
         <p className="mt-2 text-base text-muted-foreground">
-          <Suspense
-            fallback={<span className="invisible">{t("today")}</span>}
-          >
+          <Suspense fallback={<span className="invisible">{t("today")}</span>}>
             <Today />
           </Suspense>{" "}
           · {t("chooseModule")}

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { cs, csAll } from "@/i18n/test-utils";
 import { pragueInstant } from "@/lib/dates";
 import {
   blockingAbsence,
@@ -60,11 +61,9 @@ describe("resolveEntryTimes", () => {
   });
 
   it("refuses an end equal to the start", () => {
-    expect(resolveEntryTimes("2026-10-13", "08:00", "08:00")).toEqual({
-      ok: false,
-      field: "to",
-      error: "Konec musí být po začátku.",
-    });
+    const result = resolveEntryTimes("2026-10-13", "08:00", "08:00");
+    expect(result).toMatchObject({ ok: false, field: "to" });
+    if (!result.ok) expect(cs(result.error)).toBe("Konec musí být po začátku.");
   });
 
   it("refuses a time skipped when clocks go forward", () => {
@@ -77,11 +76,11 @@ describe("resolveEntryTimes", () => {
   it("counts real time across the clock change", () => {
     // 25 Oct 2026, clocks go back at 03:00: 22:00–06:00 is 9 hours
     const result = resolveEntryTimes("2026-10-24", "22:00", "06:00");
-    if (!result.ok) throw new Error(result.error);
+    if (!result.ok) throw new Error(result.error.key);
     expect(entryDurationMinutes(result)).toBe(9 * 60);
     // 29 Mar 2026, clocks go forward at 02:00: 22:00–06:00 is 7 hours
     const spring = resolveEntryTimes("2026-03-28", "22:00", "06:00");
-    if (!spring.ok) throw new Error(spring.error);
+    if (!spring.ok) throw new Error(spring.error.key);
     expect(entryDurationMinutes(spring)).toBe(7 * 60);
   });
 });
@@ -193,6 +192,10 @@ describe("blockingAbsence", () => {
   });
 });
 
+/** Czech texts of validation errors; null when valid. */
+const errorsOf = (result: ReturnType<typeof validateTimeEntry>) =>
+  result.ok ? null : csAll(result.errors);
+
 describe("validateTimeEntry", () => {
   it("accepts a valid work entry", () => {
     expect(validateTimeEntry(draft(), context())).toEqual({
@@ -210,17 +213,15 @@ describe("validateTimeEntry", () => {
   });
 
   it("requires a work type for work", () => {
-    expect(validateTimeEntry(draft({ workTypeId: null }), context())).toEqual({
-      ok: false,
-      errors: { workTypeId: "Druh práce: povinné" },
-    });
+    expect(
+      errorsOf(validateTimeEntry(draft({ workTypeId: null }), context())),
+    ).toEqual({ workTypeId: "Povinné" });
   });
 
   it("requires a job unless the work type is overhead", () => {
-    expect(validateTimeEntry(draft({ jobId: null }), context())).toEqual({
-      ok: false,
-      errors: { jobId: "Zakázka: povinné" },
-    });
+    expect(
+      errorsOf(validateTimeEntry(draft({ jobId: null }), context())),
+    ).toEqual({ jobId: "Povinné" });
     expect(
       validateTimeEntry(draft({ jobId: null, workTypeId: REZIE }), context())
         .ok,
@@ -228,10 +229,9 @@ describe("validateTimeEntry", () => {
   });
 
   it("refuses a closed job, unless an existing entry keeps it", () => {
-    expect(validateTimeEntry(draft({ jobId: CLOSED_JOB }), context())).toEqual({
-      ok: false,
-      errors: { jobId: "Zakázka není aktivní." },
-    });
+    expect(
+      errorsOf(validateTimeEntry(draft({ jobId: CLOSED_JOB }), context())),
+    ).toEqual({ jobId: "Zakázka není aktivní." });
     expect(
       validateTimeEntry(
         draft({ jobId: CLOSED_JOB }),
@@ -242,10 +242,9 @@ describe("validateTimeEntry", () => {
 
   it("refuses an archived work type, unless an existing entry keeps it", () => {
     const workTypes = [{ id: MONTAZ, requiresJob: true, active: false }];
-    expect(validateTimeEntry(draft(), context({ workTypes }))).toEqual({
-      ok: false,
-      errors: { workTypeId: "Druh práce není aktivní." },
-    });
+    expect(
+      errorsOf(validateTimeEntry(draft(), context({ workTypes }))),
+    ).toEqual({ workTypeId: "Druh práce není aktivní." });
     expect(
       validateTimeEntry(
         draft(),
@@ -263,11 +262,10 @@ describe("validateTimeEntry", () => {
   });
 
   it("refuses changes in a locked month", () => {
-    expect(validateTimeEntry(draft(), context({ locked: true }))).toEqual({
-      ok: false,
-      errors: {
-        _form: "Měsíc je potvrzený nebo uzavřený, intervaly nelze měnit.",
-      },
+    expect(
+      errorsOf(validateTimeEntry(draft(), context({ locked: true }))),
+    ).toEqual({
+      _form: "Měsíc je potvrzený nebo uzavřený, intervaly nelze měnit.",
     });
   });
 
@@ -279,9 +277,8 @@ describe("validateTimeEntry", () => {
         endAt: at("2026-10-13", "09:00"),
       },
     ];
-    expect(validateTimeEntry(draft(), context({ others }))).toEqual({
-      ok: false,
-      errors: { _form: "Překrývá se s intervalem 08:00–09:00." },
+    expect(errorsOf(validateTimeEntry(draft(), context({ others })))).toEqual({
+      _form: "Překrývá se s intervalem 08:00–09:00.",
     });
   });
 
@@ -295,16 +292,14 @@ describe("validateTimeEntry", () => {
         status: "approved" as const,
       },
     ];
-    expect(validateTimeEntry(draft(), context({ absences }))).toEqual({
-      ok: false,
-      errors: { _form: "Tento den je zapsaná absence (nemoc)." },
-    });
+    expect(errorsOf(validateTimeEntry(draft(), context({ absences })))).toEqual(
+      { _form: "Tento den je zapsaná absence (nemoc)." },
+    );
   });
 
   it("reports invalid times on the field", () => {
-    expect(validateTimeEntry(draft({ to: "06:30" }), context())).toEqual({
-      ok: false,
-      errors: { to: "Konec musí být po začátku." },
-    });
+    expect(
+      errorsOf(validateTimeEntry(draft({ to: "06:30" }), context())),
+    ).toEqual({ to: "Konec musí být po začátku." });
   });
 });

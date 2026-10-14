@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { msg } from "@/i18n/messages";
+import { cs } from "@/i18n/test-utils";
 import { hasErrors, sheetPreview, validRows } from "./preview";
 
 describe("sheetPreview", () => {
@@ -7,8 +9,16 @@ describe("sheetPreview", () => {
       headerError: null,
       rows: [{ row: 2 }, { row: 4 }],
       issues: [
-        { row: 3, column: "E-mail", message: "neplatný formát" },
-        { row: 4, column: "Osobní číslo", message: "je v souboru vícekrát" },
+        {
+          row: 3,
+          column: "E-mail",
+          message: msg("import.issues.invalidEmail"),
+        },
+        {
+          row: 4,
+          column: "Osobní číslo",
+          message: msg("import.issues.duplicate"),
+        },
       ],
     };
     const planned = [
@@ -25,16 +35,16 @@ describe("sheetPreview", () => {
         key: "1001",
         label: "1001 Jan Novák",
         status: "update" as const,
-        changes: ["x"],
+        changes: [msg("import.changes.inactive")],
         errors: [],
       },
     ];
     const preview = sheetPreview("Zaměstnanci", parsed, planned);
     expect(
-      preview.rows.map((r) => [r.row, r.status, r.label, r.errors]),
+      preview.rows.map((r) => [r.row, r.status, r.label, r.errors.map(cs)]),
     ).toEqual([
       [2, "unchanged", "1001 Jan Novák", []],
-      [3, "error", "Řádek 3", ["E-mail: neplatný formát"]],
+      [3, "error", null, ["E-mail: neplatný formát"]],
       [4, "error", "1001 Jan Novák", ["Osobní číslo: je v souboru vícekrát"]],
     ]);
     expect(preview.counts).toEqual({
@@ -50,7 +60,15 @@ describe("sheetPreview", () => {
   it("treats a header error as an error of the whole file", () => {
     const preview = sheetPreview(
       "Zakázky",
-      { headerError: "Hlavička…", rows: [], issues: [] },
+      {
+        headerError: msg("import.headerMismatch", {
+          column: 1,
+          expected: "Číslo zakázky",
+          actual: "Číslo",
+        }),
+        rows: [],
+        issues: [],
+      },
       [],
     );
     expect(hasErrors([preview])).toBe(true);

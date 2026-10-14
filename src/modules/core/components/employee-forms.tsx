@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useActionState } from "react";
 import {
   CheckboxField,
@@ -12,7 +13,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { initialFormState, type FormState } from "@/lib/form-state";
-import { EMPLOYMENT_TYPES, SCHEDULE_TYPES } from "../rules/forms";
 
 type Option = { id: string; label: string };
 type Action = (prev: FormState, formData: FormData) => Promise<FormState>;
@@ -42,10 +42,14 @@ function EmployeeFields({
   initial?: EmployeeValues;
   canEditEmail: boolean;
 }) {
+  const t = useTranslations();
   const f = useFields(state);
   return (
     <>
-      <Field {...f.field("personalNumber")} label="Osobní číslo">
+      <Field
+        {...f.field("personalNumber")}
+        label={t("core.fields.personalNumber")}
+      >
         <Input
           {...f.control("personalNumber")}
           defaultValue={valueOf(
@@ -55,13 +59,13 @@ function EmployeeFields({
           )}
         />
       </Field>
-      <Field {...f.field("lastName")} label="Příjmení">
+      <Field {...f.field("lastName")} label={t("core.fields.lastName")}>
         <Input
           {...f.control("lastName")}
           defaultValue={valueOf(state, "lastName", initial?.lastName)}
         />
       </Field>
-      <Field {...f.field("firstName")} label="Jméno">
+      <Field {...f.field("firstName")} label={t("core.fields.firstName")}>
         <Input
           {...f.control("firstName")}
           defaultValue={valueOf(state, "firstName", initial?.firstName)}
@@ -69,11 +73,11 @@ function EmployeeFields({
       </Field>
       <Field
         {...f.field("email")}
-        label="Přihlašovací e-mail (Google)"
+        label={t("core.form.signInEmail")}
         hint={
           canEditEmail
-            ? "S e-mailem se zaměstnanec může přihlásit."
-            : "Mění jen administrátor."
+            ? t("core.form.signInEmailHint")
+            : t("core.form.signInEmailAdminOnly")
         }
       >
         <Input
@@ -89,7 +93,7 @@ function EmployeeFields({
       <div className="sm:col-span-2">
         <CheckboxField
           name="tracksTime"
-          label="Eviduje docházku"
+          label={t("core.form.tracksTime")}
           defaultChecked={
             state.values
               ? state.values.tracksTime === "on"
@@ -110,25 +114,26 @@ function EmploymentFields({
   initial?: EmploymentValues;
   withValidTo?: boolean;
 }) {
+  const t = useTranslations();
   const f = useFields(state);
   return (
     <>
-      <Field {...f.field("type")} label="Typ úvazku">
+      <Field {...f.field("type")} label={t("core.form.employmentType")}>
         <NativeSelect
           {...f.control("type")}
           defaultValue={valueOf(state, "type", initial?.type ?? "hpp")}
         >
-          {Object.entries(EMPLOYMENT_TYPES).map(([value, label]) => (
+          {(["hpp", "dpp", "dpc"] as const).map((value) => (
             <option key={value} value={value}>
-              {label}
+              {t(`core.employmentType.${value}`)}
             </option>
           ))}
         </NativeSelect>
       </Field>
       <Field
         {...f.field("weeklyHours")}
-        label="Hodin týdně"
-        hint="U DPP prázdné"
+        label={t("core.form.weeklyHours")}
+        hint={t("core.form.weeklyHoursHint")}
       >
         <Input
           {...f.control("weeklyHours")}
@@ -140,7 +145,7 @@ function EmploymentFields({
           )}
         />
       </Field>
-      <Field {...f.field("scheduleType")} label="Režim">
+      <Field {...f.field("scheduleType")} label={t("core.form.scheduleType")}>
         <NativeSelect
           {...f.control("scheduleType")}
           defaultValue={valueOf(
@@ -149,14 +154,14 @@ function EmploymentFields({
             initial?.scheduleType ?? "flexible",
           )}
         >
-          {Object.entries(SCHEDULE_TYPES).map(([value, label]) => (
+          {(["flexible", "uneven"] as const).map((value) => (
             <option key={value} value={value}>
-              {label}
+              {t(`core.scheduleType.${value}`)}
             </option>
           ))}
         </NativeSelect>
       </Field>
-      <Field {...f.field("validFrom")} label="Platnost od">
+      <Field {...f.field("validFrom")} label={t("core.form.validFrom")}>
         <Input
           {...f.control("validFrom")}
           type="date"
@@ -166,8 +171,8 @@ function EmploymentFields({
       {withValidTo && (
         <Field
           {...f.field("validTo")}
-          label="Platnost do"
-          hint="Prázdné = trvá"
+          label={t("core.form.validTo")}
+          hint={t("core.form.validToHint")}
         >
           <Input
             {...f.control("validTo")}
@@ -191,6 +196,7 @@ export function NewEmployeeForm({
   teams: Option[];
   canEditEmail: boolean;
 }) {
+  const t = useTranslations();
   const [state, formAction] = useActionState(action, initialFormState);
   const f = useFields(state);
   return (
@@ -200,18 +206,20 @@ export function NewEmployeeForm({
         <EmployeeFields state={state} canEditEmail={canEditEmail} />
       </section>
       <section className="flex flex-col gap-3">
-        <h2 className="text-lg font-bold">Úvazek a parta</h2>
+        <h2 className="text-lg font-bold">
+          {t("core.form.employmentAndTeam")}
+        </h2>
         <div className={grid}>
           <EmploymentFields state={state} />
-          <Field {...f.field("teamId")} label="Parta">
+          <Field {...f.field("teamId")} label={t("core.form.team")}>
             <NativeSelect
               {...f.control("teamId")}
               defaultValue={valueOf(state, "teamId", "")}
             >
-              <option value="">Bez party</option>
-              {teams.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.label}
+              <option value="">{t("core.form.noTeam")}</option>
+              {teams.map((team) => (
+                <option key={team.id} value={team.id}>
+                  {team.label}
                 </option>
               ))}
             </NativeSelect>
@@ -219,7 +227,7 @@ export function NewEmployeeForm({
         </div>
       </section>
       <div>
-        <SubmitButton>Založit zaměstnance</SubmitButton>
+        <SubmitButton>{t("core.form.createEmployee")}</SubmitButton>
       </div>
     </form>
   );
@@ -234,6 +242,7 @@ export function EditEmployeeForm({
   initial: EmployeeValues;
   canEditEmail: boolean;
 }) {
+  const t = useTranslations();
   const [state, formAction] = useActionState(action, initialFormState);
   return (
     <form action={formAction} className="flex flex-col gap-4">
@@ -246,7 +255,7 @@ export function EditEmployeeForm({
         />
       </div>
       <div>
-        <SubmitButton>Uložit</SubmitButton>
+        <SubmitButton>{t("core.form.save")}</SubmitButton>
       </div>
     </form>
   );
@@ -292,26 +301,27 @@ export function TeamChangeForm({
   currentTeamId: string | null;
   today: string;
 }) {
+  const t = useTranslations();
   const [state, formAction] = useActionState(action, initialFormState);
   const f = useFields(state);
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <FormMessage state={state} />
       <div className={grid}>
-        <Field {...f.field("teamId")} label="Parta">
+        <Field {...f.field("teamId")} label={t("core.form.team")}>
           <NativeSelect
             {...f.control("teamId")}
             defaultValue={valueOf(state, "teamId", currentTeamId ?? "")}
           >
-            <option value="">Bez party</option>
-            {teams.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.label}
+            <option value="">{t("core.form.noTeam")}</option>
+            {teams.map((team) => (
+              <option key={team.id} value={team.id}>
+                {team.label}
               </option>
             ))}
           </NativeSelect>
         </Field>
-        <Field {...f.field("validFrom")} label="Od">
+        <Field {...f.field("validFrom")} label={t("core.form.from")}>
           <Input
             {...f.control("validFrom")}
             type="date"
@@ -320,7 +330,7 @@ export function TeamChangeForm({
         </Field>
       </div>
       <div>
-        <SubmitButton>Změnit partu</SubmitButton>
+        <SubmitButton>{t("core.form.changeTeam")}</SubmitButton>
       </div>
     </form>
   );
@@ -335,6 +345,7 @@ export function LeaveForm({
   year: number;
   initial?: { hoursEntitled: number; hoursCarriedOver: number };
 }) {
+  const t = useTranslations();
   const [state, formAction] = useActionState(action, initialFormState);
   const f = useFields(state);
   return (
@@ -342,7 +353,10 @@ export function LeaveForm({
       <FormMessage state={state} />
       <input type="hidden" name="year" value={year} />
       <div className={grid}>
-        <Field {...f.field("hoursEntitled")} label={`Nárok ${year} (h)`}>
+        <Field
+          {...f.field("hoursEntitled")}
+          label={t("core.form.leaveEntitled", { year: String(year) })}
+        >
           <Input
             {...f.control("hoursEntitled")}
             inputMode="decimal"
@@ -353,7 +367,10 @@ export function LeaveForm({
             )}
           />
         </Field>
-        <Field {...f.field("hoursCarriedOver")} label="Převod z loňska (h)">
+        <Field
+          {...f.field("hoursCarriedOver")}
+          label={t("core.form.leaveCarried")}
+        >
           <Input
             {...f.control("hoursCarriedOver")}
             inputMode="decimal"
@@ -366,7 +383,7 @@ export function LeaveForm({
         </Field>
       </div>
       <div>
-        <SubmitButton>Uložit nárok</SubmitButton>
+        <SubmitButton>{t("core.form.saveLeave")}</SubmitButton>
       </div>
     </form>
   );
@@ -379,6 +396,7 @@ export function RolesForm({
   action: Action;
   initial: { admin: boolean; timesheetsManager: boolean };
 }) {
+  const t = useTranslations();
   const [state, formAction] = useActionState(action, initialFormState);
   const checked = (name: keyof typeof initial) =>
     state.values ? state.values[name] === "on" : initial[name];
@@ -390,16 +408,16 @@ export function RolesForm({
       )}
       <CheckboxField
         name="admin"
-        label="Administrátor (role a přístupy, zakázky, zaměstnanci)"
+        label={t("core.form.roleAdmin")}
         defaultChecked={checked("admin")}
       />
       <CheckboxField
         name="timesheetsManager"
-        label="Správce docházky (uzávěrka, export, zaměstnanci, zakázky)"
+        label={t("core.form.roleManager")}
         defaultChecked={checked("timesheetsManager")}
       />
       <div>
-        <SubmitButton>Uložit role</SubmitButton>
+        <SubmitButton>{t("core.form.saveRoles")}</SubmitButton>
       </div>
     </form>
   );

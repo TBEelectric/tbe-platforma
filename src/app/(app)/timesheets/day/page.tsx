@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { buttonVariants } from "@/components/ui/button";
 import { requirePermission } from "@/lib/current-user";
 import { todayInPrague } from "@/lib/dates";
@@ -56,10 +57,11 @@ export default async function DayPage({
   const view = await loadDay(employeeId, date);
   if (!view) notFound();
   const query = forSomeoneElse ? `&employee=${employeeId}` : "";
+  const t = await getTranslations("timesheets.day");
   return (
     <DayScreen
       view={view}
-      title={forSomeoneElse ? "Den zaměstnance" : "Můj den"}
+      title={forSomeoneElse ? t("titleSomeone") : t("title")}
       forSomeoneElse={forSomeoneElse}
       hrefFor={(d) => `/timesheets/day?date=${d}${query}`}
       headerActions={
@@ -68,7 +70,7 @@ export default async function DayPage({
             href={`/timesheets/day/someone?date=${date}`}
             className={buttonVariants({ variant: "outline" })}
           >
-            Zapsat za jiného
+            {t("writeForSomeone")}
           </Link>
         )
       }

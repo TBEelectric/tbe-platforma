@@ -1,50 +1,46 @@
 import { z } from "zod";
+import { msg, type Msg } from "@/i18n/messages";
+import { calendarDate } from "@/i18n/format";
 import { addDays, monthStart } from "@/lib/dates";
-import { monthLabel } from "./month";
 import {
-  ABSENCE_TYPE_LABELS,
-  type AbsenceLike,
+  ABSENCE_TYPES,
+  absenceTypeMsg,
   type AbsenceStatus,
+  type AbsenceLike,
   type AbsenceType,
 } from "./time-entry";
 
-export const ABSENCE_TYPES = Object.keys(ABSENCE_TYPE_LABELS) as AbsenceType[];
+export { ABSENCE_TYPES };
 
-export const ABSENCE_STATUS_LABELS: Record<AbsenceStatus, string> = {
-  requested: "Čeká na schválení",
-  approved: "Schváleno",
-  rejected: "Zamítnuto",
-};
-
-const optionalText = (label: string, max: number) =>
+const optionalText = (max: number) =>
   z
     .string()
     .optional()
     .transform((v) => v?.trim() || null)
-    .refine(
-      (v) => v === null || v.length <= max,
-      `${label}: nejvýše ${max} znaků`,
-    );
+    .refine((v) => v === null || v.length <= max, {
+      message: "validation.maxLength",
+      params: { maximum: max },
+    });
 
 export const absenceFormSchema = z.object({
   employeeId: z.uuid(),
   type: z.enum(ABSENCE_TYPES as [AbsenceType, ...AbsenceType[]], {
-    error: "Typ: povinné",
+    error: "validation.required",
   }),
-  dateFrom: z.iso.date({ error: "Od: zadejte datum" }),
-  dateTo: z.iso.date({ error: "Do: zadejte datum" }),
+  dateFrom: z.iso.date({ error: "validation.enterDate" }),
+  dateTo: z.iso.date({ error: "validation.enterDate" }),
   /** Empty = whole days; Czech decimal comma accepted. */
   hours: z
     .string()
     .optional()
     .transform((v) => (v ? Number(v.replace(",", ".")) : null))
-    .refine(
-      (v) => v === null || (Number.isFinite(v) && v > 0 && v <= 24),
-      "Hodiny: číslo 0–24",
-    ),
-  note: optionalText("Poznámka", 500),
+    .refine((v) => v === null || (Number.isFinite(v) && v > 0 && v <= 24), {
+      message: "validation.numberRange",
+      params: { minimum: 0, maximum: 24 },
+    }),
+  note: optionalText(500),
   /** Required when entering an absence for someone else (checked by the service). */
-  reason: optionalText("Důvod", 500),
+  reason: optionalText(500),
 });
 export type AbsenceForm = z.infer<typeof absenceFormSchema>;
 
@@ -67,11 +63,6 @@ export type AbsenceContext = {
   id?: string;
 };
 
-const shortDate = (date: string) => {
-  const [, m, d] = date.split("-").map(Number);
-  return `${d}. ${m}.`;
-};
-
 /** Months (first days) touched by a date range. */
 export function monthsInRange(dateFrom: string, dateTo: string): string[] {
   const months: string[] = [];
@@ -87,13 +78,13 @@ export function monthsInRange(dateFrom: string, dateTo: string): string[] {
 export function validateAbsence(
   draft: AbsenceDraft,
   ctx: AbsenceContext,
-): { ok: true } | { ok: false; errors: Record<string, string> } {
+): { ok: true } | { ok: false; errors: Record<string, Msg> } {
   if (draft.dateTo < draft.dateFrom)
-    return { ok: false, errors: { dateTo: "Konec musí být od začátku." } };
+    return { ok: false, errors: { dateTo: msg("errors.endNotBeforeStart") } };
   if (draft.hours !== null && draft.dateFrom !== draft.dateTo)
     return {
       ok: false,
-      errors: { hours: "Hodiny jen u absence na jeden den." },
+      errors: { hours: msg("timesheets.errors.hoursOneDay") },
     };
 
   const locked = monthsInRange(draft.dateFrom, draft.dateTo).find((m) =>
@@ -103,7 +94,9 @@ export function validateAbsence(
     return {
       ok: false,
       errors: {
-        _form: `Měsíc ${monthLabel(locked).toLocaleLowerCase("cs-CZ")} je potvrzený nebo uzavřený, absenci nelze měnit.`,
+        _form: msg("timesheets.errors.absenceMonthLocked", {
+          month: calendarDate(locked),
+        }),
       },
     };
 
@@ -120,7 +113,11 @@ export function validateAbsence(
     return {
       ok: false,
       errors: {
-        _form: `Překrývá se s jinou absencí (${ABSENCE_TYPE_LABELS[overlap.type]} ${shortDate(overlap.dateFrom)} – ${shortDate(overlap.dateTo)}).`,
+        _form: msg("timesheets.errors.absenceOverlap", {
+          type: absenceTypeMsg(overlap.type),
+          from: calendarDate(overlap.dateFrom),
+          to: calendarDate(overlap.dateTo),
+        }),
       },
     };
 
@@ -132,7 +129,10 @@ export function validateAbsence(
       return {
         ok: false,
         errors: {
-          _form: `V těchto dnech jsou zapsané intervaly: ${[...new Set(withEntries)].map(shortDate).join(", ")} Nejdřív je smažte.`,
+          _form: msg("timesheets.errors.entriesInRange", {
+            first: calendarDate(withEntries[0]),
+            count: new Set(withEntries).size,
+          }),
         },
       };
   }
@@ -146,8 +146,9 @@ export function decisionError(
   status: AbsenceStatus,
   decision: AbsenceDecision,
   reason: string | null,
-): string | null {
-  if (status !== "requested") return "O absenci už bylo rozhodnuto.";
-  if (decision === "reject" && !reason) return "Uveďte důvod zamítnutí.";
+): Msg | null {
+  if (status !== "requested") return msg("timesheets.errors.alreadyDecided");
+  if (decision === "reject" && !reason)
+    return msg("timesheets.errors.rejectReasonRequired");
   return null;
 }

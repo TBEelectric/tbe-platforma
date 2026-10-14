@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { cs, csAll } from "@/i18n/test-utils";
 import {
   absenceFormSchema,
   decisionError,
@@ -17,6 +18,10 @@ const draft = (overrides: Partial<AbsenceDraft> = {}): AbsenceDraft => ({
   ...overrides,
 });
 
+/** Czech texts of validation errors; null when valid. */
+const errorsOf = (result: ReturnType<typeof validateAbsence>) =>
+  result.ok ? null : csAll(result.errors);
+
 const ctx = (overrides: Partial<AbsenceContext> = {}): AbsenceContext => ({
   lockedMonths: [],
   others: [],
@@ -30,16 +35,16 @@ describe("validateAbsence", () => {
   });
 
   it("refuses an end before the start", () => {
-    expect(validateAbsence(draft({ dateTo: "2026-10-18" }), ctx())).toEqual({
-      ok: false,
-      errors: { dateTo: "Konec musí být od začátku." },
+    expect(
+      errorsOf(validateAbsence(draft({ dateTo: "2026-10-18" }), ctx())),
+    ).toEqual({
+      dateTo: "Konec nesmí být před začátkem.",
     });
   });
 
   it("allows hours only for a single day", () => {
-    expect(validateAbsence(draft({ hours: 4 }), ctx())).toEqual({
-      ok: false,
-      errors: { hours: "Hodiny jen u absence na jeden den." },
+    expect(errorsOf(validateAbsence(draft({ hours: 4 }), ctx()))).toEqual({
+      hours: "Hodiny jen u absence na jeden den.",
     });
     expect(
       validateAbsence(
@@ -51,15 +56,14 @@ describe("validateAbsence", () => {
 
   it("refuses a locked month in the range", () => {
     expect(
-      validateAbsence(
-        draft({ dateFrom: "2026-09-28", dateTo: "2026-10-02" }),
-        ctx({ lockedMonths: ["2026-09-01"] }),
+      errorsOf(
+        validateAbsence(
+          draft({ dateFrom: "2026-09-28", dateTo: "2026-10-02" }),
+          ctx({ lockedMonths: ["2026-09-01"] }),
+        ),
       ),
     ).toEqual({
-      ok: false,
-      errors: {
-        _form: "Měsíc září je potvrzený nebo uzavřený, absenci nelze měnit.",
-      },
+      _form: "Měsíc září 2026 je potvrzený nebo uzavřený, absenci nelze měnit.",
     });
   });
 
@@ -72,11 +76,10 @@ describe("validateAbsence", () => {
       hours: null,
       status: "approved" as const,
     };
-    expect(validateAbsence(draft(), ctx({ others: [other] }))).toEqual({
-      ok: false,
-      errors: {
-        _form: "Překrývá se s jinou absencí (nemoc 22. 10. – 26. 10.).",
-      },
+    expect(
+      errorsOf(validateAbsence(draft(), ctx({ others: [other] }))),
+    ).toEqual({
+      _form: "Překrývá se s jinou absencí (nemoc 22. 10. – 26. 10.).",
     });
     expect(
       validateAbsence(
@@ -108,13 +111,15 @@ describe("validateAbsence", () => {
 
   it("refuses whole days that already have time entries", () => {
     expect(
-      validateAbsence(draft(), ctx({ entryDates: ["2026-10-20"] })),
+      errorsOf(
+        validateAbsence(
+          draft(),
+          ctx({ entryDates: ["2026-10-21", "2026-10-20", "2026-10-21"] }),
+        ),
+      ),
     ).toEqual({
-      ok: false,
-      errors: {
-        _form:
-          "V těchto dnech jsou zapsané intervaly: 20. 10. Nejdřív je smažte.",
-      },
+      _form:
+        "V tomto období jsou zapsané intervaly (od 20. 10., 2 dny). Nejdřív je smažte.",
     });
     expect(
       validateAbsence(
@@ -132,14 +137,14 @@ describe("validateAbsence", () => {
 
 describe("decisionError", () => {
   it("decides only requests", () => {
-    expect(decisionError("approved", "approve", null)).toBe(
+    expect(cs(decisionError("approved", "approve", null)!)).toBe(
       "O absenci už bylo rozhodnuto.",
     );
     expect(decisionError("requested", "approve", null)).toBeNull();
   });
 
   it("requires a reason to reject", () => {
-    expect(decisionError("requested", "reject", null)).toBe(
+    expect(cs(decisionError("requested", "reject", null)!)).toBe(
       "Uveďte důvod zamítnutí.",
     );
     expect(decisionError("requested", "reject", "Termín zakázky")).toBeNull();

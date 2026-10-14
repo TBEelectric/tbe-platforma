@@ -1,4 +1,5 @@
 import { BackLink } from "@/components/back-link";
+import { getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/shell/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { requirePermission } from "@/lib/current-user";
@@ -10,20 +11,21 @@ export const instant = false;
 
 export default async function NewJobPage() {
   await requirePermission(canManageJobs);
+  const t = await getTranslations();
   const customers = await listCustomerOptions();
   return (
     <>
-      <BackLink href="/timesheets/jobs">Zakázky</BackLink>
+      <BackLink href="/timesheets/jobs">{t("core.tabs.jobs")}</BackLink>
       <PageHeader
-        title="Nová zakázka"
-        subtitle="Zákazníka bez záznamu nejdřív založte v záložce Zákazníci."
+        title={t("core.pages.newJob")}
+        subtitle={t("core.pages.newJobSubtitle")}
       />
       <Card className="max-w-3xl">
         <CardContent>
           <JobForm
             action={createJobAction}
             customers={customers}
-            submitLabel="Založit zakázku"
+            submitLabel={t("core.pages.createJob")}
           />
         </CardContent>
       </Card>

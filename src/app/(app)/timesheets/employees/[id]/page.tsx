@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getFormatter, getTranslations } from "next-intl/server";
 import type { ReactNode } from "react";
 import { BackLink } from "@/components/back-link";
 import { ConfirmButton } from "@/components/form/confirm-button";
@@ -6,10 +7,9 @@ import { PageHeader } from "@/components/shell/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requirePermission } from "@/lib/current-user";
-import { formatDate, todayInPrague } from "@/lib/dates";
+import { calendarDate } from "@/i18n/format";
+import { todayInPrague } from "@/lib/dates";
 import {
-  EMPLOYMENT_TYPES,
-  SCHEDULE_TYPES,
   canManageAccess,
   canManageEmployees,
   getEmployeeDetail,
@@ -47,10 +47,6 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function period(from: string, to: string | null) {
-  return `${formatDate(from)} – ${to ? formatDate(to) : "trvá"}`;
-}
-
 export default async function EmployeeDetailPage({
   params,
 }: PageProps<"/timesheets/employees/[id]">) {
@@ -62,6 +58,14 @@ export default async function EmployeeDetailPage({
     listLeaveEntitlements(id),
   ]);
   if (!detail) notFound();
+  const t = await getTranslations();
+  const format = await getFormatter();
+  const date = (d: string) => format.dateTime(calendarDate(d), "short");
+  const period = (from: string, to: string | null) =>
+    t("common.dateRange", {
+      from: date(from),
+      to: to ? date(to) : t("common.ongoing"),
+    });
 
   const { employee: emp, employments, memberships, roles } = detail;
   const today = todayInPrague();
@@ -75,18 +79,20 @@ export default async function EmployeeDetailPage({
 
   return (
     <>
-      <BackLink href="/timesheets/employees">Zaměstnanci</BackLink>
+      <BackLink href="/timesheets/employees">
+        {t("core.tabs.employees")}
+      </BackLink>
       <PageHeader
         title={`${emp.firstName} ${emp.lastName}`}
         subtitle={
           <span className="flex flex-wrap items-center gap-2">
-            Os. číslo {emp.personalNumber}
+            {t("core.detail.personalNumber", { number: emp.personalNumber })}
             {emp.archivedAt ? (
-              <Badge variant="neutral">Archivovaný</Badge>
+              <Badge variant="neutral">{t("core.employees.archived")}</Badge>
             ) : emp.active ? (
-              <Badge variant="success">Aktivní</Badge>
+              <Badge variant="success">{t("core.employees.active")}</Badge>
             ) : (
-              <Badge variant="warning">Neaktivní</Badge>
+              <Badge variant="warning">{t("core.employees.inactive")}</Badge>
             )}
           </span>
         }
@@ -97,8 +103,8 @@ export default async function EmployeeDetailPage({
                 <form
                   action={setEmployeeStateAction.bind(null, emp.id, "restore")}
                 >
-                  <ConfirmButton confirm="Obnovit zaměstnance z archivu?">
-                    Obnovit z archivu
+                  <ConfirmButton confirm={t("core.detail.confirmRestore")}>
+                    {t("core.detail.restore")}
                   </ConfirmButton>
                 </form>
               ) : (
@@ -113,11 +119,13 @@ export default async function EmployeeDetailPage({
                     <ConfirmButton
                       confirm={
                         emp.active
-                          ? "Deaktivovat? Zaměstnanec se nebude moct přihlásit a nebude vykazovat docházku."
-                          : "Znovu aktivovat zaměstnance?"
+                          ? t("core.detail.confirmDeactivate")
+                          : t("core.detail.confirmActivate")
                       }
                     >
-                      {emp.active ? "Deaktivovat" : "Aktivovat"}
+                      {emp.active
+                        ? t("core.detail.deactivate")
+                        : t("core.detail.activate")}
                     </ConfirmButton>
                   </form>
                   <form
@@ -127,8 +135,8 @@ export default async function EmployeeDetailPage({
                       "archive",
                     )}
                   >
-                    <ConfirmButton confirm="Archivovat zaměstnance? Zmizí ze seznamů, data zůstanou zachovaná.">
-                      Archivovat
+                    <ConfirmButton confirm={t("core.detail.confirmArchive")}>
+                      {t("core.detail.archive")}
                     </ConfirmButton>
                   </form>
                 </>
@@ -139,7 +147,7 @@ export default async function EmployeeDetailPage({
       />
 
       <div className="grid items-start gap-5 xl:grid-cols-2">
-        <Section title="Údaje a přístup">
+        <Section title={t("core.detail.dataAndAccess")}>
           <EditEmployeeForm
             action={updateEmployeeAction.bind(null, emp.id)}
             initial={emp}
@@ -147,7 +155,7 @@ export default async function EmployeeDetailPage({
           />
         </Section>
 
-        <Section title="Role">
+        <Section title={t("core.detail.roles")}>
           {isAdmin ? (
             <RolesForm
               action={setRolesAction.bind(null, emp.id)}
@@ -159,23 +167,21 @@ export default async function EmployeeDetailPage({
           ) : (
             <p className="text-[15px] text-muted-foreground">
               {roles.length === 0
-                ? "Bez role (zaměstnanec)."
-                : roles
-                    .map((r) =>
-                      r === "admin" ? "Administrátor" : "Správce docházky",
-                    )
-                    .join(", ")}{" "}
-              Role přiděluje administrátor.
+                ? t("core.detail.noRole")
+                : roles.map((r) => t(`roles.${r}`)).join(", ")}{" "}
+              {t("core.detail.rolesByAdmin")}
             </p>
           )}
           <p className="text-sm text-muted-foreground">
-            Vedoucí party se nastavuje u party.
+            {t("core.detail.leadAtTeam")}
           </p>
         </Section>
 
-        <Section title="Úvazky">
+        <Section title={t("core.detail.employments")}>
           {employments.length === 0 && (
-            <p className="text-muted-foreground">Bez úvazku.</p>
+            <p className="text-muted-foreground">
+              {t("core.detail.noEmployment")}
+            </p>
           )}
           <ul className="flex flex-col gap-2">
             {employments.map((e) => (
@@ -183,17 +189,21 @@ export default async function EmployeeDetailPage({
                 <details>
                   <summary className="flex min-h-11 cursor-pointer flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-[15px]">
                     <span className="font-semibold">
-                      {EMPLOYMENT_TYPES[e.type]}
-                      {e.weeklyHours ? ` ${e.weeklyHours} h/týden` : ""}
+                      {e.weeklyHours
+                        ? t("core.detail.typePerWeek", {
+                            type: t(`core.employmentType.${e.type}`),
+                            hours: e.weeklyHours,
+                          })
+                        : t(`core.employmentType.${e.type}`)}
                     </span>
                     <span className="text-muted-foreground">
-                      {SCHEDULE_TYPES[e.scheduleType]}
+                      {t(`core.scheduleType.${e.scheduleType}`)}
                     </span>
                     <span className="text-muted-foreground">
                       {period(e.validFrom, e.validTo)}
                     </span>
                     <span className="ml-auto text-sm text-accent-foreground underline">
-                      Upravit
+                      {t("core.detail.edit")}
                     </span>
                   </summary>
                   <div className="border-t border-border p-3">
@@ -201,7 +211,7 @@ export default async function EmployeeDetailPage({
                       action={updateEmploymentAction.bind(null, e.id)}
                       initial={e}
                       withValidTo
-                      submitLabel="Uložit úvazek"
+                      submitLabel={t("core.detail.saveEmployment")}
                     />
                   </div>
                 </details>
@@ -210,21 +220,23 @@ export default async function EmployeeDetailPage({
           </ul>
           <details className="rounded-lg border border-dashed border-border">
             <summary className="flex min-h-11 cursor-pointer items-center px-3 text-[15px] font-semibold text-accent-foreground">
-              Nový úvazek (ukončí předchozí)
+              {t("core.detail.newEmployment")}
             </summary>
             <div className="border-t border-border p-3">
               <EmploymentForm
                 action={addEmploymentAction.bind(null, emp.id)}
-                submitLabel="Přidat úvazek"
+                submitLabel={t("core.detail.addEmployment")}
               />
             </div>
           </details>
         </Section>
 
-        <Section title="Parta">
+        <Section title={t("core.form.team")}>
           <p className="text-[15px]">
-            Nyní:{" "}
-            <strong>{currentTeam ? currentTeam.teamName : "bez party"}</strong>
+            {t("core.detail.now")}{" "}
+            <strong>
+              {currentTeam ? currentTeam.teamName : t("core.detail.noTeam")}
+            </strong>
           </p>
           <TeamChangeForm
             action={changeTeamAction.bind(null, emp.id)}
@@ -243,7 +255,7 @@ export default async function EmployeeDetailPage({
           )}
         </Section>
 
-        <Section title="Dovolená">
+        <Section title={t("core.detail.leave")}>
           <LeaveForm
             action={setLeaveAction.bind(null, emp.id)}
             year={year}
@@ -255,8 +267,11 @@ export default async function EmployeeDetailPage({
                 .filter((l) => l.year !== year)
                 .map((l) => (
                   <li key={l.id}>
-                    {l.year}: nárok {l.hoursEntitled} h, převod{" "}
-                    {l.hoursCarriedOver} h
+                    {t("core.detail.leaveYear", {
+                      year: String(l.year),
+                      entitled: l.hoursEntitled,
+                      carried: l.hoursCarriedOver,
+                    })}
                   </li>
                 ))}
             </ul>

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { cs } from "@/i18n/test-utils";
 import { pragueInstant } from "@/lib/dates";
 import type { TimesheetSettings } from "./settings";
 import {
@@ -8,6 +9,7 @@ import {
   longDayWarning,
   missingWorkdays,
   weeklyRestWarning,
+  type Warning,
   type WarningEntry,
 } from "./warnings";
 
@@ -44,6 +46,10 @@ const referenceDay = [
   work("2026-10-13", "12:00", "15:15"),
 ];
 
+/** A warning with its Czech text. */
+const text = (warning: Warning | null) =>
+  warning && { code: warning.code, message: cs(warning.message) };
+
 describe("breakWarning", () => {
   it("accepts a 30 min break split into two 15 min parts within 6 h", () => {
     expect(breakWarning(referenceDay, settings)).toBeNull();
@@ -51,7 +57,7 @@ describe("breakWarning", () => {
 
   it("warns after 6 h of work without a break", () => {
     expect(
-      breakWarning([work("2026-10-13", "06:00", "12:30")], settings),
+      text(breakWarning([work("2026-10-13", "06:00", "12:30")], settings)),
     ).toEqual({
       code: "break",
       message: "Přes 6:00 práce bez přestávky 0:30 (od 12:00).",
@@ -92,7 +98,7 @@ describe("breakWarning", () => {
       rest("2026-10-13", "08:00", "08:15"),
       work("2026-10-13", "08:15", "13:00"),
     ];
-    expect(breakWarning(entries, settings)).toEqual({
+    expect(text(breakWarning(entries, settings))).toEqual({
       code: "break",
       message: "Přes 6:00 práce bez přestávky 0:30 (od 12:15).",
     });
@@ -102,7 +108,7 @@ describe("breakWarning", () => {
 describe("longDayWarning", () => {
   it("warns over 12 h of work", () => {
     expect(
-      longDayWarning([work("2026-10-13", "05:00", "17:30")], settings),
+      text(longDayWarning([work("2026-10-13", "05:00", "17:30")], settings)),
     ).toEqual({
       code: "long_day",
       message: "Přes 12:00 práce za den (12:30).",
@@ -126,10 +132,12 @@ describe("longDayWarning", () => {
 describe("dailyRestWarning", () => {
   it("warns when the rest between days is under 11 h", () => {
     expect(
-      dailyRestWarning(
-        [work("2026-10-12", "12:00", "22:00")],
-        [work("2026-10-13", "06:00", "14:00")],
-        settings,
+      text(
+        dailyRestWarning(
+          [work("2026-10-12", "12:00", "22:00")],
+          [work("2026-10-13", "06:00", "14:00")],
+          settings,
+        ),
       ),
     ).toEqual({
       code: "daily_rest",
@@ -171,7 +179,7 @@ describe("weeklyRestWarning", () => {
       work("2026-10-17", "07:00", "15:00"),
       work("2026-10-18", "07:00", "12:00"),
     ];
-    expect(weeklyRestWarning("2026-10-12", entries, settings)).toEqual({
+    expect(text(weeklyRestWarning("2026-10-12", entries, settings))).toEqual({
       code: "weekly_rest",
       message: "Nejdelší odpočinek v týdnu 16:00 (nejméně 35:00).",
     });

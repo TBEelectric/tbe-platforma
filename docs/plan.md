@@ -43,7 +43,7 @@ Docházka má prioritu. Vozový park se připravuje souběžně (Traccar, ověř
 Reference: prototypy `docs/design/prototypes/MobilOsa.dc.html` (primární) a `Den.dc.html` (celá obrazovka Můj den) – převzít chování
 (výpočty jako čisté funkce s testy) a rozložení, UI postavit znovu.
 
-- [ ] **Jazyky (první úkol milníku):** zavést `next-intl`, převést dosavadní texty rozhraní (milníky 1–3) na klíče
+- [x] **Jazyky (první úkol milníku):** zavést `next-intl`, převést dosavadní texty rozhraní (milníky 1–3) na klíče
       v `messages/cs.json`, přidat `user.locale` (výchozí `cs`); nové obrazovky už rovnou s klíči. Bez překladu.
 - [ ] Pravidla s testy: společná hranice navazujících intervalů (soused min. 5 min, nezmizí), vložení intervalu do mezery, změna začátku/konce a posun bez překryvů, přichytávání
       (15 min tažení na mobilu, 5 min jinak), ne do budoucna; šablona „Obvyklý den“ a „Jako včera“ (vynechá kolize)

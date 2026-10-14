@@ -1,10 +1,11 @@
+import { msg, type Msg } from "@/i18n/messages";
 import { addDays } from "@/lib/dates";
 
 type Period = { id: string; validFrom: string; validTo: string | null };
 
 export type PeriodPlan =
   | { ok: true; close: { id: string; validTo: string } | null }
-  | { ok: false; error: string };
+  | { ok: false; error: Msg };
 
 /**
  * A new period (employment, team membership) starting on `validFrom` follows the latest one.
@@ -20,10 +21,7 @@ export function planFollowingPeriod(
   )[0];
   if (!latest) return { ok: true, close: null };
   if (validFrom <= latest.validFrom) {
-    return {
-      ok: false,
-      error: "Začátek musí být po začátku posledního záznamu.",
-    };
+    return { ok: false, error: msg("core.errors.startAfterLatest") };
   }
   if (latest.validTo && latest.validTo < validFrom)
     return { ok: true, close: null };
@@ -50,9 +48,8 @@ export function periodOn<T extends Period>(
 export function adminRemovalError(input: {
   isSelf: boolean;
   otherActiveAdmins: number;
-}): string | null {
-  if (input.isSelf) return "Vlastní roli administrátora nelze odebrat.";
-  if (input.otherActiveAdmins === 0)
-    return "Musí zůstat alespoň jeden administrátor.";
+}): Msg | null {
+  if (input.isSelf) return msg("core.errors.ownAdminRole");
+  if (input.otherActiveAdmins === 0) return msg("core.errors.lastAdmin");
   return null;
 }

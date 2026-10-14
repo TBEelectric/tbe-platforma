@@ -1,20 +1,6 @@
 /** All dates are displayed in this time zone; the database stores timestamptz. */
 export const APP_TIME_ZONE = "Europe/Prague";
 
-const longDateFormat = new Intl.DateTimeFormat("cs-CZ", {
-  weekday: "long",
-  day: "numeric",
-  month: "long",
-  year: "numeric",
-  timeZone: APP_TIME_ZONE,
-});
-
-/** Formats an instant as a Czech long date in Prague time, e.g. "Úterý 13. října 2026". */
-export function formatLongDate(date: Date): string {
-  const text = longDateFormat.format(date);
-  return text.charAt(0).toLocaleUpperCase("cs-CZ") + text.slice(1);
-}
-
 /** Shifts a calendar date "YYYY-MM-DD" by whole days (no time zone involved). */
 export function addDays(date: string, days: number): string {
   const d = new Date(`${date}T00:00:00Z`);
@@ -29,13 +15,6 @@ const isoDateFormat = new Intl.DateTimeFormat("en-CA", {
 /** Today's calendar date in Prague as "YYYY-MM-DD". */
 export function todayInPrague(now: Date = new Date()): string {
   return isoDateFormat.format(now);
-}
-
-/** "2026-10-13" → "13. 10. 2026" */
-export function formatDate(date: string | null | undefined): string {
-  if (!date) return "";
-  const [y, m, d] = date.split("-").map(Number);
-  return `${d}. ${m}. ${y}`;
 }
 
 /** "2026-10-13" → "2026-10-01" */
@@ -95,16 +74,4 @@ export function pragueInstant(date: string, time: string): Date | null {
     if (local.date === date && local.time === time) return instant;
   }
   return null;
-}
-
-const weekdayFormat = new Intl.DateTimeFormat("cs-CZ", {
-  weekday: "long",
-  timeZone: "UTC",
-});
-
-/** "2026-10-12" → "Pondělí 12. 10." (calendar date, no time zone involved). */
-export function formatWeekdayDate(date: string): string {
-  const weekday = weekdayFormat.format(new Date(`${date}T12:00:00Z`));
-  const [, m, d] = date.split("-").map(Number);
-  return `${weekday.charAt(0).toLocaleUpperCase("cs-CZ")}${weekday.slice(1)} ${d}. ${m}.`;
 }

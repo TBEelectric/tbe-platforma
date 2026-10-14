@@ -2,6 +2,7 @@
 
 import readExcelFile from "read-excel-file/node";
 import { revalidatePath } from "next/cache";
+import { msg, type Msg } from "@/i18n/messages";
 import { db, type DbOrTx } from "@/lib/db";
 import { todayInPrague } from "@/lib/dates";
 import { requirePermission } from "@/lib/current-user";
@@ -30,8 +31,8 @@ import {
 export type ImportState = {
   fileName?: string;
   sheets?: SheetPreview[];
-  /** File-level problem (not an .xlsx, missing sheet…). */
-  error?: string;
+  /** File-level problem (not an .xlsx, missing sheet…); translated by the client. */
+  error?: Msg;
   saved?: boolean;
 };
 
@@ -53,8 +54,8 @@ export async function importAction(
   const file = formData.get("file");
   const mode = formData.get("mode") === "apply" ? "apply" : "preview";
   if (!(file instanceof File) || file.size === 0)
-    return { error: "Vyberte soubor .xlsx." };
-  if (file.size > MAX_SIZE) return { error: "Soubor je větší než 1 MB." };
+    return { error: msg("import.fileErrors.noFile") };
+  if (file.size > MAX_SIZE) return { error: msg("import.fileErrors.tooLarge") };
 
   let sheets: { sheet: string; data: Cell[][] }[];
   try {
@@ -64,8 +65,7 @@ export async function importAction(
   } catch {
     return {
       fileName: file.name,
-      error:
-        "Soubor nejde přečíst. Uložte ho v Excelu jako .xlsx podle šablony.",
+      error: msg("import.fileErrors.unreadable"),
     };
   }
   const data = (name: string) => sheets.find((s) => s.sheet === name)?.data;
@@ -74,7 +74,10 @@ export async function importAction(
   if (!employeeData && !jobData) {
     return {
       fileName: file.name,
-      error: `V souboru chybí listy „${EMPLOYEE_SHEET}“ a „${JOB_SHEET}“.`,
+      error: msg("import.fileErrors.missingSheets", {
+        employees: EMPLOYEE_SHEET,
+        jobs: JOB_SHEET,
+      }),
     };
   }
 
@@ -134,7 +137,7 @@ export async function importAction(
       return {
         fileName: file.name,
         sheets: previews,
-        error: "Soubor obsahuje chyby, nic se neuložilo.",
+        error: msg("import.fileErrors.hasErrors"),
       };
     }
     throw error;

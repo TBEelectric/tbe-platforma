@@ -1,16 +1,15 @@
 import Link from "next/link";
+import { getFormatter, getLocale, getTranslations } from "next-intl/server";
 import { PageHeader } from "@/components/shell/page-header";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requirePermission } from "@/lib/current-user";
-import { formatDate, todayInPrague } from "@/lib/dates";
+import { calendarDate, capitalize } from "@/i18n/format";
+import { todayInPrague } from "@/lib/dates";
 import {
-  ABSENCE_STATUS_LABELS,
-  ABSENCE_TYPE_LABELS,
   canOpenAbsences,
   canRecordOwnTime,
-  formatDays,
   listAbsences,
   listDecidableEmployees,
   listPendingDecisions,
@@ -26,27 +25,18 @@ import { AbsenceForm } from "@/modules/timesheets/components/absences/absence-fo
 
 export const instant = false;
 
-const hours = (h: number) =>
-  `${String(Math.round(h * 10) / 10).replace(".", ",")} h`;
-
-const range = (a: AbsenceRow) =>
-  a.dateFrom === a.dateTo
-    ? formatDate(a.dateFrom)
-    : `${formatDate(a.dateFrom)} – ${formatDate(a.dateTo)}`;
-
 const statusVariant = {
   requested: "warning",
   approved: "success",
   rejected: "neutral",
 } as const;
 
-const capitalize = (text: string) =>
-  text.charAt(0).toLocaleUpperCase("cs-CZ") + text.slice(1);
-
 export default async function AbsencesPage({
   searchParams,
 }: PageProps<"/timesheets/absences">) {
   const user = await requirePermission(canOpenAbsences);
+  const t = await getTranslations("timesheets.absences");
+  const hours = (h: number) => t("hours", { hours: h });
   const today = todayInPrague();
   const { year: rawYear } = await searchParams;
   const year =
@@ -68,8 +58,8 @@ export default async function AbsencesPage({
   return (
     <>
       <PageHeader
-        title="Absence"
-        subtitle="Dovolená, nemoc, OČR, lékař a jiné"
+        title={t("title")}
+        subtitle={t("subtitle")}
         actions={
           <>
             <Link
@@ -96,28 +86,30 @@ export default async function AbsencesPage({
           {leave ? (
             <>
               <Stat
-                label="Zbývá"
+                label={t("remaining")}
                 value={hours(leave.remainingHours)}
                 detail={
                   leave.remainingDays !== null
-                    ? formatDays(leave.remainingDays)
+                    ? t("days", { days: leave.remainingDays })
                     : undefined
                 }
                 strong
               />
-              <Stat label={`Nárok ${year}`} value={hours(leave.entitled)} />
-              <Stat label="Převod" value={hours(leave.carriedOver)} />
-              <Stat label="Čerpáno" value={hours(leave.takenHours)} />
               <Stat
-                label="Čeká na schválení"
+                label={t("entitled", { year: String(year) })}
+                value={hours(leave.entitled)}
+              />
+              <Stat label={t("carried")} value={hours(leave.carriedOver)} />
+              <Stat label={t("taken")} value={hours(leave.takenHours)} />
+              <Stat
+                label={t("requested")}
                 value={hours(leave.requestedHours)}
               />
             </>
           ) : (
             <Card className="col-span-full" size="sm">
               <CardContent className="text-[15px] text-muted-foreground">
-                Nárok na dovolenou pro rok {year} není zadaný (zadává správce
-                docházky u zaměstnance).
+                {t("noEntitlement", { year: String(year) })}
               </CardContent>
             </Card>
           )}
@@ -127,7 +119,7 @@ export default async function AbsencesPage({
       <div className="grid gap-5 lg:grid-cols-[22rem_minmax(0,1fr)] lg:items-start">
         <Card>
           <CardHeader>
-            <CardTitle>{own ? "Nová žádost" : "Zapsat absenci"}</CardTitle>
+            <CardTitle>{own ? t("newRequest") : t("record")}</CardTitle>
           </CardHeader>
           <CardContent>
             <AbsenceForm
@@ -145,12 +137,12 @@ export default async function AbsencesPage({
           {decider && (
             <Card>
               <CardHeader>
-                <CardTitle>Ke schválení</CardTitle>
+                <CardTitle>{t("toDecide")}</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-4">
                 {pending.length === 0 && (
                   <p className="text-[15px] text-muted-foreground">
-                    Žádné žádosti nečekají.
+                    {t("noneWaiting")}
                   </p>
                 )}
                 {pending.map((a) => (
@@ -169,12 +161,12 @@ export default async function AbsencesPage({
           {own && (
             <Card>
               <CardHeader>
-                <CardTitle>Moje absence {year}</CardTitle>
+                <CardTitle>{t("mine", { year: String(year) })}</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-4">
                 {mine.length === 0 && (
                   <p className="text-[15px] text-muted-foreground">
-                    V roce {year} žádná absence.
+                    {t("noneInYear", { year: String(year) })}
                   </p>
                 )}
                 {mine.map((a) => (
@@ -195,7 +187,7 @@ export default async function AbsencesPage({
           {decider && recent.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Rozhodnuté a zapsané (posledních 60 dní)</CardTitle>
+                <CardTitle>{t("recent")}</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-4">
                 {recent.map((a) => (
@@ -250,33 +242,43 @@ function Stat({
   );
 }
 
-function AbsenceLine({
+async function AbsenceLine({
   absence: a,
   withName,
 }: {
   absence: AbsenceRow;
   withName?: boolean;
 }) {
+  const t = await getTranslations("timesheets");
+  const format = await getFormatter();
+  const locale = await getLocale();
+  const date = (d: string) => format.dateTime(calendarDate(d), "short");
   return (
     <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1 text-[15px]">
       <div className="flex min-w-0 flex-col gap-0.5">
         <span className="font-semibold">
           {withName && `${a.employeeName} · `}
-          {capitalize(ABSENCE_TYPE_LABELS[a.type])}
+          {capitalize(t(`absenceType.${a.type}`), locale)}
         </span>
         <span className="text-muted-foreground">
-          {range(a)} · {hours(a.hours)}
-          {a.partDay && " (část dne)"}
+          {a.dateFrom === a.dateTo
+            ? date(a.dateFrom)
+            : t("absences.range", {
+                from: date(a.dateFrom),
+                to: date(a.dateTo),
+              })}{" "}
+          · {t("absences.hours", { hours: a.hours })}
+          {a.partDay && ` ${t("absences.partDay")}`}
           {a.note && ` · ${a.note}`}
         </span>
         {a.status === "rejected" && a.decisionReason && (
           <span className="text-muted-foreground">
-            Důvod zamítnutí: {a.decisionReason}
+            {t("absences.rejectReason", { reason: a.decisionReason })}
           </span>
         )}
       </div>
       <Badge variant={statusVariant[a.status]}>
-        {ABSENCE_STATUS_LABELS[a.status]}
+        {t(`absenceStatus.${a.status}`)}
       </Badge>
     </div>
   );

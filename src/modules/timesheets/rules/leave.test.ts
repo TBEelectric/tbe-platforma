@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { absenceHours, dailyHours, formatDays, leaveBalance } from "./leave";
+import { absenceHours, dailyHours, leaveBalance } from "./leave";
 
 const eightHours = () => 8;
 
@@ -77,15 +77,5 @@ describe("leaveBalance", () => {
         dailyHours: 0,
       }).remainingDays,
     ).toBeNull();
-  });
-});
-
-describe("formatDays", () => {
-  it("uses the Czech plural", () => {
-    expect(formatDays(1)).toBe("1 den");
-    expect(formatDays(3)).toBe("3 dny");
-    expect(formatDays(5)).toBe("5 dní");
-    expect(formatDays(0)).toBe("0 dní");
-    expect(formatDays(11.5)).toBe("11,5 dne");
   });
 });

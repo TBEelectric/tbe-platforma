@@ -45,9 +45,7 @@ describe("permissions", () => {
   });
 
   it("labels the highest role", () => {
-    expect(roleKey({ ...admin, isTimesheetsManager: true })).toBe(
-      "admin",
-    );
+    expect(roleKey({ ...admin, isTimesheetsManager: true })).toBe("admin");
     expect(roleKey(manager)).toBe("timesheetsManager");
     expect(roleKey(lead)).toBe("teamLead");
     expect(roleKey(employee)).toBe("employee");

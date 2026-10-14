@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { BackLink } from "@/components/back-link";
 import { ConfirmButton } from "@/components/form/confirm-button";
 import { PageHeader } from "@/components/shell/page-header";
@@ -14,6 +15,7 @@ export default async function JobDetailPage({
   params,
 }: PageProps<"/timesheets/jobs/[id]">) {
   await requirePermission(canManageJobs);
+  const t = await getTranslations();
   const { id } = await params;
   const [job, customers] = await Promise.all([
     getJob(id),
@@ -23,20 +25,20 @@ export default async function JobDetailPage({
   const archived = !!job.archivedAt;
   return (
     <>
-      <BackLink href="/timesheets/jobs">Zakázky</BackLink>
+      <BackLink href="/timesheets/jobs">{t("core.tabs.jobs")}</BackLink>
       <PageHeader
         title={`${job.code} ${job.name}`}
-        subtitle={archived ? "Archivovaná zakázka" : undefined}
+        subtitle={archived ? t("core.pages.archivedJob") : undefined}
         actions={
           <form action={setJobArchivedAction.bind(null, job.id, !archived)}>
             <ConfirmButton
               confirm={
                 archived
-                  ? "Obnovit zakázku?"
-                  : "Archivovat zakázku? Zmizí z výběru, zapsané hodiny zůstanou."
+                  ? t("core.pages.confirmRestoreJob")
+                  : t("core.pages.confirmArchiveJob")
               }
             >
-              {archived ? "Obnovit" : "Archivovat"}
+              {archived ? t("core.pages.restore") : t("core.detail.archive")}
             </ConfirmButton>
           </form>
         }
@@ -47,7 +49,7 @@ export default async function JobDetailPage({
             action={updateJobAction.bind(null, job.id)}
             customers={customers}
             initial={job}
-            submitLabel="Uložit"
+            submitLabel={t("core.form.save")}
           />
         </CardContent>
       </Card>

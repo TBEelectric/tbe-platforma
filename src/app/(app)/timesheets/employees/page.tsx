@@ -1,4 +1,5 @@
 import { Plus } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { PageHeader } from "@/components/shell/page-header";
 import { buttonVariants } from "@/components/ui/button";
@@ -15,15 +16,16 @@ export const instant = false;
 
 export default async function EmployeesPage() {
   const user = await requirePermission(canManageEmployees);
+  const t = await getTranslations();
   const rows = await listEmployees();
   return (
     <>
       <PageHeader
-        title="Zaměstnanci"
-        subtitle="Úvazky, party, nároky na dovolenou a přístup do aplikace"
+        title={t("core.tabs.employees")}
+        subtitle={t("core.pages.employeesSubtitle")}
         actions={
           <Link href="/timesheets/employees/new" className={buttonVariants()}>
-            <Plus /> Nový zaměstnanec
+            <Plus /> {t("core.pages.newEmployee")}
           </Link>
         }
       />

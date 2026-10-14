@@ -1,4 +1,5 @@
 import { and, eq, gte, isNull, lte, ne } from "drizzle-orm";
+import { msg } from "@/i18n/messages";
 import { addDays, monthStart } from "@/lib/dates";
 import { db, type DbOrTx } from "@/lib/db";
 import { UserError, pgError } from "@/lib/form-state";
@@ -79,10 +80,10 @@ async function assertCanWrite(
 ): Promise<"self" | "manager"> {
   const teamId = await teamOn(tx, employeeId, date);
   if (!canWriteTimeFor(writer.actor, { employeeId, teamId }))
-    throw new UserError("K zápisu za tohoto zaměstnance nemáte oprávnění.");
+    throw new UserError(msg("timesheets.errors.noPermissionForEmployee"));
   if (employeeId === writer.actor.employeeId) return "self";
   if (!reason)
-    throw new UserError("Při zápisu za jiného uveďte důvod.", "reason");
+    throw new UserError(msg("timesheets.errors.reasonRequired"), "reason");
   return "manager";
 }
 
@@ -149,7 +150,7 @@ async function validate(
 /** A concurrent overlapping insert is caught by the exclusion constraint. */
 function rethrowOverlap(error: unknown): never {
   if (pgError(error).constraint === "time_entry_no_overlap")
-    throw new UserError("Interval se překrývá s jiným intervalem.");
+    throw new UserError(msg("timesheets.errors.overlap"));
   throw error;
 }
 
@@ -193,7 +194,7 @@ async function loadOwned(tx: DbOrTx, id: string, employeeId: string) {
     .select()
     .from(timeEntry)
     .where(and(eq(timeEntry.id, id), eq(timeEntry.employeeId, employeeId)));
-  if (!row) throw new UserError("Interval nenalezen.");
+  if (!row) throw new UserError(msg("errors.notFound"));
   return row;
 }
 
@@ -221,9 +222,7 @@ export async function updateTimeEntry(
         change.reason,
       );
       if (await isLocked(tx, change.employeeId, existing.workDate))
-        throw new UserError(
-          "Měsíc je potvrzený nebo uzavřený, intervaly nelze měnit.",
-        );
+        throw new UserError(msg("timesheets.errors.monthLocked"));
       const entry = await validate(tx, change, existing);
       await updateAudited(
         tx,
@@ -252,9 +251,7 @@ export async function deleteTimeEntry(
     const existing = await loadOwned(tx, id, employeeId);
     await assertCanWrite(tx, writer, employeeId, existing.workDate, reason);
     if (await isLocked(tx, employeeId, existing.workDate))
-      throw new UserError(
-        "Měsíc je potvrzený nebo uzavřený, intervaly nelze měnit.",
-      );
+      throw new UserError(msg("timesheets.errors.monthLocked"));
     await deleteAudited(tx, writer, "time_entry", timeEntry, id, reason);
   });
 }

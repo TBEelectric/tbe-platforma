@@ -1,4 +1,5 @@
 import { PageHeader } from "@/components/shell/page-header";
+import { getTranslations } from "next-intl/server";
 import { Card, CardContent } from "@/components/ui/card";
 import { requirePermission } from "@/lib/current-user";
 import {
@@ -13,12 +14,13 @@ export const instant = false;
 
 export default async function NewEmployeePage() {
   const user = await requirePermission(canManageEmployees);
+  const t = await getTranslations();
   const teams = await listTeamOptions();
   return (
     <>
       <PageHeader
-        title="Nový zaměstnanec"
-        subtitle="Zaměstnanec s e-mailem se může přihlásit firemním Google účtem."
+        title={t("core.pages.newEmployee")}
+        subtitle={t("core.pages.newEmployeeSubtitle")}
       />
       <Card className="max-w-3xl">
         <CardContent>

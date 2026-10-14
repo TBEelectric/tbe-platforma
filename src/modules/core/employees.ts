@@ -1,4 +1,5 @@
 import { and, asc, desc, eq, inArray, isNull, ne, sql } from "drizzle-orm";
+import { msg } from "@/i18n/messages";
 import { db, type DbOrTx } from "@/lib/db";
 import { addDays, todayInPrague } from "@/lib/dates";
 import { UserError } from "@/lib/form-state";
@@ -231,7 +232,7 @@ export async function updateEmployment(
   input: EmploymentForm & { validTo: string | null },
 ): Promise<void> {
   if (input.validTo && input.validTo < input.validFrom) {
-    throw new UserError("Konec musí být po začátku.", "validTo");
+    throw new UserError(msg("errors.endAfterStart"), "validTo");
   }
   try {
     await db.transaction((tx) =>
@@ -264,7 +265,7 @@ export async function changeTeam(
         });
       } else {
         throw new UserError(
-          "Členství začíná tento den; zvolte pozdější datum nebo jinou partu.",
+          msg("core.errors.membershipStartsToday"),
           "validFrom",
         );
       }

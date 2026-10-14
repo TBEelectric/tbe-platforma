@@ -1,6 +1,7 @@
 "use client";
 
 import { Lock } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,9 +26,10 @@ function workTypeBadge(e: DayEntryView) {
   );
 }
 
-function jobLabel(e: DayEntryView) {
+function JobLabel({ e }: { e: DayEntryView }) {
+  const t = useTranslations("timesheets.entries");
   if (!e.jobCode)
-    return <span className="text-muted-foreground">Bez zakázky</span>;
+    return <span className="text-muted-foreground">{t("noJob")}</span>;
   return (
     <>
       <span className="font-semibold">{e.jobCode}</span> {e.jobName}
@@ -40,9 +42,10 @@ const timeRange = (e: DayEntryView) =>
 
 /**
  * Intervals of the day: a table with the add/edit form on desktop, cards with a bottom sheet and
- * „Pokračovat od …“ on phones.
+ * "continue from …" on phones.
  */
 export function DayEntries({ view, needsReason }: Props) {
+  const t = useTranslations("timesheets.entries");
   const [editing, setEditing] = useState<DayEntryView | null>(null);
   const [formKey, setFormKey] = useState(0);
   const [sheet, setSheet] = useState<{
@@ -77,14 +80,16 @@ export function DayEntries({ view, needsReason }: Props) {
           <table className="w-full border-collapse text-[15px]">
             <thead>
               <tr className="bg-[#f6f8fa] text-left text-[13px] font-semibold text-muted-foreground">
-                <th className="px-3 py-3 font-semibold">Od</th>
-                <th className="px-3 py-3 font-semibold">Do</th>
-                <th className="px-3 py-3 font-semibold">Zakázka</th>
-                <th className="px-3 py-3 font-semibold">Druh práce</th>
-                <th className="px-3 py-3 font-semibold">Poznámka</th>
-                <th className="px-3 py-3 text-right font-semibold">Doba</th>
+                <th className="px-3 py-3 font-semibold">{t("from")}</th>
+                <th className="px-3 py-3 font-semibold">{t("to")}</th>
+                <th className="px-3 py-3 font-semibold">{t("job")}</th>
+                <th className="px-3 py-3 font-semibold">{t("workType")}</th>
+                <th className="px-3 py-3 font-semibold">{t("note")}</th>
+                <th className="px-3 py-3 text-right font-semibold">
+                  {t("duration")}
+                </th>
                 <th className="px-3 py-3">
-                  <span className="sr-only">Akce</span>
+                  <span className="sr-only">{t("actions")}</span>
                 </th>
               </tr>
             </thead>
@@ -108,7 +113,7 @@ export function DayEntries({ view, needsReason }: Props) {
                   </td>
                   <td className="px-3 py-3">
                     {e.kind === "break" ? (
-                      <Badge variant="neutral">Přestávka</Badge>
+                      <Badge variant="neutral">{t("break")}</Badge>
                     ) : (
                       <span className="flex items-center gap-2">
                         <span
@@ -116,7 +121,9 @@ export function DayEntries({ view, needsReason }: Props) {
                           className="size-2.5 shrink-0 rounded-full"
                           style={{ background: e.color }}
                         />
-                        <span>{jobLabel(e)}</span>
+                        <span>
+                          <JobLabel e={e} />
+                        </span>
                       </span>
                     )}
                   </td>
@@ -125,7 +132,7 @@ export function DayEntries({ view, needsReason }: Props) {
                     {e.note}
                     {e.source === "manager" && (
                       <span className="block text-[13px] text-muted-foreground">
-                        zapsáno za zaměstnance
+                        {t("writtenByManager")}
                       </span>
                     )}
                   </td>
@@ -148,7 +155,7 @@ export function DayEntries({ view, needsReason }: Props) {
                           setFormKey((k) => k + 1);
                         }}
                       >
-                        Upravit
+                        {t("edit")}
                       </Button>
                     )}
                   </td>
@@ -157,9 +164,7 @@ export function DayEntries({ view, needsReason }: Props) {
             </tbody>
           </table>
         ) : (
-          <p className="py-4 text-[15px] text-muted-foreground">
-            Tento den zatím nemá žádný interval.
-          </p>
+          <p className="py-4 text-[15px] text-muted-foreground">{t("empty")}</p>
         )}
 
         {view.locked ? (
@@ -168,8 +173,8 @@ export function DayEntries({ view, needsReason }: Props) {
           <div className="mt-6 border-t border-border pt-5">
             <h3 className="mb-3 text-base font-bold">
               {editing
-                ? `Upravit interval ${timeRange(editing)}`
-                : "Přidat interval"}
+                ? t("editEntry", { range: timeRange(editing) })
+                : t("addEntry")}
             </h3>
             <EntryForm
               key={`desktop-${formKey}`}
@@ -182,8 +187,7 @@ export function DayEntries({ view, needsReason }: Props) {
             />
             {!editing && (
               <p className="mt-3 text-sm text-muted-foreground">
-                Začátek se předvyplní koncem posledního intervalu, zakázka a
-                druh práce posledním zápisem.
+                {t("prefillHint")}
               </p>
             )}
           </div>
@@ -194,7 +198,7 @@ export function DayEntries({ view, needsReason }: Props) {
       <div className="flex flex-col gap-2 lg:hidden">
         {view.entries.length === 0 && (
           <p className="rounded-xl border border-border bg-card px-4 py-5 text-[15px] text-muted-foreground">
-            Tento den zatím nemá žádný interval.
+            {t("empty")}
           </p>
         )}
         {view.entries.map((e) =>
@@ -206,7 +210,9 @@ export function DayEntries({ view, needsReason }: Props) {
               onClick={() => setSheet({ entry: e })}
               className="flex min-h-11 items-center justify-between rounded-lg bg-neutral px-4 text-left text-sm text-neutral-foreground"
             >
-              <span>Přestávka {timeRange(e)}</span>
+              <span>
+                {t("break")} {timeRange(e)}
+              </span>
               <span className="tabular-nums">{formatMinutes(e.minutes)}</span>
             </button>
           ) : (
@@ -230,7 +236,7 @@ export function DayEntries({ view, needsReason }: Props) {
               </span>
               <span className="flex min-w-0 flex-1 flex-col gap-1.5">
                 <span className="text-base leading-snug font-semibold">
-                  {e.jobCode ? `${e.jobCode} ${e.jobName}` : "Bez zakázky"}
+                  {e.jobCode ? `${e.jobCode} ${e.jobName}` : t("noJob")}
                 </span>
                 <span className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                   {workTypeBadge(e)}
@@ -257,7 +263,7 @@ export function DayEntries({ view, needsReason }: Props) {
                   className="h-auto min-h-12 flex-1 flex-col gap-0 py-1.5"
                   onClick={() => setSheet({ defaults: continueDefaults })}
                 >
-                  <span>Pokračovat od {next.from}</span>
+                  <span>{t("continueFrom", { from: next.from })}</span>
                   {nextLabel && (
                     <span className="text-[13px] font-normal opacity-90">
                       {nextLabel}
@@ -270,7 +276,7 @@ export function DayEntries({ view, needsReason }: Props) {
                   className="flex-1"
                   onClick={() => setSheet({})}
                 >
-                  Přidat interval
+                  {t("addEntry")}
                 </Button>
               )}
               {next && (
@@ -279,7 +285,7 @@ export function DayEntries({ view, needsReason }: Props) {
                   variant="outline"
                   onClick={() => setSheet({})}
                 >
-                  Jiný zápis
+                  {t("otherEntry")}
                 </Button>
               )}
             </div>
@@ -297,8 +303,8 @@ export function DayEntries({ view, needsReason }: Props) {
         >
           <SheetTitle className="text-lg font-bold">
             {sheet?.entry
-              ? `Upravit interval ${timeRange(sheet.entry)}`
-              : "Přidat interval"}
+              ? t("editEntry", { range: timeRange(sheet.entry) })
+              : t("addEntry")}
           </SheetTitle>
           {sheet && (
             <EntryForm
@@ -318,10 +324,11 @@ export function DayEntries({ view, needsReason }: Props) {
 }
 
 function LockedNotice() {
+  const t = useTranslations("timesheets.errors");
   return (
     <p className="mt-4 flex items-center gap-2 rounded-lg bg-neutral px-4 py-3 text-[15px] text-neutral-foreground">
       <Lock className="size-4" aria-hidden />
-      Měsíc je potvrzený nebo uzavřený, intervaly nelze měnit.
+      {t("monthLocked")}
     </p>
   );
 }

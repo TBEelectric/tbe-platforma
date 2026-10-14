@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
+import { cs } from "@/i18n/test-utils";
 import type { EmployeeImportRow, JobImportRow } from "./parse";
 import {
   planEmployeeImport,
   planJobImport,
   type EmployeeSnapshot,
   type ExistingEmployee,
+  type RowPreview,
 } from "./plan";
 
 const row = (over: Partial<EmployeeImportRow> = {}): EmployeeImportRow => ({
@@ -61,10 +63,17 @@ const snapshot = (over: Partial<EmployeeSnapshot> = {}): EmployeeSnapshot => ({
   ...over,
 });
 
+/** A preview row with its changes and errors in Czech. */
+const textOf = (preview: RowPreview) => ({
+  ...preview,
+  changes: preview.changes.map(cs),
+  errors: preview.errors.map(cs),
+});
+
 describe("planEmployeeImport", () => {
   it("reports an identical row as unchanged (re-import is idempotent)", () => {
     const plan = planEmployeeImport([row()], snapshot());
-    expect(plan.previews[0]).toMatchObject({
+    expect(textOf(plan.previews[0])).toMatchObject({
       status: "unchanged",
       changes: [],
       errors: [],
@@ -87,7 +96,7 @@ describe("planEmployeeImport", () => {
       ],
       snapshot(),
     );
-    expect(plan.previews[0].status).toBe("new");
+    expect(textOf(plan.previews[0]).status).toBe("new");
     expect(plan.newTeams).toEqual(["Kancelář"]);
     expect(plan.ops[0]).toMatchObject({
       employeeId: null,
@@ -114,7 +123,7 @@ describe("planEmployeeImport", () => {
       [row({ lastName: "Nováček", active: false, isLead: false })],
       snapshot(),
     );
-    expect(plan.previews[0]).toMatchObject({
+    expect(textOf(plan.previews[0])).toMatchObject({
       status: "update",
       changes: [
         "Příjmení: Novák → Nováček",
@@ -145,7 +154,7 @@ describe("planEmployeeImport", () => {
       kind: "create",
       close: { id: "m1", validTo: "2026-12-31" },
     });
-    expect(later.previews[0].changes[0]).toBe(
+    expect(textOf(later.previews[0]).changes[0]).toBe(
       "Nový úvazek DPČ 20 h, pružná od 1. 1. 2027 (předchozí končí 31. 12. 2026)",
     );
   });
@@ -155,8 +164,10 @@ describe("planEmployeeImport", () => {
       [row({ validFrom: "2018-01-01" })],
       snapshot(),
     );
-    expect(plan.previews[0].status).toBe("error");
-    expect(plan.previews[0].errors[0]).toContain("je dřív než poslední úvazek");
+    expect(textOf(plan.previews[0]).status).toBe("error");
+    expect(textOf(plan.previews[0]).errors[0]).toContain(
+      "je dřív než poslední úvazek",
+    );
     expect(plan.ops).toEqual([]);
   });
 
@@ -170,7 +181,7 @@ describe("planEmployeeImport", () => {
       validFrom: "2026-10-13",
       close: { id: "t-m1", validTo: "2026-10-12" },
     });
-    expect(plan.previews[0].changes).toContain(
+    expect(textOf(plan.previews[0]).changes).toContain(
       "Parta: Montáže 1 → Montáže 2 od 13. 10. 2026",
     );
   });
@@ -205,14 +216,14 @@ describe("planEmployeeImport", () => {
       [row({ email: "petr@example.cz" })],
       snapshot({ employees: [jan, other] }),
     );
-    expect(taken.previews[0].errors).toEqual([
+    expect(textOf(taken.previews[0]).errors).toEqual([
       "E-mail už má Petr Svoboda (1002).",
     ]);
     const archived = planEmployeeImport(
       [row()],
       snapshot({ employees: [{ ...jan, archived: true }] }),
     );
-    expect(archived.previews[0].status).toBe("error");
+    expect(textOf(archived.previews[0]).status).toBe("error");
   });
 
   it("replaces another team lead and names the previous one", () => {
@@ -227,7 +238,7 @@ describe("planEmployeeImport", () => {
       ],
       snapshot(),
     );
-    expect(plan.previews[0].changes).toContain(
+    expect(textOf(plan.previews[0]).changes).toContain(
       "Vedoucí party Montáže 1 (místo Jan Novák)",
     );
   });
@@ -238,6 +249,8 @@ describe("planJobImport", () => {
     row: 2,
     code: "250147",
     name: "Rozvaděče hala A",
+    siteName: "Jihlava, hala A",
+    siteAddress: "Průmyslová 12, Jihlava",
     customerName: "Strojírny Vysočina s.r.o.",
     ico: "12345678",
     status: "active",
@@ -316,7 +329,7 @@ describe("planJobImport", () => {
       name: "Rozvaděče hala A+B",
       status: "closed",
     });
-    expect(plan.previews[0].changes).toEqual([
+    expect(textOf(plan.previews[0]).changes).toEqual([
       "Název: Rozvaděče hala A → Rozvaděče hala A+B",
       "Stav: aktivní → uzavřená",
     ]);

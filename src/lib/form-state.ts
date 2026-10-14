@@ -1,4 +1,6 @@
-/** Result of a form server action (used with useActionState). */
+import type { Msg } from "@/i18n/messages";
+
+/** Result of a form server action (used with useActionState). Texts are already translated. */
 export type FormState = {
   ok?: boolean;
   /** Success or general error message shown above the form. */
@@ -19,13 +21,13 @@ export function formValues(formData: FormData): Record<string, string> {
   return values;
 }
 
-/** Thrown by services for expected business errors; actions turn it into a FormState. */
+/** Thrown by services for expected business errors; actions translate it into a FormState. */
 export class UserError extends Error {
   constructor(
-    message: string,
+    readonly msg: Msg,
     readonly field?: string,
   ) {
-    super(message);
+    super(msg.key);
   }
 }
 

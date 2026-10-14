@@ -58,12 +58,3 @@ export function leaveBalance(input: {
     requestedHours: input.requestedHours,
   };
 }
-
-/** Czech label of a number of days: "1 den", "2 dny", "5 dní", "11,5 dne". */
-export function formatDays(days: number): string {
-  const text = String(days).replace(".", ",");
-  if (!Number.isInteger(days)) return `${text} dne`;
-  if (Math.abs(days) === 1) return `${text} den`;
-  if (Math.abs(days) >= 2 && Math.abs(days) <= 4) return `${text} dny`;
-  return `${text} dní`;
-}

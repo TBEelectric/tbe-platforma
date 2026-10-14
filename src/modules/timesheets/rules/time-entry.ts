@@ -1,3 +1,4 @@
+import { msg, type Msg } from "@/i18n/messages";
 import { addDays, pragueInstant, pragueTime } from "@/lib/dates";
 
 // Validation of one time entry (blocks saving). The form, the server action and the import call it.
@@ -7,13 +8,17 @@ export type TimesheetStatus = "open" | "confirmed" | "approved" | "closed";
 export type AbsenceType = "vacation" | "sick" | "ocr" | "doctor" | "other";
 export type AbsenceStatus = "requested" | "approved" | "rejected";
 
-export const ABSENCE_TYPE_LABELS: Record<AbsenceType, string> = {
-  vacation: "dovolená",
-  sick: "nemoc",
-  ocr: "OČR",
-  doctor: "lékař",
-  other: "jiná absence",
-};
+export const ABSENCE_TYPES: AbsenceType[] = [
+  "vacation",
+  "sick",
+  "ocr",
+  "doctor",
+  "other",
+];
+
+/** Name of an absence type (messages timesheets.absenceType.*). */
+export const absenceTypeMsg = (type: AbsenceType): Msg =>
+  msg(`timesheets.absenceType.${type}`);
 
 export const MAX_ENTRY_MINUTES = 24 * 60;
 
@@ -65,8 +70,7 @@ export type ValidEntry = {
 };
 
 export type EntryValidation =
-  | { ok: true; entry: ValidEntry }
-  | { ok: false; errors: Record<string, string> };
+  { ok: true; entry: ValidEntry } | { ok: false; errors: Record<string, Msg> };
 
 export function entryDurationMinutes(range: {
   startAt: Date;
@@ -85,28 +89,28 @@ export function resolveEntryTimes(
   to: string,
 ):
   | { ok: true; startAt: Date; endAt: Date }
-  | { ok: false; field: "from" | "to"; error: string } {
+  | { ok: false; field: "from" | "to"; error: Msg } {
   const startAt = pragueInstant(workDate, from);
   if (!startAt)
     return {
       ok: false,
       field: "from",
-      error: "Začátek: neplatný čas (v den změny času neexistuje).",
+      error: msg("timesheets.errors.skippedTime"),
     };
   if (to === from)
-    return { ok: false, field: "to", error: "Konec musí být po začátku." };
+    return { ok: false, field: "to", error: msg("errors.endAfterStart") };
   const endDate = to < from ? addDays(workDate, 1) : workDate;
   const endAt = pragueInstant(endDate, to);
   if (!endAt)
     return {
       ok: false,
       field: "to",
-      error: "Konec: neplatný čas (v den změny času neexistuje).",
+      error: msg("timesheets.errors.skippedTime"),
     };
   if (endAt <= startAt)
-    return { ok: false, field: "to", error: "Konec musí být po začátku." };
+    return { ok: false, field: "to", error: msg("errors.endAfterStart") };
   if (entryDurationMinutes({ startAt, endAt }) > MAX_ENTRY_MINUTES)
-    return { ok: false, field: "to", error: "Interval může mít nejvýš 24 h." };
+    return { ok: false, field: "to", error: msg("timesheets.errors.max24h") };
   return { ok: true, startAt, endAt };
 }
 
@@ -152,9 +156,7 @@ export function validateTimeEntry(
   if (ctx.locked)
     return {
       ok: false,
-      errors: {
-        _form: "Měsíc je potvrzený nebo uzavřený, intervaly nelze měnit.",
-      },
+      errors: { _form: msg("timesheets.errors.monthLocked") },
     };
 
   const times = resolveEntryTimes(draft.workDate, draft.from, draft.to);
@@ -163,21 +165,21 @@ export function validateTimeEntry(
   let jobId: string | null = null;
   let workTypeId: string | null = null;
   if (draft.kind === "work") {
-    const errors: Record<string, string> = {};
+    const errors: Record<string, Msg> = {};
     const type = ctx.workTypes.find((w) => w.id === draft.workTypeId);
     if (!draft.workTypeId || !type) {
-      errors.workTypeId = "Druh práce: povinné";
+      errors.workTypeId = msg("validation.required");
     } else if (!type.active && ctx.previous?.workTypeId !== type.id) {
-      errors.workTypeId = "Druh práce není aktivní.";
+      errors.workTypeId = msg("timesheets.errors.workTypeInactive");
     }
     if (draft.jobId) {
       if (
         !ctx.activeJobIds.includes(draft.jobId) &&
         ctx.previous?.jobId !== draft.jobId
       )
-        errors.jobId = "Zakázka není aktivní.";
+        errors.jobId = msg("timesheets.errors.jobInactive");
     } else if (type?.requiresJob ?? true) {
-      errors.jobId = "Zakázka: povinné";
+      errors.jobId = msg("validation.required");
     }
     if (Object.keys(errors).length > 0) return { ok: false, errors };
     jobId = draft.jobId;
@@ -192,7 +194,10 @@ export function validateTimeEntry(
     return {
       ok: false,
       errors: {
-        _form: `Překrývá se s intervalem ${pragueTime(overlap.startAt)}–${pragueTime(overlap.endAt)}.`,
+        _form: msg("timesheets.errors.overlapWith", {
+          from: pragueTime(overlap.startAt),
+          to: pragueTime(overlap.endAt),
+        }),
       },
     };
 
@@ -201,7 +206,9 @@ export function validateTimeEntry(
     return {
       ok: false,
       errors: {
-        _form: `Tento den je zapsaná absence (${ABSENCE_TYPE_LABELS[absence.type]}).`,
+        _form: msg("timesheets.errors.absenceOnDay", {
+          type: absenceTypeMsg(absence.type),
+        }),
       },
     };
 

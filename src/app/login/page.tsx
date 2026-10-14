@@ -16,7 +16,6 @@ export async function generateMetadata(): Promise<Metadata> {
 // Reads the session and the error from the URL; renders on the server per request.
 export const instant = false;
 
-
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const { error } = await searchParams;
   const code = typeof error === "string" ? error : undefined;

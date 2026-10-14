@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { csAll } from "@/i18n/test-utils";
 import {
   customerFormSchema,
   employeeFormSchema,
@@ -36,18 +37,19 @@ describe("employeeFormSchema", () => {
     expect(parsed.tracksTime).toBe(false);
   });
 
-  it("reports Czech field errors", () => {
+  it("reports field errors as messages", () => {
     const result = employeeFormSchema.safeParse({
       personalNumber: "",
       firstName: "A",
-      lastName: "B",
+      lastName: "x".repeat(101),
       email: "x",
     });
     expect(result.success).toBe(false);
     if (!result.success) {
-      expect(fieldErrors(result.error)).toEqual({
-        personalNumber: "Osobní číslo: povinné",
-        email: "E-mail: neplatný formát",
+      expect(csAll(fieldErrors(result.error))).toEqual({
+        personalNumber: "Povinné",
+        lastName: "Nejvýše 100 znaků",
+        email: "Neplatný formát e-mailu",
       });
     }
   });

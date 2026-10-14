@@ -1,5 +1,6 @@
 "use server";
 
+import { msg } from "@/i18n/messages";
 import type { CurrentUser } from "@/lib/current-user";
 import { handleFormAction } from "@/lib/form-action";
 import type { FormState } from "@/lib/form-state";
@@ -44,7 +45,7 @@ export async function createTimeEntryAction(
     formData,
     async (user, data) => {
       await createTimeEntry(writerOf(user), data);
-      return { ok: true, message: "Interval přidán." };
+      return msg("timesheets.messages.entryAdded");
     },
     DAY,
   );
@@ -61,7 +62,7 @@ export async function updateTimeEntryAction(
     formData,
     async (user, data) => {
       await updateTimeEntry(writerOf(user), id, data);
-      return { ok: true, message: "Interval uložen." };
+      return msg("timesheets.messages.entrySaved");
     },
     DAY,
   );
@@ -83,7 +84,7 @@ export async function deleteTimeEntryAction(
     formData,
     async (user, data) => {
       await deleteTimeEntry(writerOf(user), id, data.employeeId, data.reason);
-      return { ok: true, message: "Interval smazán." };
+      return msg("timesheets.messages.entryDeleted");
     },
     DAY,
   );
@@ -118,13 +119,9 @@ export async function createAbsenceAction(
     formData,
     async (user, data) => {
       await createAbsence(writerOf(user), data);
-      return {
-        ok: true,
-        message:
-          data.employeeId === user.employee.id
-            ? "Žádost odeslána ke schválení."
-            : "Absence zapsána a schválena.",
-      };
+      return data.employeeId === user.employee.id
+        ? msg("timesheets.messages.absenceRequested")
+        : msg("timesheets.messages.absenceRecorded");
     },
     ABSENCES,
   );
@@ -144,10 +141,9 @@ export async function decideAbsenceAction(
     formData,
     async (user, data) => {
       await decideAbsence(writerOf(user), id, decision, data.reason);
-      return {
-        ok: true,
-        message: decision === "approve" ? "Schváleno." : "Zamítnuto.",
-      };
+      return decision === "approve"
+        ? msg("timesheets.messages.approved")
+        : msg("timesheets.messages.rejected");
     },
     ABSENCES,
   );
@@ -164,7 +160,7 @@ export async function cancelAbsenceAction(
     formData,
     async (user, data) => {
       await cancelAbsence(writerOf(user), id, data.reason);
-      return { ok: true, message: "Absence zrušena." };
+      return msg("timesheets.messages.absenceCancelled");
     },
     ABSENCES,
   );

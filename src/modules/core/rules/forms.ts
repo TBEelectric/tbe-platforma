@@ -1,13 +1,15 @@
 import { z } from "zod";
+import type { MessageKey, MessageValues, Msg } from "@/i18n/messages";
 
-// Form schemas shared by forms, server actions and the import. Czech messages are shown in the UI.
+// Form schemas shared by forms, server actions and the import. Messages are translation keys
+// (validation.*), shown next to the field; fieldErrors() turns issues into Msg.
 
-const requiredText = (label: string, max = 100) =>
+const requiredText = (max = 100) =>
   z
-    .string({ error: `${label}: povinné` })
+    .string({ error: "validation.required" })
     .trim()
-    .min(1, `${label}: povinné`)
-    .max(max, `${label}: nejvýše ${max} znaků`);
+    .min(1, "validation.required")
+    .max(max, "validation.maxLength");
 
 /** HTML checkbox: "on" when checked, missing otherwise. */
 export const checkbox = z.preprocess(
@@ -15,13 +17,13 @@ export const checkbox = z.preprocess(
   z.boolean(),
 );
 
-const isoDate = (label: string) =>
+const isoDate = () =>
   z
-    .string({ error: `${label}: povinné` })
-    .regex(/^\d{4}-\d{2}-\d{2}$/, `${label}: zadejte datum`)
+    .string({ error: "validation.required" })
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "validation.enterDate")
     .refine(
       (v) => !Number.isNaN(Date.parse(`${v}T00:00:00Z`)),
-      `${label}: neplatné datum`,
+      "validation.invalidDate",
     );
 
 const optionalUuid = z
@@ -31,52 +33,48 @@ const optionalUuid = z
   .pipe(z.uuid().nullable());
 
 /** Hours as a number; accepts a Czech decimal comma ("7,5"). Empty → null. */
-const optionalHours = (label: string, max: number) =>
+const optionalHours = (max: number) =>
   z
     .union([z.string(), z.number()])
     .optional()
     .transform((v) =>
       v === undefined || v === "" ? null : Number(String(v).replace(",", ".")),
     )
-    .refine(
-      (v) => v === null || (Number.isFinite(v) && v >= 0 && v <= max),
-      `${label}: číslo 0–${max}`,
-    );
+    .refine((v) => v === null || (Number.isFinite(v) && v >= 0 && v <= max), {
+      message: "validation.numberRange",
+      params: { minimum: 0, maximum: max },
+    });
 
 export const employeeFormSchema = z.object({
-  personalNumber: requiredText("Osobní číslo", 20),
-  firstName: requiredText("Jméno"),
-  lastName: requiredText("Příjmení"),
+  personalNumber: requiredText(20),
+  firstName: requiredText(),
+  lastName: requiredText(),
   email: z
     .string()
     .trim()
     .toLowerCase()
     .optional()
     .transform((v) => (v ? v : null))
-    .pipe(z.email("E-mail: neplatný formát").nullable()),
+    .pipe(z.email("validation.invalidEmail").nullable()),
   tracksTime: checkbox,
 });
 export type EmployeeForm = z.infer<typeof employeeFormSchema>;
 
-export const EMPLOYMENT_TYPES = { hpp: "HPP", dpp: "DPP", dpc: "DPČ" } as const;
-export const SCHEDULE_TYPES = {
-  flexible: "pružná",
-  uneven: "nerovnoměrná",
-} as const;
-
 export const employmentFormSchema = z
   .object({
-    type: z.enum(["hpp", "dpp", "dpc"], { error: "Typ úvazku: vyberte" }),
-    validFrom: isoDate("Platnost od"),
-    weeklyHours: optionalHours("Hodin týdně", 60),
-    scheduleType: z.enum(["flexible", "uneven"], { error: "Režim: vyberte" }),
+    type: z.enum(["hpp", "dpp", "dpc"], { error: "validation.choose" }),
+    validFrom: isoDate(),
+    weeklyHours: optionalHours(60),
+    scheduleType: z.enum(["flexible", "uneven"], {
+      error: "validation.choose",
+    }),
   })
   .superRefine((value, ctx) => {
     if (value.type !== "dpp" && !value.weeklyHours) {
       ctx.addIssue({
         code: "custom",
         path: ["weeklyHours"],
-        message: "Hodin týdně: u HPP a DPČ povinné",
+        message: "validation.required",
       });
     }
   })
@@ -88,20 +86,18 @@ export type EmploymentForm = z.infer<typeof employmentFormSchema>;
 
 export const leaveFormSchema = z.object({
   year: z.coerce.number().int().min(2000).max(2100),
-  hoursEntitled: optionalHours("Nárok dovolené", 1000).transform((v) => v ?? 0),
-  hoursCarriedOver: optionalHours("Převod z loňska", 1000).transform(
-    (v) => v ?? 0,
-  ),
+  hoursEntitled: optionalHours(1000).transform((v) => v ?? 0),
+  hoursCarriedOver: optionalHours(1000).transform((v) => v ?? 0),
 });
 
 export const teamFormSchema = z.object({
-  name: requiredText("Název party"),
+  name: requiredText(),
   leadEmployeeId: optionalUuid,
 });
 
 export const membershipFormSchema = z.object({
   teamId: optionalUuid,
-  validFrom: isoDate("Od"),
+  validFrom: isoDate(),
 });
 
 export const rolesFormSchema = z.object({
@@ -109,31 +105,41 @@ export const rolesFormSchema = z.object({
   timesheetsManager: checkbox,
 });
 
-export const JOB_STATUSES = { active: "aktivní", closed: "uzavřená" } as const;
-
 export const jobFormSchema = z.object({
-  code: requiredText("Číslo zakázky", 20),
-  name: requiredText("Název", 200),
+  code: requiredText(20),
+  name: requiredText(200),
   customerId: optionalUuid,
-  status: z.enum(["active", "closed"], { error: "Stav: vyberte" }),
+  status: z.enum(["active", "closed"], { error: "validation.choose" }),
 });
 
 export const customerFormSchema = z.object({
-  name: requiredText("Název zákazníka", 200),
+  name: requiredText(200),
   ico: z
     .string()
     .trim()
     .optional()
     .transform((v) => (v ? v.replace(/\s/g, "") : null))
-    .refine((v) => v === null || /^\d{8}$/.test(v), "IČO: 8 číslic"),
+    .refine((v) => v === null || /^\d{8}$/.test(v), "validation.ico"),
 });
 
-/** Field errors keyed by field name, first message only. */
-export function fieldErrors(error: z.ZodError): Record<string, string> {
-  const result: Record<string, string> = {};
+/** Field errors keyed by field name, first issue only, as messages (validation.* keys). */
+export function fieldErrors(error: z.ZodError): Record<string, Msg> {
+  const result: Record<string, Msg> = {};
   for (const issue of error.issues) {
-    const key = String(issue.path[0] ?? "_form");
-    result[key] ??= issue.message;
+    const field = String(issue.path[0] ?? "_form");
+    result[field] ??= issueMessage(issue);
   }
   return result;
+}
+
+function issueMessage(issue: z.core.$ZodIssue): Msg {
+  if (!issue.message.startsWith("validation."))
+    return { key: "validation.invalid" };
+  const values: MessageValues = {};
+  const bounds = issue as { minimum?: unknown; maximum?: unknown };
+  if (typeof bounds.minimum === "number") values.minimum = bounds.minimum;
+  if (typeof bounds.maximum === "number") values.maximum = bounds.maximum;
+  if (issue.code === "custom")
+    Object.assign(values, (issue as { params?: MessageValues }).params);
+  return { key: issue.message as MessageKey, values };
 }

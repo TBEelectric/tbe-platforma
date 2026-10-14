@@ -1,6 +1,9 @@
 // Reading the import template (docs/import/sablona-importu.xlsx). Pure functions: the input is the
 // sheet data as returned by read-excel-file (rows of string | number | boolean | Date | null).
+// Sheet names, column names and cell values are the template's (Czech) file format; messages are keys.
 import { z } from "zod";
+import type { Messages } from "next-intl";
+import { msg, type Msg } from "@/i18n/messages";
 import { normalizeEmail } from "../../core/shared";
 
 export type Cell = string | number | boolean | Date | null | undefined;
@@ -35,7 +38,9 @@ export const JOB_COLUMNS = [
   "Stav",
 ] as const;
 
-export type RowIssue = { row: number; column?: string; message: string };
+export type RowIssue = { row: number; column?: string; message: Msg };
+
+type IssueKey = keyof Messages["import"]["issues"];
 
 export type EmployeeImportRow = {
   row: number;
@@ -70,7 +75,7 @@ export type JobImportRow = {
 export type SheetResult<T> = {
   rows: T[];
   issues: RowIssue[];
-  headerError: string | null;
+  headerError: Msg | null;
 };
 
 // ── Cell helpers ──
@@ -129,11 +134,15 @@ function yesNo(value: Cell): boolean | null | "invalid" {
 function checkHeader(
   header: Cell[] | undefined,
   expected: readonly string[],
-): string | null {
+): Msg | null {
   const actual = (header ?? []).map(text);
   const mismatch = expected.findIndex((name, i) => actual[i] !== name);
   if (mismatch === -1) return null;
-  return `Hlavička neodpovídá šabloně: ve sloupci ${mismatch + 1} čekám „${expected[mismatch]}“, je tam „${actual[mismatch] ?? ""}“.`;
+  return msg("import.headerMismatch", {
+    column: mismatch + 1,
+    expected: expected[mismatch],
+    actual: actual[mismatch] ?? "",
+  });
 }
 
 const EMPLOYMENT_TYPE: Record<string, EmployeeImportRow["type"]> = {
@@ -170,48 +179,53 @@ export function parseEmployeeSheet(
     const row = index + 2; // spreadsheet row number (header is row 1)
     const issue = (
       column: (typeof EMPLOYEE_COLUMNS)[number],
-      message: string,
-    ) => issues.push({ row, column, message });
+      key: IssueKey,
+      values?: Record<string, number>,
+    ) =>
+      issues.push({
+        row,
+        column,
+        message: msg(`import.issues.${key}`, values),
+      });
     const before = issues.length;
     const get = (column: (typeof EMPLOYEE_COLUMNS)[number]) =>
       cells[EMPLOYEE_COLUMNS.indexOf(column)];
 
     const personalNumber = text(get("Osobní číslo"));
-    if (!personalNumber) issue("Osobní číslo", "povinné");
+    if (!personalNumber) issue("Osobní číslo", "required");
     const lastName = text(get("Příjmení"));
-    if (!lastName) issue("Příjmení", "povinné");
+    if (!lastName) issue("Příjmení", "required");
     const firstName = text(get("Jméno"));
-    if (!firstName) issue("Jméno", "povinné");
+    if (!firstName) issue("Jméno", "required");
 
     const rawEmail = text(get("E-mail"));
     const email = rawEmail ? normalizeEmail(rawEmail) : null;
     if (email && !emailSchema.safeParse(email).success)
-      issue("E-mail", "neplatný formát");
+      issue("E-mail", "invalidEmail");
 
     const type = EMPLOYMENT_TYPE[text(get("Typ úvazku")).toLowerCase()];
-    if (!type) issue("Typ úvazku", "HPP, DPP nebo DPČ");
+    if (!type) issue("Typ úvazku", "employmentType");
 
     const weeklyHours = parseNumberCell(get("Hodin týdně"));
     if (
       weeklyHours !== null &&
       (Number.isNaN(weeklyHours) || weeklyHours <= 0 || weeklyHours > 60)
     ) {
-      issue("Hodin týdně", "číslo 1–60");
+      issue("Hodin týdně", "hoursRange");
     } else if (type && type !== "dpp" && weeklyHours === null) {
-      issue("Hodin týdně", "u HPP a DPČ povinné");
+      issue("Hodin týdně", "hoursRequired");
     }
 
     const scheduleType = SCHEDULE[text(get("Režim")).toLowerCase()];
-    if (!scheduleType) issue("Režim", "pružná nebo nerovnoměrná");
+    if (!scheduleType) issue("Režim", "schedule");
 
     const validFrom = parseDateCell(get("Platnost od"));
-    if (!validFrom) issue("Platnost od", "datum DD.MM.RRRR");
+    if (!validFrom) issue("Platnost od", "date");
 
     const team = text(get("Parta")) || null;
     const lead = yesNo(get("Vedoucí party"));
-    if (lead === "invalid") issue("Vedoucí party", "ano nebo ne");
-    else if (lead && !team)
-      issue("Vedoucí party", "vedoucí musí mít vyplněnou partu");
+    if (lead === "invalid") issue("Vedoucí party", "yesNo");
+    else if (lead && !team) issue("Vedoucí party", "leadNeedsTeam");
 
     const entitled = parseNumberCell(get("Nárok dovolené (h)"));
     const carried = parseNumberCell(get("Převod z loňska (h)"));
@@ -220,16 +234,15 @@ export function parseEmployeeSheet(
       ["Převod z loňska (h)", carried],
     ] as const) {
       if (value !== null && (Number.isNaN(value) || value < 0 || value > 1000))
-        issue(column, "číslo 0–1000");
+        issue(column, "leaveRange");
     }
 
     const roleText = text(get("Role")).toLowerCase();
     const role = ROLE[roleText];
-    if (role === undefined)
-      issue("Role", "prázdné, správce docházky nebo administrátor");
+    if (role === undefined) issue("Role", "role");
 
     const active = yesNo(get("Aktivní"));
-    if (active === "invalid") issue("Aktivní", "ano nebo ne");
+    if (active === "invalid") issue("Aktivní", "yesNo");
 
     if (issues.length > before) return;
     rows.push({
@@ -258,18 +271,16 @@ export function parseEmployeeSheet(
       rows,
       (r) => r.personalNumber,
       "Osobní číslo",
-      "je v souboru vícekrát",
+      "duplicate",
     ),
   );
-  issues.push(
-    ...duplicateIssues(rows, (r) => r.email, "E-mail", "je v souboru vícekrát"),
-  );
+  issues.push(...duplicateIssues(rows, (r) => r.email, "E-mail", "duplicate"));
   issues.push(
     ...duplicateIssues(
       rows.filter((r) => r.isLead),
       (r) => r.team?.toLowerCase() ?? null,
       "Vedoucí party",
-      "parta má v souboru víc vedoucích",
+      "twoLeads",
     ),
   );
   return { rows, issues: sortIssues(issues), headerError: null };
@@ -293,18 +304,18 @@ export function parseJobSheet(data: Cell[][]): SheetResult<JobImportRow> {
   data.slice(1).forEach((cells, index) => {
     if (isEmptyRow(cells)) return;
     const row = index + 2;
-    const issue = (column: (typeof JOB_COLUMNS)[number], message: string) =>
-      issues.push({ row, column, message });
+    const issue = (column: (typeof JOB_COLUMNS)[number], key: IssueKey) =>
+      issues.push({ row, column, message: msg(`import.issues.${key}`) });
     const before = issues.length;
     const get = (column: (typeof JOB_COLUMNS)[number]) =>
       cells[JOB_COLUMNS.indexOf(column)];
 
     const code = text(get("Číslo zakázky"));
-    if (!code) issue("Číslo zakázky", "povinné");
+    if (!code) issue("Číslo zakázky", "required");
     const name = text(get("Název"));
-    if (!name) issue("Název", "povinné");
+    if (!name) issue("Název", "required");
     const siteName = text(get("Místo"));
-    if (!siteName) issue("Místo", "povinné");
+    if (!siteName) issue("Místo", "required");
     const siteAddress = text(get("Adresa místa")) || null;
     const customerName = text(get("Zákazník")) || null;
 
@@ -314,12 +325,11 @@ export function parseJobSheet(data: Cell[][]): SheetResult<JobImportRow> {
       typeof icoCell === "number"
         ? String(icoCell).padStart(8, "0")
         : text(icoCell).replace(/\s/g, "") || null;
-    if (ico && !/^\d{8}$/.test(ico)) issue("IČO zákazníka", "8 číslic");
-    if (ico && !customerName)
-      issue("Zákazník", "u IČO vyplňte i název zákazníka");
+    if (ico && !/^\d{8}$/.test(ico)) issue("IČO zákazníka", "ico");
+    if (ico && !customerName) issue("Zákazník", "icoNeedsCustomer");
 
     const status = JOB_STATUS[text(get("Stav")).toLowerCase()];
-    if (!status) issue("Stav", "aktivní nebo uzavřená");
+    if (!status) issue("Stav", "status");
 
     if (issues.length > before) return;
     rows.push({
@@ -335,12 +345,7 @@ export function parseJobSheet(data: Cell[][]): SheetResult<JobImportRow> {
   });
 
   issues.push(
-    ...duplicateIssues(
-      rows,
-      (r) => r.code,
-      "Číslo zakázky",
-      "je v souboru vícekrát",
-    ),
+    ...duplicateIssues(rows, (r) => r.code, "Číslo zakázky", "duplicate"),
   );
   return { rows, issues: sortIssues(issues), headerError: null };
 }
@@ -351,8 +356,9 @@ function duplicateIssues<T extends { row: number }>(
   rows: T[],
   key: (row: T) => string | null,
   column: string,
-  message: string,
+  issue: IssueKey,
 ): RowIssue[] {
+  const message = msg(`import.issues.${issue}`);
   const byKey = new Map<string, T[]>();
   for (const row of rows) {
     const k = key(row);

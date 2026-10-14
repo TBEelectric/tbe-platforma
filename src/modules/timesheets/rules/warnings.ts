@@ -1,3 +1,4 @@
+import { msg, type Msg } from "@/i18n/messages";
 import { addDays, isWeekend, pragueInstant, pragueTime } from "@/lib/dates";
 import { formatMinutes } from "@/lib/duration";
 import type { TimesheetSettings } from "./settings";
@@ -12,7 +13,7 @@ import {
 export type WarningEntry = { kind: TimeEntryKind; startAt: Date; endAt: Date };
 export type Warning = {
   code: "break" | "long_day" | "daily_rest" | "weekly_rest";
-  message: string;
+  message: Msg;
 };
 
 const MINUTE = 60_000;
@@ -52,7 +53,11 @@ export function breakWarning(
       );
       return {
         code: "break",
-        message: `Přes ${formatMinutes(s.breakAfterWorkMinutes)} práce bez přestávky ${formatMinutes(s.breakMinMinutes)} (od ${pragueTime(limitAt)}).`,
+        message: msg("timesheets.warnings.break", {
+          work: formatMinutes(s.breakAfterWorkMinutes),
+          pause: formatMinutes(s.breakMinMinutes),
+          from: pragueTime(limitAt),
+        }),
       };
     }
     continuous += duration;
@@ -76,7 +81,10 @@ export function longDayWarning(
   if (total <= s.dailyWorkWarningMinutes) return null;
   return {
     code: "long_day",
-    message: `Přes ${formatMinutes(s.dailyWorkWarningMinutes)} práce za den (${formatMinutes(total)}).`,
+    message: msg("timesheets.warnings.longDay", {
+      limit: formatMinutes(s.dailyWorkWarningMinutes),
+      total: formatMinutes(total),
+    }),
   };
 }
 
@@ -94,7 +102,10 @@ export function dailyRestWarning(
   if (rest >= s.dailyRestMinutes) return null;
   return {
     code: "daily_rest",
-    message: `Odpočinek mezi dny jen ${formatMinutes(Math.max(rest, 0))} (nejméně ${formatMinutes(s.dailyRestMinutes)}).`,
+    message: msg("timesheets.warnings.dailyRest", {
+      rest: formatMinutes(Math.max(rest, 0)),
+      minimum: formatMinutes(s.dailyRestMinutes),
+    }),
   };
 }
 
@@ -124,7 +135,10 @@ export function weeklyRestWarning(
   if (minutes >= s.weeklyRestMinutes) return null;
   return {
     code: "weekly_rest",
-    message: `Nejdelší odpočinek v týdnu ${formatMinutes(minutes)} (nejméně ${formatMinutes(s.weeklyRestMinutes)}).`,
+    message: msg("timesheets.warnings.weeklyRest", {
+      rest: formatMinutes(minutes),
+      minimum: formatMinutes(s.weeklyRestMinutes),
+    }),
   };
 }
 

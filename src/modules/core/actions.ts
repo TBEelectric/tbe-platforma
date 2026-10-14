@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { msg } from "@/i18n/messages";
 import { handleFormAction } from "@/lib/form-action";
 import { requirePermission, type CurrentUser } from "@/lib/current-user";
 import { UserError, type FormState } from "@/lib/form-state";
@@ -65,10 +66,7 @@ export async function createEmployeeAction(
     formData,
     async (user, data) => {
       if (data.email && !canManageAccess(user.actor)) {
-        throw new UserError(
-          "Přihlašovací e-mail může zadat jen administrátor.",
-          "email",
-        );
+        throw new UserError(msg("core.errors.emailOnlyAdmin"), "email");
       }
       createdId = await createEmployee(ctxOf(user), {
         personalNumber: data.personalNumber,
@@ -102,16 +100,13 @@ export async function updateEmployeeAction(
     formData,
     async (user, data) => {
       const detail = await getEmployeeDetail(id);
-      if (!detail) throw new UserError("Zaměstnanec nenalezen.");
+      if (!detail) throw new UserError(msg("errors.notFound"));
       // The e-mail grants sign-in, so only an administrator may change it.
       if (
         !canManageAccess(user.actor) &&
         data.email !== detail.employee.email
       ) {
-        throw new UserError(
-          "Přihlašovací e-mail může měnit jen administrátor.",
-          "email",
-        );
+        throw new UserError(msg("core.errors.emailOnlyAdmin"), "email");
       }
       await updateEmployee(ctxOf(user), id, data);
     },
@@ -126,10 +121,10 @@ export async function setEmployeeStateAction(
   const user = await requirePermission(canManageEmployees);
   if (change === "deactivate" || change === "archive") {
     if (id === user.actor.employeeId)
-      throw new Error("Nelze deaktivovat vlastní účet.");
+      throw new Error("Cannot deactivate own account");
     const detail = await getEmployeeDetail(id);
     if (detail?.roles.includes("admin") && !canManageAccess(user.actor)) {
-      throw new Error("Administrátora může deaktivovat jen administrátor.");
+      throw new Error("Only an administrator may deactivate an administrator");
     }
   }
   await setEmployeeState(ctxOf(user), id, change);
@@ -211,7 +206,7 @@ export async function createTeamAction(
     formData,
     async (user, data) => {
       await createTeam(ctxOf(user), data);
-      return { ok: true, message: `Parta ${data.name} založena.` };
+      return msg("core.messages.teamCreated", { name: data.name });
     },
     EMPLOYEES,
   );

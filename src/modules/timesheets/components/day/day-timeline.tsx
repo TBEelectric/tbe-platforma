@@ -34,7 +34,7 @@ export function DayTimeline({
           return (
             <div
               key={e.id}
-              title={`${e.from}–${e.to} ${e.jobCode ?? (e.kind === "break" ? "Přestávka" : "")} (${formatMinutes(e.minutes)})`}
+              title={`${e.from}–${e.to} ${e.jobCode ?? ""} (${formatMinutes(e.minutes)})`}
               className="absolute inset-y-0 rounded-md border-x border-white"
               style={{
                 left: pct(start),

@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { BackLink } from "@/components/back-link";
 import { ConfirmButton } from "@/components/form/confirm-button";
 import { PageHeader } from "@/components/shell/page-header";
@@ -17,16 +18,19 @@ export default async function CustomerDetailPage({
   params,
 }: PageProps<"/timesheets/jobs/customers/[id]">) {
   await requirePermission(canManageJobs);
+  const t = await getTranslations();
   const { id } = await params;
   const customer = await getCustomer(id);
   if (!customer) notFound();
   const archived = !!customer.archivedAt;
   return (
     <>
-      <BackLink href="/timesheets/jobs/customers">Zákazníci</BackLink>
+      <BackLink href="/timesheets/jobs/customers">
+        {t("core.tabs.customers")}
+      </BackLink>
       <PageHeader
         title={customer.name}
-        subtitle={archived ? "Archivovaný zákazník" : undefined}
+        subtitle={archived ? t("core.pages.archivedCustomer") : undefined}
         actions={
           <form
             action={setCustomerArchivedAction.bind(
@@ -38,11 +42,11 @@ export default async function CustomerDetailPage({
             <ConfirmButton
               confirm={
                 archived
-                  ? "Obnovit zákazníka?"
-                  : "Archivovat zákazníka? Zakázky zůstanou."
+                  ? t("core.pages.confirmRestoreCustomer")
+                  : t("core.pages.confirmArchiveCustomer")
               }
             >
-              {archived ? "Obnovit" : "Archivovat"}
+              {archived ? t("core.pages.restore") : t("core.detail.archive")}
             </ConfirmButton>
           </form>
         }
@@ -52,7 +56,7 @@ export default async function CustomerDetailPage({
           <CustomerForm
             action={updateCustomerAction.bind(null, customer.id)}
             initial={customer}
-            submitLabel="Uložit"
+            submitLabel={t("core.form.save")}
           />
         </CardContent>
       </Card>

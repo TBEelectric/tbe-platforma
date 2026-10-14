@@ -7,17 +7,9 @@ import {
   todayInPrague,
 } from "@/lib/dates";
 import { db } from "@/lib/db";
-import {
-  EMPLOYMENT_TYPES,
-  SCHEDULE_TYPES,
-  employee,
-  employment,
-  job,
-  periodOn,
-  publicHoliday,
-} from "../core";
+import { employee, employment, job, periodOn, publicHoliday } from "../core";
 import { loadLeaveSummary } from "./leave";
-import { isPeriodClosed, monthLabel, weekStart } from "./rules/month";
+import { isPeriodClosed, weekStart } from "./rules/month";
 import { resolveSettings } from "./rules/settings";
 import {
   entryDurationMinutes,
@@ -71,10 +63,16 @@ export type DayEntryView = {
 export type DayView = {
   date: string;
   today: string;
-  employee: { id: string; name: string; employmentLabel: string | null };
+  employee: {
+    id: string;
+    name: string;
+    employment: {
+      type: "hpp" | "dpp" | "dpc";
+      scheduleType: "flexible" | "uneven";
+    } | null;
+  };
   status: TimesheetStatus;
   locked: boolean;
-  monthLabel: string;
   entries: DayEntryView[];
   totals: {
     workMinutes: number;
@@ -85,7 +83,7 @@ export type DayView = {
   };
   byJob: Array<{
     jobId: string | null;
-    label: string;
+    label: string | null;
     minutes: number;
     color: string;
   }>;
@@ -295,13 +293,12 @@ export async function loadDay(
     employee: {
       id: emp.id,
       name: `${emp.firstName} ${emp.lastName}`,
-      employmentLabel: current
-        ? `${EMPLOYMENT_TYPES[current.type]}, ${SCHEDULE_TYPES[current.scheduleType]} doba`
+      employment: current
+        ? { type: current.type, scheduleType: current.scheduleType }
         : null,
     },
     status,
     locked: isMonthLocked(status, periodClosed),
-    monthLabel: monthLabel(date),
     entries: day.map((e) => ({
       id: e.id,
       kind: e.kind,
@@ -332,9 +329,8 @@ export async function loadDay(
       const sample = day.find((e) => e.jobId === t.jobId);
       return {
         jobId: t.jobId,
-        label: sample?.jobCode
-          ? `${sample.jobCode} ${sample.jobName}`
-          : "Bez zakázky (režie)",
+        /** null = work without a job (overhead). */
+        label: sample?.jobCode ? `${sample.jobCode} ${sample.jobName}` : null,
         minutes: t.minutes,
         color: colorOf.get(t.jobId) ?? NO_JOB_COLOR,
       };

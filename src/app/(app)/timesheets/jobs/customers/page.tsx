@@ -1,4 +1,5 @@
 import { Plus } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { PageHeader } from "@/components/shell/page-header";
 import { buttonVariants } from "@/components/ui/button";
@@ -11,18 +12,19 @@ export const instant = false;
 
 export default async function CustomersPage() {
   await requirePermission(canManageJobs);
+  const t = await getTranslations();
   const customers = await listCustomers();
   return (
     <>
       <PageHeader
-        title="Zakázky"
-        subtitle="Zákazníci (odběratelé zakázek)"
+        title={t("core.tabs.jobs")}
+        subtitle={t("core.pages.customersSubtitle")}
         actions={
           <Link
             href="/timesheets/jobs/customers/new"
             className={buttonVariants()}
           >
-            <Plus /> Nový zákazník
+            <Plus /> {t("core.pages.newCustomer")}
           </Link>
         }
       />

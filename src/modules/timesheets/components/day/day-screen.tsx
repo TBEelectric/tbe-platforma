@@ -1,37 +1,19 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { PageHeader } from "@/components/shell/page-header";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  addDays,
-  formatLongDate,
-  formatWeekdayDate,
-  pragueInstant,
-} from "@/lib/dates";
+import { calendarDate, capitalize } from "@/i18n/format";
+import { translate } from "@/i18n/messages";
+import { addDays } from "@/lib/dates";
 import { formatMinutes } from "@/lib/duration";
 import { cn } from "@/lib/utils";
 import type { DayView } from "../../day";
-import { formatDays } from "../../rules/leave";
-import { TIMESHEET_STATUS_LABELS } from "../../rules/month";
-import { ABSENCE_TYPE_LABELS } from "../../rules/time-entry";
 import { DayEntries } from "./day-entries";
 import { DayTimeline } from "./day-timeline";
-
-function breaksLabel(count: number): string {
-  if (count === 0) return "bez přestávky";
-  if (count === 1) return "1 přestávka";
-  if (count < 5) return `${count} přestávky`;
-  return `${count} přestávek`;
-}
-
-const ABSENCE_STATUS_LABELS = {
-  requested: "čeká na schválení",
-  approved: "schváleno",
-  rejected: "zamítnuto",
-} as const;
 
 /** Můj den (docs/design/screens/02-muj-den, 06-mobil-den). */
 export function DayScreen({
@@ -52,16 +34,24 @@ export function DayScreen({
   /** Back to the own day (when writing for someone else). */
   ownDayHref?: string;
 }) {
-  const longDate = formatLongDate(pragueInstant(view.date, "12:00")!);
+  const t = useTranslations();
+  const format = useFormatter();
+  const locale = useLocale();
+  const day = calendarDate(view.date);
+  const longDate = capitalize(format.dateTime(day, "long"), locale);
+  const weekday = (d: string) =>
+    capitalize(format.dateTime(calendarDate(d), "weekday"), locale);
+  const month = capitalize(format.dateTime(day, { month: "long" }), locale);
+  const status = t(`timesheets.status.${view.status}`);
+  const statusText = t("timesheets.day.monthStatus", { month, status });
   const isToday = view.date === view.today;
-  const statusText = `${view.monthLabel} ${TIMESHEET_STATUS_LABELS[view.status]}`;
   const lockedOrOpen = view.locked ? "neutral" : "soft";
 
   const nav = (
     <>
       <Link
         href={hrefFor(addDays(view.date, -1))}
-        aria-label="Předchozí den"
+        aria-label={t("timesheets.day.previousDay")}
         className={buttonVariants({ variant: "outline", size: "icon" })}
       >
         <ChevronLeft />
@@ -70,11 +60,11 @@ export function DayScreen({
         href={hrefFor(view.today)}
         className={buttonVariants({ variant: "outline" })}
       >
-        Dnes
+        {t("timesheets.day.today")}
       </Link>
       <Link
         href={hrefFor(addDays(view.date, 1))}
-        aria-label="Další den"
+        aria-label={t("timesheets.day.nextDay")}
         className={buttonVariants({ variant: "outline", size: "icon" })}
       >
         <ChevronRight />
@@ -89,9 +79,11 @@ export function DayScreen({
           key={i}
           className="rounded-lg bg-info px-4 py-3 text-[15px] text-info-foreground"
         >
-          Absence: {ABSENCE_TYPE_LABELS[a.type]}
-          {a.hours !== null && ` ${String(a.hours).replace(".", ",")} h`} (
-          {ABSENCE_STATUS_LABELS[a.status]})
+          {t("timesheets.day.absence", {
+            type: t(`timesheets.absenceType.${a.type}`),
+            hours: a.hours ?? "none",
+            status: t(`timesheets.absenceStatus.${a.status}`),
+          })}
         </p>
       ))}
     </>
@@ -104,24 +96,24 @@ export function DayScreen({
         <div className="flex items-center justify-between gap-2">
           <Link
             href={hrefFor(addDays(view.date, -1))}
-            aria-label="Předchozí den"
+            aria-label={t("timesheets.day.previousDay")}
             className="flex size-11 items-center justify-center rounded-lg bg-white/10"
           >
             <ChevronLeft className="size-5" />
           </Link>
           <div className="min-w-0 text-center">
             <h1 className="text-lg leading-tight font-bold">
-              {longDate.replace(/ \d{4}$/, "")}
+              {capitalize(format.dateTime(day, "weekdayLong"), locale)}
             </h1>
             <p className="text-sm text-white/75">
               {forSomeoneElse ? `${view.employee.name} · ` : ""}
-              {isToday ? "Dnes · " : ""}
-              {statusText.toLowerCase()}
+              {isToday ? `${t("timesheets.day.today")} · ` : ""}
+              {statusText}
             </p>
           </div>
           <Link
             href={hrefFor(addDays(view.date, 1))}
-            aria-label="Další den"
+            aria-label={t("timesheets.day.nextDay")}
             className="flex size-11 items-center justify-center rounded-lg bg-white/10"
           >
             <ChevronRight className="size-5" />
@@ -129,28 +121,28 @@ export function DayScreen({
         </div>
         <div className="grid grid-cols-3 gap-2">
           <MobileStat
-            label="Odpracováno"
+            label={t("timesheets.day.worked")}
             value={formatMinutes(view.totals.workMinutes)}
           />
           <MobileStat
-            label="Přestávky"
+            label={t("timesheets.day.breaks")}
             value={formatMinutes(view.totals.breakMinutes)}
           />
-          <MobileStat
-            label="Stav"
-            value={TIMESHEET_STATUS_LABELS[view.status]}
-            accent
-          />
+          <MobileStat label={t("timesheets.day.state")} value={status} accent />
         </div>
       </div>
 
       {forSomeoneElse && (
         <p className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-lg bg-info px-4 py-3 text-[15px] text-info-foreground">
           <span>
-            Zapisujete za <strong>{view.employee.name}</strong>. Každá změna
-            vyžaduje důvod, uloží se do historie změn.
+            {t.rich("timesheets.day.writingFor", {
+              name: view.employee.name,
+              strong: (chunks) => <strong>{chunks}</strong>,
+            })}
           </span>
-          {ownDayHref && <Link href={ownDayHref}>Zpět na můj den</Link>}
+          {ownDayHref && (
+            <Link href={ownDayHref}>{t("timesheets.day.backToOwn")}</Link>
+          )}
         </p>
       )}
 
@@ -161,7 +153,13 @@ export function DayScreen({
           subtitle={[
             longDate,
             view.employee.name,
-            view.employee.employmentLabel,
+            view.employee.employment &&
+              t("timesheets.day.employment", {
+                type: t(`core.employmentType.${view.employee.employment.type}`),
+                schedule: t(
+                  `core.scheduleType.${view.employee.employment.scheduleType}`,
+                ),
+              }),
           ]
             .filter(Boolean)
             .join(" · ")}
@@ -174,44 +172,63 @@ export function DayScreen({
         />
         <div className="grid grid-cols-4 gap-4">
           <StatCard
-            label={isToday ? "Odpracováno dnes" : "Odpracováno"}
+            label={
+              isToday
+                ? t("timesheets.day.workedToday")
+                : t("timesheets.day.worked")
+            }
             value={formatMinutes(view.totals.workMinutes)}
             detail={
               view.totals.from
-                ? `${view.totals.from} – ${view.totals.to}`
-                : "bez záznamu"
+                ? t("common.dateRange", {
+                    from: view.totals.from,
+                    to: view.totals.to ?? "",
+                  })
+                : t("timesheets.day.noRecord")
             }
           />
           <StatCard
-            label="Přestávky"
+            label={t("timesheets.day.breaks")}
             value={formatMinutes(view.totals.breakMinutes)}
-            detail={breaksLabel(view.totals.breakCount)}
+            detail={t("timesheets.day.breakCount", {
+              count: view.totals.breakCount,
+            })}
           />
           <StatCard
-            label={`${view.monthLabel} k dnešku`}
+            label={t("timesheets.day.monthToDate", { month })}
             value={formatMinutes(view.monthWorkMinutes)}
             detail={
               view.missingDays.length > 0
-                ? `chybí ${view.missingDays
-                    .slice(0, 3)
-                    .map((d) =>
-                      formatWeekdayDate(d).split(" ").slice(1).join(" "),
-                    )
-                    .join(", ")}${view.missingDays.length > 3 ? "…" : ""}`
-                : "bez chybějících dnů"
+                ? t("timesheets.day.missing", {
+                    days: view.missingDays
+                      .slice(0, 3)
+                      .map((d) => format.dateTime(calendarDate(d), "dayMonth"))
+                      .join(", "),
+                    more: view.missingDays.length > 3 ? "yes" : "no",
+                  })
+                : t("timesheets.day.noMissing")
             }
           />
           <StatCard
-            label="Dovolená zbývá"
+            label={t("timesheets.day.leaveRemaining")}
             value={
               view.leave
-                ? `${String(view.leave.remainingHours).replace(".", ",")} h`
+                ? t("timesheets.absences.hours", {
+                    hours: view.leave.remainingHours,
+                  })
                 : "–"
             }
             detail={
               view.leave
-                ? `${view.leave.remainingDays !== null ? `${formatDays(view.leave.remainingDays)} ` : ""}z nároku ${String(view.leave.totalHours).replace(".", ",")} h`
-                : "nárok není zadaný"
+                ? view.leave.remainingDays !== null
+                  ? t("timesheets.day.leaveDetailDays", {
+                      days: view.leave.remainingDays,
+                      total: view.leave.totalHours,
+                    })
+                  : t("timesheets.day.leaveDetail", {
+                      total: view.leave.totalHours,
+                    })
+                : t("timesheets.day.noEntitlement")
             }
           />
         </div>
@@ -227,8 +244,12 @@ export function DayScreen({
             href={hrefFor(view.missingDays[0])}
             className="flex min-h-11 items-center justify-between gap-3 rounded-lg bg-warning px-4 py-3 text-[15px] text-warning-foreground no-underline"
           >
-            <span>{formatWeekdayDate(view.missingDays[0])} nemá záznam</span>
-            <span className="font-semibold">Doplnit</span>
+            <span>
+              {t("timesheets.day.dayMissing", {
+                day: weekday(view.missingDays[0]),
+              })}
+            </span>
+            <span className="font-semibold">{t("timesheets.day.fill")}</span>
           </Link>
         )}
         {view.warnings.map((w) => (
@@ -236,7 +257,7 @@ export function DayScreen({
             key={w.code}
             className="rounded-lg bg-warning px-4 py-3 text-[15px] text-warning-foreground"
           >
-            {w.message}
+            {translate(t, w.message)}
           </p>
         ))}
         {banners}
@@ -245,7 +266,9 @@ export function DayScreen({
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-start">
         <section className="flex flex-col gap-4 lg:rounded-xl lg:border lg:border-border lg:bg-card lg:p-5">
           <div className="hidden items-center justify-between gap-3 lg:flex">
-            <h2 className="text-lg font-bold">Intervaly dne</h2>
+            <h2 className="text-lg font-bold">
+              {t("timesheets.day.entriesTitle")}
+            </h2>
             <Badge variant={lockedOrOpen}>
               <span aria-hidden className="size-2 rounded-full bg-current" />
               {statusText}
@@ -262,12 +285,16 @@ export function DayScreen({
           <Card>
             <CardHeader>
               <CardTitle>
-                {isToday ? "Dnes podle zakázek" : "Podle zakázek"}
+                {isToday
+                  ? t("timesheets.day.byJobToday")
+                  : t("timesheets.day.byJob")}
               </CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
               {view.byJob.length === 0 && (
-                <p className="text-[15px] text-muted-foreground">Zatím nic.</p>
+                <p className="text-[15px] text-muted-foreground">
+                  {t("timesheets.day.nothingYet")}
+                </p>
               )}
               {view.byJob.map((j) => (
                 <div key={j.jobId ?? "none"} className="flex flex-col gap-1.5">
@@ -278,7 +305,9 @@ export function DayScreen({
                         className="size-2.5 shrink-0 rounded-full"
                         style={{ background: j.color }}
                       />
-                      <span className="truncate">{j.label}</span>
+                      <span className="truncate">
+                        {j.label ?? t("timesheets.day.noJob")}
+                      </span>
                     </span>
                     <span className="font-bold tabular-nums">
                       {formatMinutes(j.minutes)}
@@ -300,48 +329,66 @@ export function DayScreen({
 
           <Card>
             <CardHeader>
-              <CardTitle>Kontroly</CardTitle>
+              <CardTitle>{t("timesheets.day.checks")}</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-3 text-[15px]">
               {view.warnings.length === 0 && view.totals.workMinutes > 0 && (
-                <Check badge={<Badge variant="success">OK</Badge>}>
-                  Den bez upozornění: přestávky, délka dne i odpočinek v
-                  pořádku.
+                <Check
+                  badge={
+                    <Badge variant="success">{t("timesheets.day.ok")}</Badge>
+                  }
+                >
+                  {t("timesheets.day.allGood")}
                 </Check>
               )}
               {view.warnings.map((w) => (
                 <Check
                   key={w.code}
-                  badge={<Badge variant="warning">Pozor</Badge>}
+                  badge={
+                    <Badge variant="warning">
+                      {t("timesheets.day.attention")}
+                    </Badge>
+                  }
                 >
-                  {w.message}
+                  {translate(t, w.message)}
                 </Check>
               ))}
               {view.missingDays.map((d) => (
-                <Check key={d} badge={<Badge variant="warning">Chybí</Badge>}>
-                  {formatWeekdayDate(d)} nemá záznam ani absenci.{" "}
-                  <Link href={hrefFor(d)}>Doplnit</Link>
+                <Check
+                  key={d}
+                  badge={
+                    <Badge variant="warning">
+                      {t("timesheets.day.missingBadge")}
+                    </Badge>
+                  }
+                >
+                  {t("timesheets.day.dayMissingFull", { day: weekday(d) })}{" "}
+                  <Link href={hrefFor(d)}>{t("timesheets.day.fill")}</Link>
                 </Check>
               ))}
               {view.warnings.length === 0 &&
                 view.totals.workMinutes === 0 &&
                 view.missingDays.length === 0 && (
-                  <p className="text-muted-foreground">Nic ke kontrole.</p>
+                  <p className="text-muted-foreground">
+                    {t("timesheets.day.nothingToCheck")}
+                  </p>
                 )}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Měsíční výkaz</CardTitle>
+              <CardTitle>{t("timesheets.day.timesheet")}</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-2 text-[15px]">
               <p>
                 {view.status === "open"
-                  ? `${view.monthLabel} potvrdíte po skončení měsíce. Pak ho schválí vedoucí party.`
-                  : `${view.monthLabel} je ${TIMESHEET_STATUS_LABELS[view.status]}.`}
+                  ? t("timesheets.day.confirmLater", { month })
+                  : t("timesheets.day.monthIs", { month, status })}
               </p>
-              <Link href="/timesheets/month">Zobrazit můj měsíc</Link>
+              <Link href="/timesheets/month">
+                {t("timesheets.day.showMonth")}
+              </Link>
             </CardContent>
           </Card>
         </aside>

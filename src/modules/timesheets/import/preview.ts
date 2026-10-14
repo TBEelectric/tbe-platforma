@@ -1,10 +1,11 @@
 // Combines parse issues and plan previews into what the import screen shows. Pure.
+import { msg, type Msg } from "@/i18n/messages";
 import type { RowIssue, SheetResult } from "./parse";
 import type { RowPreview, RowStatus } from "./plan";
 
 export type SheetPreview = {
   sheet: string;
-  headerError: string | null;
+  headerError: Msg | null;
   rows: RowPreview[];
   counts: Record<RowStatus, number>;
 };
@@ -24,11 +25,13 @@ export function sheetPreview(
     ...[...issuesByRow.entries()].map(([row, issues]) => ({
       row,
       key: planned.find((p) => p.row === row)?.key ?? "",
-      label: planned.find((p) => p.row === row)?.label ?? `Řádek ${row}`,
+      label: planned.find((p) => p.row === row)?.label ?? null,
       status: "error" as const,
       changes: [],
       errors: issues.map((i) =>
-        i.column ? `${i.column}: ${i.message}` : i.message,
+        i.column
+          ? msg("import.issue", { column: i.column, message: i.message })
+          : i.message,
       ),
     })),
   ].sort((a, b) => a.row - b.row);

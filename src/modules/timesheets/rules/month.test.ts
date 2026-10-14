@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isPeriodClosed, monthLabel, weekStart } from "./month";
+import { isPeriodClosed, weekStart } from "./month";
 
 describe("isPeriodClosed", () => {
   const closedAt = new Date("2026-11-03T10:00:00Z");
@@ -22,13 +22,6 @@ describe("isPeriodClosed", () => {
         reopenedAt,
       }),
     ).toBe(true);
-  });
-});
-
-describe("monthLabel", () => {
-  it("names the month in Czech", () => {
-    expect(monthLabel("2026-10-13")).toBe("Říjen");
-    expect(monthLabel("2026-01-01")).toBe("Leden");
   });
 });
 

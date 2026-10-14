@@ -1,4 +1,5 @@
 import { and, asc, desc, eq, gte, inArray, isNull, lte } from "drizzle-orm";
+import { msg } from "@/i18n/messages";
 import { addDays } from "@/lib/dates";
 import { db, type DbOrTx } from "@/lib/db";
 import { UserError } from "@/lib/form-state";
@@ -82,7 +83,7 @@ export async function createAbsence(
     const self = form.employeeId === writer.actor.employeeId;
     if (self) {
       if (!canRecordOwnTime(writer.actor))
-        throw new UserError("Nemáte vlastní docházku.");
+        throw new UserError(msg("timesheets.errors.noOwnTimesheet"));
     } else {
       if (
         !canDecideAbsence(
@@ -91,11 +92,11 @@ export async function createAbsence(
         )
       )
         throw new UserError(
-          "Absenci za tohoto zaměstnance nemůžete zadat.",
+          msg("timesheets.errors.cannotEnterAbsenceFor"),
           "employeeId",
         );
       if (!form.reason)
-        throw new UserError("Při zápisu za jiného uveďte důvod.", "reason");
+        throw new UserError(msg("timesheets.errors.reasonRequired"), "reason");
     }
     await assertValid(tx, form.employeeId, form);
     const row = await insertAudited(
@@ -130,7 +131,7 @@ async function load(tx: DbOrTx, id: string) {
     .select()
     .from(absence)
     .where(and(eq(absence.id, id), isNull(absence.archivedAt)));
-  if (!row) throw new UserError("Absence nenalezena.");
+  if (!row) throw new UserError(msg("errors.notFound"));
   return row;
 }
 
@@ -149,7 +150,7 @@ export async function decideAbsence(
         await owner(tx, row.employeeId, row.dateFrom),
       )
     )
-      throw new UserError("O této absenci nemůžete rozhodnout.");
+      throw new UserError(msg("timesheets.errors.cannotDecide"));
     const error = decisionError(row.status, decision, reason);
     if (error) throw new UserError(error, "reason");
     if (decision === "approve")
@@ -190,14 +191,15 @@ export async function cancelAbsence(
       await owner(tx, row.employeeId, row.dateFrom),
     );
     if (!ownRequest && !decider)
-      throw new UserError("Tuto absenci nemůžete zrušit.");
+      throw new UserError(msg("timesheets.errors.cannotCancel"));
     if (!ownRequest && !reason)
-      throw new UserError("Uveďte důvod zrušení.", "reason");
+      throw new UserError(
+        msg("timesheets.errors.cancelReasonRequired"),
+        "reason",
+      );
     for (const month of monthsInRange(row.dateFrom, row.dateTo))
       if (await isLocked(tx, row.employeeId, month))
-        throw new UserError(
-          "Měsíc je potvrzený nebo uzavřený, absenci nelze zrušit.",
-        );
+        throw new UserError(msg("timesheets.errors.cancelMonthLocked"));
     await updateAudited(
       tx,
       writer,

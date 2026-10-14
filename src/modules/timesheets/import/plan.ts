@@ -1,6 +1,7 @@
 // Import planning: compares parsed rows with the current database state and decides what to create
 // or update. Pure; the same plan drives the preview and the save. Nothing is ever deleted.
-import { formatDate } from "@/lib/dates";
+import { calendarDate } from "@/i18n/format";
+import { msg, type Msg } from "@/i18n/messages";
 import { periodOn, planFollowingPeriod, type RoleKey } from "../../core/shared";
 import type { EmployeeImportRow, JobImportRow } from "./parse";
 
@@ -62,10 +63,11 @@ export type RowStatus = "new" | "update" | "unchanged" | "error";
 export type RowPreview = {
   row: number;
   key: string;
-  label: string;
+  /** Record shown in the preview (data: number and name); null = only the row number. */
+  label: string | null;
   status: RowStatus;
-  changes: string[];
-  errors: string[];
+  changes: Msg[];
+  errors: Msg[];
 };
 
 type EmployeeValues = {
@@ -111,27 +113,33 @@ export type EmployeePlan = {
   newTeams: string[];
 };
 
-const TYPE_LABEL = { hpp: "HPP", dpp: "DPP", dpc: "DPČ" } as const;
-const SCHEDULE_LABEL = { flexible: "pružná", uneven: "nerovnoměrná" } as const;
-const ROLE_LABEL = {
-  admin: "administrátor",
-  timesheetsManager: "správce docházky",
-} as const;
-
 const employmentLabel = (e: {
   type: Employment["type"];
   weeklyHours: number | null;
   scheduleType: Employment["scheduleType"];
-}) =>
-  `${TYPE_LABEL[e.type]}${e.weeklyHours ? ` ${e.weeklyHours} h` : ""}, ${SCHEDULE_LABEL[e.scheduleType]}`;
+}): Msg => {
+  const type = msg(`core.employmentType.${e.type}`);
+  const schedule = msg(`core.scheduleType.${e.scheduleType}`);
+  return e.weeklyHours
+    ? msg("core.employmentLabel", { type, hours: e.weeklyHours, schedule })
+    : msg("core.employmentLabelNoHours", { type, schedule });
+};
 
 const sameEmployment = (a: EmploymentValues, b: EmploymentValues) =>
   a.type === b.type &&
   (a.weeklyHours ?? null) === (b.weeklyHours ?? null) &&
   a.scheduleType === b.scheduleType;
 
-const fieldChange = (label: string, from: unknown, to: unknown) =>
-  `${label}: ${from === null || from === "" ? "–" : String(from)} → ${to === null || to === "" ? "–" : String(to)}`;
+const shown = (value: string | Msg | null) =>
+  value === null || value === "" ? "–" : value;
+
+/** "Příjmení: Novák → Nováková"; values are data or messages (e.g. a job status). */
+const fieldChange = (
+  field: Msg,
+  from: string | Msg | null,
+  to: string | Msg | null,
+): Msg =>
+  msg("import.changes.field", { field, from: shown(from), to: shown(to) });
 
 export function planEmployeeImport(
   rows: EmployeeImportRow[],
@@ -158,12 +166,11 @@ export function planEmployeeImport(
 
   for (const r of rows) {
     const existing = byNumber.get(r.personalNumber);
-    const changes: string[] = [];
-    const errors: string[] = [];
+    const changes: Msg[] = [];
+    const errors: Msg[] = [];
     const label = `${r.personalNumber} ${r.firstName} ${r.lastName}`;
 
-    if (existing?.archived)
-      errors.push("Zaměstnanec je archivovaný; nejdřív ho v aplikaci obnovte.");
+    if (existing?.archived) errors.push(msg("import.errors.employeeArchived"));
     if (r.email) {
       const owner = snapshot.employees.find(
         (e) =>
@@ -172,7 +179,10 @@ export function planEmployeeImport(
       );
       if (owner)
         errors.push(
-          `E-mail už má ${owner.firstName} ${owner.lastName} (${owner.personalNumber}).`,
+          msg("import.errors.emailTaken", {
+            name: `${owner.firstName} ${owner.lastName}`,
+            number: owner.personalNumber,
+          }),
         );
     }
 
@@ -187,27 +197,45 @@ export function planEmployeeImport(
     if (!existing) {
       employee = values;
       changes.push(
-        r.email ? `Přihlášení: ${r.email}` : "Bez přihlášení (bez e-mailu)",
+        r.email
+          ? msg("import.changes.signIn", { email: r.email })
+          : msg("import.changes.noSignIn"),
       );
-      if (!r.active) changes.push("Neaktivní");
+      if (!r.active) changes.push(msg("import.changes.inactive"));
     } else {
       const diff: Partial<EmployeeValues> = {};
       if (existing.lastName !== r.lastName) {
         diff.lastName = r.lastName;
-        changes.push(fieldChange("Příjmení", existing.lastName, r.lastName));
+        changes.push(
+          fieldChange(
+            msg("core.fields.lastName"),
+            existing.lastName,
+            r.lastName,
+          ),
+        );
       }
       if (existing.firstName !== r.firstName) {
         diff.firstName = r.firstName;
-        changes.push(fieldChange("Jméno", existing.firstName, r.firstName));
+        changes.push(
+          fieldChange(
+            msg("core.fields.firstName"),
+            existing.firstName,
+            r.firstName,
+          ),
+        );
       }
       if ((existing.email ?? null) !== r.email) {
         diff.email = r.email;
-        changes.push(fieldChange("E-mail", existing.email, r.email));
+        changes.push(
+          fieldChange(msg("core.fields.email"), existing.email, r.email),
+        );
       }
       if (existing.active !== r.active) {
         diff.active = r.active;
         changes.push(
-          r.active ? "Aktivace" : "Deaktivace (nebude se moct přihlásit)",
+          msg(
+            r.active ? "import.changes.activate" : "import.changes.deactivate",
+          ),
         );
       }
       if (Object.keys(diff).length > 0) employee = diff;
@@ -233,7 +261,11 @@ export function planEmployeeImport(
           diff.scheduleType = wanted.scheduleType;
         employment = { kind: "update", id: sameStart.id, values: diff };
         changes.push(
-          `Úvazek od ${formatDate(r.validFrom)}: ${employmentLabel(sameStart)} → ${employmentLabel(wanted)}`,
+          msg("import.changes.employmentChanged", {
+            from: calendarDate(r.validFrom),
+            before: employmentLabel(sameStart),
+            after: employmentLabel(wanted),
+          }),
         );
       }
     } else {
@@ -243,17 +275,29 @@ export function planEmployeeImport(
           b.validFrom.localeCompare(a.validFrom),
         )[0];
         errors.push(
-          `Platnost od ${formatDate(r.validFrom)} je dřív než poslední úvazek (od ${formatDate(latest?.validFrom)}).`,
+          msg("import.errors.employmentBeforeLatest", {
+            from: calendarDate(r.validFrom),
+            latest: calendarDate(latest.validFrom),
+          }),
         );
       } else {
         employment = { kind: "create", values: wanted, close: plan.close };
         changes.push(
-          existing
-            ? `Nový úvazek ${employmentLabel(wanted)} od ${formatDate(r.validFrom)}` +
-                (plan.close
-                  ? ` (předchozí končí ${formatDate(plan.close.validTo)})`
-                  : "")
-            : `Úvazek ${employmentLabel(wanted)} od ${formatDate(r.validFrom)}`,
+          !existing
+            ? msg("import.changes.employment", {
+                employment: employmentLabel(wanted),
+                from: calendarDate(r.validFrom),
+              })
+            : plan.close
+              ? msg("import.changes.newEmploymentClosing", {
+                  employment: employmentLabel(wanted),
+                  from: calendarDate(r.validFrom),
+                  previousTo: calendarDate(plan.close.validTo),
+                })
+              : msg("import.changes.newEmployment", {
+                  employment: employmentLabel(wanted),
+                  from: calendarDate(r.validFrom),
+                }),
         );
       }
     }
@@ -270,9 +314,7 @@ export function planEmployeeImport(
       if (!target || current?.teamId !== target.id) {
         const plan = planFollowingPeriod(memberships, from);
         if (!plan.ok) {
-          errors.push(
-            "Členství v partě začíná dnes nebo později; změňte partu v aplikaci.",
-          );
+          errors.push(msg("import.errors.membershipStartsLater"));
         } else {
           team = {
             name: target?.name ?? r.team,
@@ -281,8 +323,15 @@ export function planEmployeeImport(
           };
           changes.push(
             current
-              ? `Parta: ${teamName(current.teamId)} → ${team.name} od ${formatDate(from)}`
-              : `Parta ${team.name} od ${formatDate(from)}`,
+              ? msg("import.changes.teamChanged", {
+                  before: teamName(current.teamId),
+                  after: team.name,
+                  from: calendarDate(from),
+                })
+              : msg("import.changes.team", {
+                  team: team.name,
+                  from: calendarDate(from),
+                }),
           );
         }
       }
@@ -296,8 +345,11 @@ export function planEmployeeImport(
         lead = target?.name ?? r.team;
         changes.push(
           target?.leadEmployeeId
-            ? `Vedoucí party ${lead} (místo ${employeeName(target.leadEmployeeId)})`
-            : `Vedoucí party ${lead}`,
+            ? msg("import.changes.leadInstead", {
+                team: lead,
+                previous: employeeName(target.leadEmployeeId),
+              })
+            : msg("import.changes.lead", { team: lead }),
         );
       }
     }
@@ -314,8 +366,18 @@ export function planEmployeeImport(
         leave = { id: current?.id ?? null, ...r.leave };
         changes.push(
           current
-            ? `Dovolená ${snapshot.year}: nárok ${current.hoursEntitled} → ${r.leave.hoursEntitled} h, převod ${current.hoursCarriedOver} → ${r.leave.hoursCarriedOver} h`
-            : `Dovolená ${snapshot.year}: nárok ${r.leave.hoursEntitled} h, převod ${r.leave.hoursCarriedOver} h`,
+            ? msg("import.changes.leaveChanged", {
+                year: String(snapshot.year),
+                entitledBefore: current.hoursEntitled,
+                entitled: r.leave.hoursEntitled,
+                carriedBefore: current.hoursCarriedOver,
+                carried: r.leave.hoursCarriedOver,
+              })
+            : msg("import.changes.leave", {
+                year: String(snapshot.year),
+                entitled: r.leave.hoursEntitled,
+                carried: r.leave.hoursCarriedOver,
+              }),
         );
       }
     }
@@ -323,7 +385,8 @@ export function planEmployeeImport(
     // Roles are only added, never removed
     const addRoles: RoleKey[] =
       r.role && !existing?.roles.includes(r.role) ? [r.role] : [];
-    for (const role of addRoles) changes.push(`Role: + ${ROLE_LABEL[role]}`);
+    for (const role of addRoles)
+      changes.push(msg("import.changes.role", { role: msg(`roles.${role}`) }));
 
     const status: RowStatus =
       errors.length > 0
@@ -426,14 +489,20 @@ export function planJobImport(
 
   const previews: RowPreview[] = [];
   const ops: JobOps[] = [];
-  const STATUS = { active: "aktivní", closed: "uzavřená" } as const;
+  const status = (s: "active" | "closed") => msg(`core.jobStatus.${s}`);
+  const newCustomer = (r: JobImportRow) =>
+    r.ico
+      ? msg("import.changes.newCustomerIco", {
+          name: r.customerName!,
+          ico: r.ico,
+        })
+      : msg("import.changes.newCustomer", { name: r.customerName! });
 
   for (const r of rows) {
     const existing = jobsByCode.get(r.code);
-    const errors: string[] = [];
-    const changes: string[] = [];
-    if (existing?.archived)
-      errors.push("Zakázka je archivovaná; nejdřív ji v aplikaci obnovte.");
+    const errors: Msg[] = [];
+    const changes: Msg[] = [];
+    if (existing?.archived) errors.push(msg("import.errors.jobArchived"));
 
     const key = customerKey(r.customerName, r.ico);
     if (key && !customerIds[key] && !newCustomers.has(key)) {
@@ -447,21 +516,32 @@ export function planJobImport(
         status: r.status,
         customerKey: key,
       });
-      if (key && !customerIds[key])
+      if (key && !customerIds[key]) changes.push(newCustomer(r));
+      else if (key)
         changes.push(
-          `Nový zákazník ${r.customerName}${r.ico ? ` (IČO ${r.ico})` : ""}`,
+          msg("import.changes.customer", {
+            name: customerName(customerIds[key]) ?? "",
+          }),
         );
-      else if (key) changes.push(`Zákazník ${customerName(customerIds[key])}`);
-      if (r.status === "closed") changes.push("Stav: uzavřená");
+      if (r.status === "closed")
+        changes.push(
+          msg("import.changes.closed", { status: status("closed") }),
+        );
     } else {
       if (existing.name !== r.name) {
         values.name = r.name;
-        changes.push(fieldChange("Název", existing.name, r.name));
+        changes.push(
+          fieldChange(msg("core.fields.name"), existing.name, r.name),
+        );
       }
       if (existing.status !== r.status) {
         values.status = r.status;
         changes.push(
-          fieldChange("Stav", STATUS[existing.status], STATUS[r.status]),
+          fieldChange(
+            msg("core.fields.status"),
+            status(existing.status),
+            status(r.status),
+          ),
         );
       }
       // An empty customer column keeps the current customer.
@@ -469,19 +549,16 @@ export function planJobImport(
         values.customerKey = key;
         changes.push(
           fieldChange(
-            "Zákazník",
+            msg("core.fields.customer"),
             customerName(existing.customerId),
             r.customerName,
           ),
         );
-        if (!customerIds[key])
-          changes.push(
-            `Nový zákazník ${r.customerName}${r.ico ? ` (IČO ${r.ico})` : ""}`,
-          );
+        if (!customerIds[key]) changes.push(newCustomer(r));
       }
     }
 
-    const status: RowStatus =
+    const rowStatus: RowStatus =
       errors.length > 0
         ? "error"
         : !existing
@@ -493,11 +570,11 @@ export function planJobImport(
       row: r.row,
       key: r.code,
       label: `${r.code} ${r.name}`,
-      status,
+      status: rowStatus,
       changes,
       errors,
     });
-    if (status === "new" || status === "update")
+    if (rowStatus === "new" || rowStatus === "update")
       ops.push({
         row: r.row,
         jobId: existing?.id ?? null,

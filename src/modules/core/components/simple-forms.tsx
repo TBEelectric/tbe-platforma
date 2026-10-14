@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useActionState } from "react";
 import {
   Field,
@@ -11,7 +12,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { initialFormState, type FormState } from "@/lib/form-state";
-import { JOB_STATUSES } from "../rules/forms";
 
 type Option = { id: string; label: string };
 type Action = (prev: FormState, formData: FormData) => Promise<FormState>;
@@ -27,19 +27,20 @@ export function TeamForm({
   initial?: { name: string; leadEmployeeId: string | null };
   submitLabel: string;
 }) {
+  const t = useTranslations();
   const [state, formAction] = useActionState(action, initialFormState);
   const f = useFields(state);
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <FormMessage state={state} />
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field {...f.field("name")} label="Název party">
+        <Field {...f.field("name")} label={t("core.form.teamName")}>
           <Input
             {...f.control("name")}
             defaultValue={valueOf(state, "name", initial?.name)}
           />
         </Field>
-        <Field {...f.field("leadEmployeeId")} label="Vedoucí">
+        <Field {...f.field("leadEmployeeId")} label={t("core.form.lead")}>
           <NativeSelect
             {...f.control("leadEmployeeId")}
             defaultValue={valueOf(
@@ -48,7 +49,7 @@ export function TeamForm({
               initial?.leadEmployeeId ?? "",
             )}
           >
-            <option value="">Bez vedoucího</option>
+            <option value="">{t("core.form.noLead")}</option>
             {employees.map((e) => (
               <option key={e.id} value={e.id}>
                 {e.label}
@@ -80,26 +81,27 @@ export function JobForm({
   };
   submitLabel: string;
 }) {
+  const t = useTranslations();
   const [state, formAction] = useActionState(action, initialFormState);
   const f = useFields(state);
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <FormMessage state={state} />
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field {...f.field("code")} label="Číslo zakázky">
+        <Field {...f.field("code")} label={t("core.form.jobCode")}>
           <Input
             {...f.control("code")}
             inputMode="numeric"
             defaultValue={valueOf(state, "code", initial?.code)}
           />
         </Field>
-        <Field {...f.field("name")} label="Název">
+        <Field {...f.field("name")} label={t("core.fields.name")}>
           <Input
             {...f.control("name")}
             defaultValue={valueOf(state, "name", initial?.name)}
           />
         </Field>
-        <Field {...f.field("customerId")} label="Zákazník">
+        <Field {...f.field("customerId")} label={t("core.fields.customer")}>
           <NativeSelect
             {...f.control("customerId")}
             defaultValue={valueOf(
@@ -108,7 +110,7 @@ export function JobForm({
               initial?.customerId ?? "",
             )}
           >
-            <option value="">Bez zákazníka</option>
+            <option value="">{t("core.form.noCustomer")}</option>
             {customers.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.label}
@@ -118,16 +120,16 @@ export function JobForm({
         </Field>
         <Field
           {...f.field("status")}
-          label="Stav"
-          hint="Na uzavřenou zakázku nejde zapisovat hodiny."
+          label={t("core.fields.status")}
+          hint={t("core.form.jobStatusHint")}
         >
           <NativeSelect
             {...f.control("status")}
             defaultValue={valueOf(state, "status", initial?.status ?? "active")}
           >
-            {Object.entries(JOB_STATUSES).map(([value, label]) => (
+            {(["active", "closed"] as const).map((value) => (
               <option key={value} value={value}>
-                {label}
+                {t(`core.jobStatus.${value}`)}
               </option>
             ))}
           </NativeSelect>
@@ -149,19 +151,24 @@ export function CustomerForm({
   initial?: { name: string; ico: string | null };
   submitLabel: string;
 }) {
+  const t = useTranslations();
   const [state, formAction] = useActionState(action, initialFormState);
   const f = useFields(state);
   return (
     <form action={formAction} className="flex flex-col gap-4">
       <FormMessage state={state} />
       <div className="grid gap-4 sm:grid-cols-2">
-        <Field {...f.field("name")} label="Název zákazníka">
+        <Field {...f.field("name")} label={t("core.form.customerName")}>
           <Input
             {...f.control("name")}
             defaultValue={valueOf(state, "name", initial?.name)}
           />
         </Field>
-        <Field {...f.field("ico")} label="IČO" hint="8 číslic, nepovinné">
+        <Field
+          {...f.field("ico")}
+          label={t("core.form.ico")}
+          hint={t("core.form.icoHint")}
+        >
           <Input
             {...f.control("ico")}
             inputMode="numeric"

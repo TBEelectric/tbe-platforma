@@ -1,5 +1,6 @@
 import readExcelFile from "read-excel-file/node";
 import { beforeAll, describe, expect, it } from "vitest";
+import { cs } from "@/i18n/test-utils";
 import {
   EMPLOYEE_COLUMNS,
   EMPLOYEE_SHEET,
@@ -10,6 +11,7 @@ import {
   parseJobSheet,
   parseNumberCell,
   type Cell,
+  type RowIssue,
 } from "./parse";
 
 // The template's made-up data is the test input (docs/import/sablona-importu.xlsx).
@@ -19,13 +21,17 @@ beforeAll(async () => {
     "docs/import/sablona-importu.xlsx",
   )) as typeof template;
 });
+/** Issues with Czech messages, as the import preview shows them. */
+const issuesOf = (result: { issues: RowIssue[] }) =>
+  result.issues.map((issue) => ({ ...issue, message: cs(issue.message) }));
+
 const sheet = (name: string) => template.find((s) => s.sheet === name)!.data;
 
 describe("template", () => {
   it("parses all 13 employees without issues", () => {
     const result = parseEmployeeSheet(sheet(EMPLOYEE_SHEET));
     expect(result.headerError).toBeNull();
-    expect(result.issues).toEqual([]);
+    expect(issuesOf(result)).toEqual([]);
     expect(result.rows).toHaveLength(13);
     expect(result.rows[0]).toEqual({
       row: 2,
@@ -67,7 +73,7 @@ describe("template", () => {
 
   it("parses all 7 jobs, keeping the IČO leading zeros", () => {
     const result = parseJobSheet(sheet(JOB_SHEET));
-    expect(result.issues).toEqual([]);
+    expect(issuesOf(result)).toEqual([]);
     expect(result.rows).toHaveLength(7);
     expect(result.rows.find((r) => r.code === "250188")).toEqual({
       row: 7,
@@ -110,7 +116,7 @@ describe("parseEmployeeSheet", () => {
   it("rejects a changed header and names the column", () => {
     const changed = [...header];
     changed[3] = "Email";
-    expect(parseEmployeeSheet([changed, valid]).headerError).toContain(
+    expect(cs(parseEmployeeSheet([changed, valid]).headerError!)).toContain(
       "„E-mail“",
     );
   });
@@ -132,7 +138,7 @@ describe("parseEmployeeSheet", () => {
       valid.map(() => null),
       withCell("Typ úvazku", "HPP!"),
     ]);
-    expect(result.issues).toEqual([
+    expect(issuesOf(result)).toEqual([
       { row: 4, column: "Typ úvazku", message: "HPP, DPP nebo DPČ" },
     ]);
   });
@@ -151,13 +157,13 @@ describe("parseEmployeeSheet", () => {
   ] as const)("%s = %j → %s", (column, value, message) => {
     const result = parseEmployeeSheet([header, withCell(column, value)]);
     expect(result.rows).toEqual([]);
-    expect(result.issues).toContainEqual({ row: 2, column, message });
+    expect(issuesOf(result)).toContainEqual({ row: 2, column, message });
   });
 
   it("requires a team for a lead", () => {
     const row = withCell("Parta", "");
     row[EMPLOYEE_COLUMNS.indexOf("Vedoucí party")] = "ano";
-    expect(parseEmployeeSheet([header, row]).issues[0].message).toBe(
+    expect(cs(parseEmployeeSheet([header, row]).issues[0].message)).toBe(
       "vedoucí musí mít vyplněnou partu",
     );
   });
@@ -165,7 +171,7 @@ describe("parseEmployeeSheet", () => {
   it("reports duplicates in the file on every affected row", () => {
     const second = withCell("E-mail", "jiny@example.cz");
     const result = parseEmployeeSheet([header, valid, second]);
-    expect(result.issues).toEqual([
+    expect(issuesOf(result)).toEqual([
       { row: 2, column: "Osobní číslo", message: "je v souboru vícekrát" },
       { row: 3, column: "Osobní číslo", message: "je v souboru vícekrát" },
     ]);
@@ -178,7 +184,7 @@ describe("parseEmployeeSheet", () => {
     b[EMPLOYEE_COLUMNS.indexOf("Vedoucí party")] = "ano";
     b[EMPLOYEE_COLUMNS.indexOf("Parta")] = "montáže 1";
     expect(
-      parseEmployeeSheet([header, a, b]).issues.map((i) => i.message),
+      parseEmployeeSheet([header, a, b]).issues.map((i) => cs(i.message)),
     ).toEqual([
       "parta má v souboru víc vedoucích",
       "parta má v souboru víc vedoucích",
@@ -193,8 +199,7 @@ describe("parseJobSheet", () => {
       parseJobSheet([
         jobHeader,
         ["300001", "Test", "Obec, úřad", "", "Obec", 240923, ""],
-      ])
-        .rows[0],
+      ]).rows[0],
     ).toMatchObject({
       ico: "00240923",
       status: "active",
@@ -211,7 +216,7 @@ describe("parseJobSheet", () => {
       ["3", "D", "M", "", "", "", ""],
       ["4", "E", "", "Ulice 1", "", "", ""],
     ]);
-    expect(result.issues).toEqual([
+    expect(issuesOf(result)).toEqual([
       { row: 2, column: "IČO zákazníka", message: "8 číslic" },
       { row: 3, column: "Stav", message: "aktivní nebo uzavřená" },
       { row: 4, column: "Číslo zakázky", message: "je v souboru vícekrát" },

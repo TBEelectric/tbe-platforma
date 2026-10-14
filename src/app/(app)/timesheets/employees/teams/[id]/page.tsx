@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { BackLink } from "@/components/back-link";
 import { ConfirmButton } from "@/components/form/confirm-button";
 import { PageHeader } from "@/components/shell/page-header";
@@ -21,6 +22,7 @@ export default async function TeamDetailPage({
   params,
 }: PageProps<"/timesheets/employees/teams/[id]">) {
   await requirePermission(canManageEmployees);
+  const t = await getTranslations();
   const { id } = await params;
   const [team, employees] = await Promise.all([
     getTeam(id),
@@ -30,22 +32,26 @@ export default async function TeamDetailPage({
   const archived = !!team.archivedAt;
   return (
     <>
-      <BackLink href="/timesheets/employees/teams">Party</BackLink>
+      <BackLink href="/timesheets/employees/teams">
+        {t("core.tabs.teams")}
+      </BackLink>
       <PageHeader
         title={team.name}
         subtitle={
-          archived ? "Archivovaná parta" : "Členy party měníte u zaměstnance."
+          archived
+            ? t("core.pages.archivedTeam")
+            : t("core.pages.teamMembersHint")
         }
         actions={
           <form action={setTeamArchivedAction.bind(null, team.id, !archived)}>
             <ConfirmButton
               confirm={
                 archived
-                  ? "Obnovit partu?"
-                  : "Archivovat partu? Historie členství zůstane."
+                  ? t("core.pages.confirmRestoreTeam")
+                  : t("core.pages.confirmArchiveTeam")
               }
             >
-              {archived ? "Obnovit" : "Archivovat"}
+              {archived ? t("core.pages.restore") : t("core.detail.archive")}
             </ConfirmButton>
           </form>
         }
@@ -56,7 +62,7 @@ export default async function TeamDetailPage({
             action={updateTeamAction.bind(null, team.id)}
             employees={employees}
             initial={team}
-            submitLabel="Uložit"
+            submitLabel={t("core.form.save")}
           />
         </CardContent>
       </Card>
