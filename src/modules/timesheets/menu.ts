@@ -21,18 +21,21 @@ import {
 export const timesheetsMenu: MenuItem[] = [
   {
     label: "Můj den",
+    shortLabel: "Den",
     href: "/timesheets/day",
     icon: Clock,
     visible: canRecordOwnTime,
   },
   {
     label: "Můj měsíc",
+    shortLabel: "Měsíc",
     href: "/timesheets/month",
     icon: CalendarDays,
     visible: canRecordOwnTime,
   },
   {
     label: "Absence",
+    shortLabel: "Absence",
     href: "/timesheets/absences",
     icon: Umbrella,
     visible: canRecordOwnTime,

@@ -5,6 +5,7 @@ export { syncPublicHolidays } from "./holidays";
 export { findEmployeeByEmail, findEmployeeById, loadActor } from "./access";
 export { ensureAdmin, type AdminAccount } from "./admin";
 export {
+  deleteAudited,
   insertAudited,
   rethrowAsUserError,
   updateAudited,

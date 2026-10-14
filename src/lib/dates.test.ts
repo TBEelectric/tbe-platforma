@@ -3,6 +3,7 @@ import {
   addDays,
   formatDate,
   formatLongDate,
+  formatWeekdayDate,
   isWeekend,
   monthStart,
   pragueDate,
@@ -107,5 +108,12 @@ describe("calendar helpers", () => {
     expect(isWeekend("2026-10-17")).toBe(true);
     expect(isWeekend("2026-10-18")).toBe(true);
     expect(isWeekend("2026-10-19")).toBe(false);
+  });
+});
+
+describe("formatWeekdayDate", () => {
+  it("formats a weekday and a short date", () => {
+    expect(formatWeekdayDate("2026-10-12")).toBe("Pondělí 12. 10.");
+    expect(formatWeekdayDate("2026-03-01")).toBe("Neděle 1. 3.");
   });
 });

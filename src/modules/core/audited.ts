@@ -17,6 +17,7 @@ export async function insertAudited<T extends TableWithId>(
   table: T,
   values: T["$inferInsert"],
   action: AuditAction = "create",
+  reason?: string | null,
 ): Promise<T["$inferSelect"]> {
   const [row] = (await tx
     .insert(table)
@@ -29,8 +30,38 @@ export async function insertAudited<T extends TableWithId>(
     action,
     before: null,
     after: row,
+    reason,
   });
   return row;
+}
+
+/**
+ * Deletes one row by id and audits it with the full previous value. Only for records that may be
+ * deleted (time entries in an open month); business records are archived instead.
+ */
+export async function deleteAudited<T extends TableWithId>(
+  tx: DbOrTx,
+  ctx: ChangeContext,
+  entity: string,
+  table: T,
+  id: string,
+  reason?: string | null,
+): Promise<T["$inferSelect"]> {
+  const [before] = (await tx
+    .delete(table)
+    .where(eq(table.id, id))
+    .returning()) as T["$inferSelect"][];
+  if (!before) throw new UserError("Záznam nenalezen.");
+  await writeAudit(tx, {
+    actorUserId: ctx.userId,
+    entity,
+    entityId: id,
+    action: "delete",
+    before,
+    after: null,
+    reason,
+  });
+  return before;
 }
 
 /** Updates one row by id and audits only the changed fields. Throws UserError when the row is missing. */
@@ -42,7 +73,7 @@ export async function updateAudited<T extends TableWithId>(
   id: string,
   values: PgUpdateSetSource<T>,
   action: AuditAction = "update",
-  reason?: string,
+  reason?: string | null,
 ): Promise<T["$inferSelect"]> {
   const [before] = (await tx
     .select()

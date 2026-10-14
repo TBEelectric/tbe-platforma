@@ -6,6 +6,8 @@ export type MenuItem = {
   label: string;
   href: string;
   icon: LucideIcon;
+  /** Label of the phone bottom tab; items without it are only in the „Více“ menu. */
+  shortLabel?: string;
   /** Items with placement "bottom" are pinned above the user at the bottom of the sidebar. */
   placement?: "main" | "bottom";
   /** Who sees the item. The page itself must check the same permission on the server. */

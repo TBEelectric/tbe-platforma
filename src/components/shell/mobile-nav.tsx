@@ -1,38 +1,62 @@
 "use client";
 
 import { Menu } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
 
-/** Phone/tablet header with a button that opens the module sidebar in a sheet. */
+export type TabItem = { label: string; href: string; icon: ReactNode };
+
+const tabClass =
+  "flex min-h-14 flex-1 flex-col items-center justify-center gap-1 text-[13px] no-underline [&_svg]:size-6";
+
+/**
+ * Phone/tablet navigation at the bottom (docs/design/screens/06-mobil-den): the module's main tabs
+ * and „Více“, which opens the whole module menu in a sheet.
+ */
 export function MobileNav({
-  title,
+  tabs,
   children,
 }: {
-  title: string;
+  tabs: TabItem[];
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
   return (
-    <header className="sticky top-0 z-40 flex h-14 items-center gap-2 bg-sidebar px-2 text-white lg:hidden">
+    <nav
+      aria-label="Hlavní navigace"
+      className="fixed inset-x-0 bottom-0 z-40 flex border-t border-border bg-card pb-[env(safe-area-inset-bottom)] lg:hidden"
+    >
+      {tabs.map((tab) => {
+        const active =
+          pathname === tab.href || pathname.startsWith(`${tab.href}/`);
+        return (
+          <Link
+            key={tab.href}
+            href={tab.href}
+            aria-current={active ? "page" : undefined}
+            className={cn(
+              tabClass,
+              active ? "font-semibold text-primary" : "text-muted-foreground",
+            )}
+          >
+            {tab.icon}
+            {tab.label}
+          </Link>
+        );
+      })}
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetTrigger
-          render={
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white hover:bg-white/10 hover:text-white"
-              aria-label="Otevřít menu"
-            />
-          }
-        >
-          <Menu />
+        <SheetTrigger className={cn(tabClass, "text-muted-foreground")}>
+          <Menu aria-hidden />
+          Více
         </SheetTrigger>
         <SheetContent
           side="left"
@@ -50,7 +74,6 @@ export function MobileNav({
           </div>
         </SheetContent>
       </Sheet>
-      <span className="text-[17px] font-semibold">{title}</span>
-    </header>
+    </nav>
   );
 }

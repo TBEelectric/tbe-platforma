@@ -96,3 +96,15 @@ export function pragueInstant(date: string, time: string): Date | null {
   }
   return null;
 }
+
+const weekdayFormat = new Intl.DateTimeFormat("cs-CZ", {
+  weekday: "long",
+  timeZone: "UTC",
+});
+
+/** "2026-10-12" → "Pondělí 12. 10." (calendar date, no time zone involved). */
+export function formatWeekdayDate(date: string): string {
+  const weekday = weekdayFormat.format(new Date(`${date}T12:00:00Z`));
+  const [, m, d] = date.split("-").map(Number);
+  return `${weekday.charAt(0).toLocaleUpperCase("cs-CZ")}${weekday.slice(1)} ${d}. ${m}.`;
+}
