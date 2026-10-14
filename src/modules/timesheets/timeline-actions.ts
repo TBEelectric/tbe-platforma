@@ -3,14 +3,17 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requirePermission } from "@/lib/current-user";
-import type { Actor } from "../core/shared";
+import { canPinTeamJobs, pinTeamJob, unpinTeamJob, type Actor } from "../core";
 import { db } from "@/lib/db";
 import {
   canRecordOwnTime,
+  canSaveOwnDayTemplate,
   canWriteForSomeoneElse,
   canWriteTimeFor,
 } from "./permissions";
+import { saveDayTemplate } from "./day-template";
 import { teamOn } from "./time-entries";
+import { dayTemplateItemsSchema } from "./rules/day-template";
 import {
   applyTimelineCommand,
   getTimelineDay,
@@ -110,5 +113,46 @@ export async function loadTimelineDayAction(
     return null;
   const teamId = await teamOn(db, employeeId, date);
   if (!canWriteTimeFor(user.actor, { employeeId, teamId })) return null;
-  return getTimelineDay(employeeId, date);
+  return getTimelineDay(employeeId, date, new Date(), user.actor);
+}
+
+/**
+ * Pins / unpins a job for the team of the employee on that date (the picker's pin). Returns the new
+ * day, or null when the viewer may not pin for that team.
+ */
+export async function pinTeamJobAction(
+  employeeId: string,
+  date: string,
+  jobId: string,
+  pinned: boolean,
+): Promise<TimelineDay | null> {
+  const user = await requirePermission(canWriteTime);
+  if (
+    !id.safeParse(employeeId).success ||
+    !id.safeParse(jobId).success ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(date)
+  )
+    return null;
+  const teamId = await teamOn(db, employeeId, date);
+  if (!teamId || !canPinTeamJobs(user.actor, teamId)) return null;
+  if (pinned) await pinTeamJob({ userId: user.userId }, teamId, jobId);
+  else await unpinTeamJob({ userId: user.userId }, teamId, jobId);
+  revalidatePath("/timesheets", "layout");
+  return getTimelineDay(employeeId, date, new Date(), user.actor);
+}
+
+/** "Uložit jako můj obvyklý den": the employee's own template, never anybody else's. */
+export async function saveOwnTemplateAction(
+  items: unknown,
+): Promise<{ ok: boolean }> {
+  const user = await requirePermission(canSaveOwnDayTemplate);
+  const parsed = dayTemplateItemsSchema.safeParse(items);
+  if (!parsed.success) return { ok: false };
+  await saveDayTemplate(
+    { userId: user.userId },
+    user.actor.employeeId,
+    parsed.data,
+  );
+  revalidatePath("/timesheets", "layout");
+  return { ok: true };
 }

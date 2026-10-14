@@ -30,12 +30,12 @@ export default async function DayPage({
 }: PageProps<"/timesheets/day">) {
   const user = await requirePermission(canOpen);
   const params = await searchParams;
-  const date =
+  const requestedDate =
     typeof params.date === "string" &&
     ISO_DATE.test(params.date) &&
     !Number.isNaN(Date.parse(params.date))
       ? params.date
-      : todayInPrague();
+      : null;
   const requested =
     typeof params.employee === "string" && UUID.test(params.employee)
       ? params.employee
@@ -44,6 +44,14 @@ export default async function DayPage({
   const self = user.employee.id;
   const employeeId = requested ?? self;
   const forSomeoneElse = employeeId !== self;
+  // Without a date the own day opens on the oldest unfilled working day of the month, else today
+  // (docs/design.md, Hlavička); rules/day-fill.ts defaultDay applies the same rule to the e-mail.
+  const today = todayInPrague();
+  const date =
+    requestedDate ??
+    (forSomeoneElse
+      ? today
+      : ((await loadDay(employeeId, today))?.missingDays[0] ?? today));
   if (!forSomeoneElse && !canRecordOwnTime(user.actor))
     redirect(`/timesheets/day/someone?date=${date}`);
   if (
@@ -57,7 +65,7 @@ export default async function DayPage({
 
   const [view, timeline] = await Promise.all([
     loadDay(employeeId, date),
-    getTimelineDay(employeeId, date),
+    getTimelineDay(employeeId, date, new Date(), user.actor),
   ]);
   if (!view) notFound();
   const query = forSomeoneElse ? `&employee=${employeeId}` : "";

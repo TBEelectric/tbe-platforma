@@ -14,7 +14,7 @@ import { translate } from "@/i18n/messages";
 import { formatMinutes } from "@/lib/duration";
 import { cn } from "@/lib/utils";
 import { jobLabel } from "@/modules/core/shared";
-import type { TimelineDay } from "../../timeline";
+import type { TimelineDay, TimelineJob } from "../../timeline";
 import {
   AXIS_END,
   AXIS_HEIGHT_PX,
@@ -27,6 +27,7 @@ import {
   HOLD_MS,
   hourMarks,
   initialFocusMinute,
+  jobChipIds,
   localAdjust,
   localSetRange,
   minuteAtOffset,
@@ -41,6 +42,9 @@ import {
   type CreateStart,
   type TimelineEntry,
 } from "../../shared";
+import { pinTeamJobAction } from "../../timeline-actions";
+import { JobPickerScreen } from "./job-picker-screen";
+import { TemplateSave } from "./template-save";
 import { useTimeline } from "./use-timeline";
 
 const BREAK_COLOR = "#f6e6d2";
@@ -105,6 +109,7 @@ export function MobileTimeline({
   const { message, setMessage, select } = tl;
   // Entries when the day opened: only they decide where the axis scrolls to (not later saves).
   const [opened] = useState(initial.entries);
+  const [picking, setPicking] = useState(false);
 
   // Latest values and handlers for the window listeners (they live across renders).
   const live = useRef({ tl, readOnly, needsReason, reason });
@@ -386,6 +391,29 @@ export function MobileTimeline({
     return j ? jobLabel(j) : t("timesheets.entries.noJob");
   };
 
+  const activeJobs = day.jobs.filter((j) => j.active);
+  const chips = selected
+    ? jobChipIds({
+        recentIds: day.recentJobIds,
+        currentJobId: selected.kind === "work" ? selected.jobId : null,
+        teamJobIds: day.teamJobIds,
+        activeJobIds: activeJobs.map((j) => j.id),
+      })
+        .map((id) => jobsById.get(id))
+        .filter((j) => j !== undefined)
+    : [];
+
+  async function togglePin(jobId: string, pinned: boolean) {
+    try {
+      const next = await pinTeamJobAction(employeeId, day.date, jobId, pinned);
+      if (next) tl.setTeamJobIds(next.teamJobIds);
+    } catch {
+      setMessage({ text: "saveFailed" });
+    }
+  }
+
+  const canFill = !readOnly && entries.length === 0;
+
   return (
     <div
       data-timeline-root
@@ -414,7 +442,39 @@ export function MobileTimeline({
         </p>
       )}
 
-      <div className="pt-3" style={{ paddingBottom: selectedId ? 280 : 24 }}>
+      {canFill && (
+        <div
+          role="group"
+          aria-label={t("timesheets.timeline.emptyDay")}
+          className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 grid grid-cols-2 gap-2 rounded-t-[18px] bg-card px-4 pt-4 pb-3 shadow-[0_-8px_30px_rgba(15,47,69,.18)]"
+        >
+          <button
+            type="button"
+            onClick={() => tl.fill("usual")}
+            disabled={!day.template}
+            className="min-h-12 rounded-xl bg-primary px-3 text-[15px] font-semibold text-primary-foreground disabled:opacity-50"
+          >
+            {t(
+              day.template?.source === "own"
+                ? "timesheets.timeline.usualOwn"
+                : "timesheets.timeline.usual",
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => tl.fill("yesterday")}
+            disabled={!day.lastFilledDay}
+            className="min-h-12 rounded-xl border border-border bg-card px-3 text-[15px] font-semibold disabled:opacity-50"
+          >
+            {t("timesheets.timeline.likeYesterday")}
+          </button>
+        </div>
+      )}
+
+      <div
+        className="pt-3"
+        style={{ paddingBottom: selectedId ? 340 : canFill ? 120 : 24 }}
+      >
         <div
           ref={colRef}
           onPointerDown={onPointerDown}
@@ -516,7 +576,9 @@ export function MobileTimeline({
                 style={{
                   top: minuteToPx(e.start),
                   height,
-                  background: isBreak ? BREAK_COLOR : (j?.color ?? "#5b6877"),
+                  backgroundColor: isBreak
+                    ? BREAK_COLOR
+                    : (j?.color ?? "#5b6877"),
                   backgroundImage: isBreak ? BREAK_HATCH : undefined,
                   color: isBreak ? "#6e3604" : "#fff",
                 }}
@@ -578,10 +640,39 @@ export function MobileTimeline({
         </div>
       </div>
 
+      {!readOnly && !needsReason && entries.length > 0 && !selected && (
+        <TemplateSave
+          entries={entries}
+          hasOwn={day.template?.source === "own"}
+          onSaved={tl.setOwnTemplate}
+        />
+      )}
+
+      {picking && (
+        <JobPickerScreen
+          jobs={activeJobs}
+          recentIds={day.recentJobIds}
+          teamJobIds={day.teamJobIds}
+          canPin={day.pinTeamId !== null}
+          currentJobId={selected?.jobId ?? null}
+          onPick={(id) => {
+            tl.setJob(id);
+            setPicking(false);
+          }}
+          onTogglePin={togglePin}
+          onClose={() => setPicking(false)}
+        />
+      )}
+
       {selected && !readOnly && (
         <EntryPanel
           entry={selected}
           label={titleOf(selected)}
+          chips={chips}
+          workTypes={day.workTypes}
+          onJob={tl.setJob}
+          onWorkType={tl.setWorkType}
+          onMore={() => setPicking(true)}
           onNudge={tl.nudge}
           onKind={tl.setKind}
           onDelete={tl.remove}
@@ -635,6 +726,11 @@ function Handle({
 function EntryPanel({
   entry,
   label,
+  chips,
+  workTypes,
+  onJob,
+  onWorkType,
+  onMore,
   onNudge,
   onKind,
   onDelete,
@@ -642,6 +738,11 @@ function EntryPanel({
 }: {
   entry: TimelineEntry;
   label: string;
+  chips: TimelineJob[];
+  workTypes: TimelineDay["workTypes"];
+  onJob: (jobId: string) => void;
+  onWorkType: (id: string) => void;
+  onMore: () => void;
   onNudge: (edge: "start" | "end", delta: number) => boolean;
   onKind: (kind: "work" | "break") => void;
   onDelete: () => void;
@@ -655,11 +756,11 @@ function EntryPanel({
     earlier: string,
     later: string,
   ) => (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-1">
       <StepButton label={earlier} onClick={() => onNudge(edge, -5)}>
         <Minus aria-hidden />
       </StepButton>
-      <strong className="min-w-[3.2rem] text-center text-[17px] tabular-nums">
+      <strong className="min-w-[2.9rem] text-center text-base tabular-nums">
         {timeText(value)}
       </strong>
       <StepButton label={later} onClick={() => onNudge(edge, 5)}>
@@ -681,24 +782,56 @@ function EntryPanel({
           –
         </span>
         {step("end", entry.end, t("endEarlier"), t("endLater"))}
-      </div>
-      <div className="flex items-center gap-2">
-        <KindChip active={!isBreak} onClick={() => onKind("work")}>
-          {t("work")}
-        </KindChip>
-        <KindChip brk active={isBreak} onClick={() => onKind("break")}>
-          <Coffee className="size-[18px]" aria-hidden />
-          {t("break")}
-        </KindChip>
         <button
           type="button"
           aria-label={t("close")}
           onClick={onClose}
-          className="ml-auto flex size-11 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground"
+          className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground"
         >
           <X aria-hidden className="size-5" />
         </button>
       </div>
+      <div className="-mx-4 flex [scrollbar-width:none] items-center gap-2 overflow-x-auto px-4">
+        <KindChip
+          brk
+          active={isBreak}
+          onClick={() => onKind(isBreak ? "work" : "break")}
+        >
+          <Coffee className="size-[18px]" aria-hidden />
+          {t("break")}
+        </KindChip>
+        <span aria-hidden className="h-7 w-px shrink-0 bg-border" />
+        {chips.map((j) => (
+          <KindChip
+            key={j.id}
+            active={!isBreak && entry.jobId === j.id}
+            onClick={() => onJob(j.id)}
+          >
+            <span
+              aria-hidden
+              className="size-2.5 shrink-0 rounded-full"
+              style={{ background: j.color }}
+            />
+            <span className="max-w-[9.5rem] truncate">{jobLabel(j)}</span>
+          </KindChip>
+        ))}
+        <KindChip active={false} onClick={onMore}>
+          {t("moreJobs")}
+        </KindChip>
+      </div>
+      {!isBreak && (
+        <div className="-mx-4 flex [scrollbar-width:none] items-center gap-2 overflow-x-auto px-4">
+          {workTypes.map((w) => (
+            <KindChip
+              key={w.id}
+              active={entry.workTypeId === w.id}
+              onClick={() => onWorkType(w.id)}
+            >
+              {w.name}
+            </KindChip>
+          ))}
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <span className="min-w-0 truncate text-sm font-semibold text-muted-foreground">
           {t("duration", { duration: formatMinutes(entry.end - entry.start) })}

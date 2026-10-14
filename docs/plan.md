@@ -130,12 +130,13 @@ hotových krocích před ním. Značky: `[ručně]` = skript krok nespustí, ud�
       pole nad osou (ne dialog); `TimelineJob` má nově `active`. Ověřeno v náhledu 375 px myší; dotykové podržení
       (300 ms) a vibraci je nutné zkusit na skutečném telefonu (krok 3b.8).
 
-- [ ] **3b.7 – Mobil II: zakázky a šablony**
+- [x] **3b.7 – Mobil II: zakázky a šablony**
       V panelu tlačítka naposledy použitých zakázek („Firma, místo“) a „Další zakázky…“ = výběr přes celou obrazovku
       (vyhledávání, sekce Naposledy použité / Zakázky party / Všechny aktivní, špendlík pro vedoucího), druh práce jako
       tlačítka; prázdný den („Můj obvyklý den“ / „Obvyklý den“, „Jako včera“), „Uložit jako můj obvyklý den“ s potvrzením,
       výchozí den, hlavička se součty, spodní navigace. Nový člen party vidí zakázky party jako tlačítka.
       Hotovo, když: celý mobilní zápis odpovídá prototypu (ověřeno v náhledu telefonu v prohlížeči).
+      Výsledek: panel má přestávku, tlačítka zakázek a druhů práce; „Další zakázky…“ je celá obrazovka s hledáním a sekcemi, špendlík pro vedoucího (akce `pinTeamJobAction`); prázdný den má „Obvyklý den“ / „Jako včera“; „Uložit jako můj obvyklý den“ s potvrzením; den bez parametru se otevře na nejstarším nevyplněném dni. Špendlík jsem v náhledu neviděl (testovací účet nevede žádnou partu), ověřeno jen typově.
 
 - [ ] **3b.8 – Vývojové přihlášení a přístup z telefonu v domácí síti** [zastavit po]
       Bez tunelu a bez Google Console. (1) **Vývojové přihlášení:** na přihlašovací stránce navíc „Přihlásit jako…“

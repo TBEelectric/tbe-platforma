@@ -17,6 +17,7 @@ import {
   SNAP_FINE,
   type AdjustAction,
   type AxisRange,
+  type DayTemplateItem,
   type MessageKey,
   type TimelineEntry,
 } from "../../shared";
@@ -230,6 +231,54 @@ export function useTimeline({
     [defaults, enqueue, entries, selectedId],
   );
 
+  /** Job of the selected entry (a break becomes work with the default work type). */
+  const setJob = useCallback(
+    (jobId: string) => {
+      const current = entries.find((e) => e.id === selectedId);
+      if (!selectedId || !current) return;
+      const workTypeId =
+        current.kind === "work" && current.workTypeId
+          ? current.workTypeId
+          : defaults().workTypeId;
+      const id = selectedId;
+      setEntries(
+        entries.map((e) =>
+          e.id === id ? { ...e, kind: "work", jobId, workTypeId } : e,
+        ),
+      );
+      enqueue((resolve) => ({
+        type: "update",
+        id: resolve(id),
+        kind: "work",
+        jobId,
+        workTypeId,
+      }));
+    },
+    [defaults, enqueue, entries, selectedId],
+  );
+
+  const setWorkType = useCallback(
+    (workTypeId: string) => {
+      if (!selectedId) return;
+      const id = selectedId;
+      setEntries(entries.map((e) => (e.id === id ? { ...e, workTypeId } : e)));
+      enqueue((resolve) => ({
+        type: "update",
+        id: resolve(id),
+        workTypeId,
+      }));
+    },
+    [enqueue, entries, selectedId],
+  );
+
+  /** "Obvyklý den" / "Jako včera": the server fills the empty day; the result replaces the picture. */
+  const fill = useCallback(
+    (source: "usual" | "yesterday") => {
+      enqueue(() => ({ type: "fill", source }));
+    },
+    [enqueue],
+  );
+
   const remove = useCallback(() => {
     if (!selectedId) return;
     const id = selectedId;
@@ -252,6 +301,14 @@ export function useTimeline({
     commitAdjust,
     nudge,
     setKind,
+    setJob,
+    setWorkType,
+    fill,
+    setOwnTemplate: (items: DayTemplateItem[]) =>
+      setDay((d) => ({ ...d, template: { items, source: "own" } })),
+    /** Team jobs changed (pin): only the lists are replaced, never the entries being saved. */
+    setTeamJobIds: (teamJobIds: string[]) =>
+      setDay((d) => ({ ...d, teamJobIds })),
     remove,
     createLocal: (id: string, range: AxisRange) =>
       setEntries((list) =>

@@ -2,7 +2,7 @@ import { addDays, isWeekend } from "@/lib/dates";
 import type { DayTemplateItem } from "./day-template";
 import type { TimeEntryKind } from "./time-entry";
 import type { AxisRange } from "./timeline";
-import { AXIS_END, AXIS_START } from "./timeline";
+import { AXIS_END, AXIS_START, axisTime } from "./timeline";
 import { missingWorkdays } from "./warnings";
 
 // Filling an empty day on the timeline: "Obvyklý den" (template) and "Jako včera" (copy of the last
@@ -76,4 +76,38 @@ export function defaultDay(
 ): string {
   const { today, ...rest } = input;
   return missingWorkdays({ ...rest, to: addDays(today, -1) })[0] ?? today;
+}
+
+/**
+ * "Uložit jako můj obvyklý den": the day's times and kinds without jobs. Null when there is nothing
+ * to save or the day reaches past midnight (a template holds times of one calendar day).
+ */
+export function templateFromEntries(
+  entries: Array<AxisRange & { kind: TimeEntryKind }>,
+): DayTemplateItem[] | null {
+  if (entries.length === 0 || entries.some((e) => e.end > 1440)) return null;
+  return [...entries]
+    .sort((a, b) => a.start - b.start)
+    .map((e) => ({
+      from: axisTime(e.start).time,
+      to: axisTime(e.end).time,
+      kind: e.kind,
+    }));
+}
+
+/** Numbers for the confirmation "7:00–15:30 · 2× práce, 1× přestávka". */
+export function templateSummary(items: DayTemplateItem[]): {
+  from: string;
+  to: string;
+  work: number;
+  breaks: number;
+} {
+  const clock = (time: string) =>
+    `${Number(time.slice(0, 2))}:${time.slice(3)}`;
+  return {
+    from: clock(items[0].from),
+    to: clock(items[items.length - 1].to),
+    work: items.filter((i) => i.kind === "work").length,
+    breaks: items.filter((i) => i.kind === "break").length,
+  };
 }

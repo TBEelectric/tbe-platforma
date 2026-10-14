@@ -321,7 +321,35 @@
       "delete": "Smazat interval",
       "readOnly": "Jen pro čtení",
       "handleStart": "Táhnutím změníte začátek",
-      "handleEnd": "Táhnutím změníte konec"
+      "handleEnd": "Táhnutím změníte konec",
+      "moreJobs": "Další zakázky…",
+      "emptyDay": "Vyplnit prázdný den",
+      "usual": "Obvyklý den",
+      "usualOwn": "Můj obvyklý den",
+      "likeYesterday": "Jako včera",
+      "picker": {
+        "title": "Výběr zakázky",
+        "back": "Zpět",
+        "search": "Hledat podle čísla, názvu nebo zákazníka",
+        "nothing": "Žádná zakázka neodpovídá hledání.",
+        "pin": "Připnout zakázku partě",
+        "unpin": "Odepnout zakázku od party",
+        "section": {
+          "results": "Nalezené zakázky",
+          "recent": "Naposledy použité",
+          "team": "Zakázky party",
+          "all": "Všechny aktivní"
+        }
+      },
+      "template": {
+        "save": "Uložit jako můj obvyklý den",
+        "summary": "{from}–{to} · {work}× práce, {breaks, plural, =0 {bez přestávky} other {{breaks}× přestávka}}",
+        "overwrite": "Dosavadní obvyklý den se přepíše.",
+        "cancel": "Zrušit",
+        "confirm": "Uložit",
+        "saved": "Obvyklý den uložen. Zakázky a druh práce se neukládají.",
+        "failed": "Obvyklý den se nepodařilo uložit."
+      }
     },
     "someone": {
       "subtitle": "Den {date}. Každá změna za jiného vyžaduje důvod, který se uloží do historie.",

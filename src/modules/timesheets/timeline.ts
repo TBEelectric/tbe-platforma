@@ -18,6 +18,7 @@ import {
   deleteAudited,
   insertAudited,
   job,
+  canPinTeamJobs,
   jobColor,
   listTeamJobs,
   publicHoliday,
@@ -95,6 +96,8 @@ export type TimelineDay = {
   blocked: AxisRange[];
   recentJobIds: string[];
   teamJobIds: string[];
+  /** Team whose jobs the viewer may pin in the picker (team lead, manager, admin); else null. */
+  pinTeamId: string | null;
   template: { items: DayTemplateItem[]; source: "own" | "default" } | null;
   /** Source day of "Jako včera". */
   lastFilledDay: string | null;
@@ -262,6 +265,7 @@ export async function getTimelineDay(
   employeeId: string,
   date: string,
   now: Date = new Date(),
+  viewer: Actor | null = null,
 ): Promise<TimelineDay> {
   const state = await loadState(db, employeeId, date, now);
   const teamId = await teamOn(db, employeeId, date);
@@ -309,6 +313,8 @@ export async function getTimelineDay(
     blocked: state.blocked,
     recentJobIds,
     teamJobIds: teamJobs.filter((j) => !j.closed).map((j) => j.jobId),
+    pinTeamId:
+      viewer && teamId && canPinTeamJobs(viewer, teamId) ? teamId : null,
     template: effectiveDayTemplate(own, companyDefault),
     lastFilledDay,
     jobs: jobRows.map((j) => ({
@@ -497,7 +503,10 @@ export async function applyTimelineCommand(
       return { ok: false, error: "timesheets.errors.max24h" };
     throw e;
   }
-  return { ok: true, day: await getTimelineDay(employeeId, date, now) };
+  return {
+    ok: true,
+    day: await getTimelineDay(employeeId, date, now, writer.actor),
+  };
 }
 
 /** Shrinking updates (and deletes) before growing ones and inserts. */

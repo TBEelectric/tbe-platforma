@@ -3,6 +3,8 @@ import {
   defaultDay,
   lastFilledWorkday,
   templateEntries,
+  templateFromEntries,
+  templateSummary,
   withoutCollisions,
   type FillEntry,
 } from "./day-fill";
@@ -157,5 +159,33 @@ describe("default day", () => {
     expect(defaultDay({ ...base, entryDates: allTo("2026-10-13") })).toBe(
       "2026-10-14",
     );
+  });
+});
+
+describe("Uložit jako můj obvyklý den", () => {
+  const entries = [
+    { start: h(12), end: h(15, 30), kind: "work" as const },
+    { start: h(7), end: h(11, 30), kind: "work" as const },
+    { start: h(11, 30), end: h(12), kind: "break" as const },
+  ];
+
+  it("keeps times and kinds sorted, without jobs", () => {
+    expect(templateFromEntries(entries)).toEqual(companyDefault);
+  });
+
+  it("refuses an empty day and a day reaching past midnight", () => {
+    expect(templateFromEntries([])).toBeNull();
+    expect(
+      templateFromEntries([{ start: h(20), end: h(25), kind: "work" }]),
+    ).toBeNull();
+  });
+
+  it("summarises the day for the confirmation", () => {
+    expect(templateSummary(companyDefault)).toEqual({
+      from: "7:00",
+      to: "15:30",
+      work: 2,
+      breaks: 1,
+    });
   });
 });
