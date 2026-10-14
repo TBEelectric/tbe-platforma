@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { jobLabel } from "@/modules/core/shared";
 import type { TimelineDay } from "../../timeline";
 import {
   loadTimelineDayAction,
@@ -122,15 +123,25 @@ export function useTimeline({
     [apply, employeeId, initial.date, recover],
   );
 
-  /** Job and work type of a new entry: the last used job (or the team's) and the default work type. */
+  /**
+   * Job and work type of a new entry: the last used job (or the team's) and the default work type.
+   * Without any history, the first active job by company – until the job picker arrives (3b.7).
+   */
   const defaults = useCallback(() => {
+    const active = day.jobs.filter((j) => j.active);
     const [jobId] = jobChipIds({
       recentIds: day.recentJobIds,
       currentJobId: null,
       teamJobIds: day.teamJobIds,
-      activeJobIds: day.jobs.filter((j) => j.active).map((j) => j.id),
+      activeJobIds: active.map((j) => j.id),
     });
-    return { jobId: jobId ?? null, workTypeId: day.defaultWorkTypeId };
+    const fallback = [...active].sort((a, b) =>
+      jobLabel(a).localeCompare(jobLabel(b), "cs"),
+    )[0];
+    return {
+      jobId: jobId ?? fallback?.id ?? null,
+      workTypeId: day.defaultWorkTypeId,
+    };
   }, [day]);
 
   /** A new work entry needs a job unless the default work type is overhead; says why not. */
