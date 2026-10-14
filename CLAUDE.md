@@ -14,12 +14,19 @@ Read before working:
 - `docs/design.md` – visual style and screen list; reference screens (HTML + PNG) in `docs/design/screens/`.
   Look at the PNG of a screen before building it. They are visual references, not code to copy:
   rebuild them with shadcn/ui + Tailwind using the tokens in `docs/design.md`.
+- `docs/design/prototypes/` – sources of clickable prototypes (`.dc.html`, see its README). Port their behaviour
+  (calculations in the `text/x-dc` script) into pure functions with tests and match it; rebuild the UI. Not code to copy.
+  If a prototype and `docs/design.md` disagree, `docs/design.md` wins.
 - `docs/plan.md` – milestones and the current task list
 
 ## Language
 
 - Code, identifiers, DB tables/columns, API, commits, tests: **English**.
 - UI texts, docs in `docs/`: **Czech** (with diacritics).
+- **All UI texts go through `next-intl` translation keys** (`messages/cs.json`; Ukrainian `uk.json` comes later).
+  Never hardcode user-facing strings in components, server actions, e-mails or exports. Data (job, customer,
+  site names) is not translated. Dates/numbers via `Intl` with the user's locale, time zone always Europe/Prague.
+  See `docs/architektura.md`, Jazyky rozhraní.
 - Czech domain terms map to English names via the glossary in `docs/technicky-navrh.md`.
   Never invent a new term: add it to the glossary first. Key ones: zakázka = `job`,
   interval = `time_entry`, měsíční výkaz = `timesheet`, uzávěrka = `period_close`,

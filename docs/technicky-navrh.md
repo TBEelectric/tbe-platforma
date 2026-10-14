@@ -17,7 +17,7 @@ Nový pojem se nejdřív zapíše sem.
 | Tým / parta | `team` | Skupina zaměstnanců s vedoucím |
 | Vedoucí | `team_lead` | Schvaluje výkazy svého týmu |
 | Zákazník | `customer` | Odběratel zakázek |
-| Zakázka | `job` | Číslo a název, vazba na zákazníka |
+| Zakázka | `job` | Číslo, název, místo a zákazník; v rozhraní se zobrazuje jako „Firma, místo“ |
 | Místo | `site` | Sídlo, sklad, stavba, adresa zákazníka |
 | Druh práce | `work_type` | Montáž, revize, cesta, režie |
 | Interval | `time_entry` | Úsek od–do: práce na zakázce, nebo přestávka |
@@ -27,6 +27,8 @@ Nový pojem se nejdřív zapíše sem.
 | Pohotovost | `standby` | Pracovní pohotovost od–do |
 | Měsíční výkaz | `timesheet` | Měsíc jednoho zaměstnance se stavem schválení |
 | Uzávěrka | `period_close` | Uzavření měsíce pro všechny zaměstnance |
+| Zakázky party | `team_job` | Zakázky připnuté vedoucím pro rychlý výběr |
+| Šablona dne | `day_template` | „Obvyklý den“ zaměstnance pro rychlé vyplnění |
 | Fond pracovní doby | `work_schedule` | Plánovaná doba a režim (pružná, nerovnoměrná) |
 | Nárok na dovolenou | `leave_entitlement` | Roční nárok a zůstatek v hodinách |
 | Historie změn | `audit_log` | Kdo, kdy, co a původní hodnota |
@@ -41,15 +43,16 @@ Sazby se zatím neevidují, `employment` i `job` je mohou dostat později.
 
 | Tabulka | Klíčová pole | Poznámka |
 | --- | --- | --- |
-| `user` | email, name, employee_id | Vytváří Better Auth; přihlásí se jen aktivní zaměstnanec s tímto e-mailem, propojení podle e-mailu |
+| `user` | email, name, employee_id, locale (výchozí `cs`) | Vytváří Better Auth; přihlásí se jen aktivní zaměstnanec s tímto e-mailem, propojení podle e-mailu |
 | `employee` | first_name, last_name, personal_number, email, active, tracks_time | Základ pro všechny moduly; e-mail = povolený účet |
 | `employment` | employee_id, type (`hpp`,`dpp`,`dpc`), valid_from, valid_to, weekly_hours, schedule_type (`flexible`,`uneven`) | Výpočty berou úvazek platný v daný den |
 | `team` | name, lead_employee_id | Parta s vedoucím |
 | `team_member` | team_id, employee_id, valid_from, valid_to | Členství s historií |
 | `role_assignment` | employee_id, module, role | Role po modulech; přiřazuje se zaměstnanci, aby šla zadat před prvním přihlášením |
 | `customer` | name, ico, external_id | |
-| `job` | code, name, customer_id, status (`active`,`closed`), external_id | |
-| `site` | name, type, address, lat, lng, customer_id | Hlavně pro vozový park |
+| `job` | code, name, customer_id, site_id, status (`active`,`closed`), external_id | Místo (`site_id`) povinné; v rozhraní se zakázka zobrazuje jako **„Firma, místo“**, číslo jen ve vyhledávání, správě a exportech |
+| `site` | name, type, address, lat, lng, customer_id | `name` = krátký název místa pro montéry („Jihlava, hala A“); použije i vozový park |
+| `team_job` | team_id, job_id, pinned_by, pinned_at | „Zakázky party“ – vedoucí připne zakázky, které parta právě dělá |
 | `public_holiday` | date, name | Státní svátky ČR, generované na roky dopředu |
 | `audit_log` | actor_user_id, entity, entity_id, action, before, after, reason, at | |
 
@@ -64,7 +67,8 @@ Sazby se zatím neevidují, `employment` i `job` je mohou dostat později.
 | `leave_entitlement` | employee_id, year, hours_entitled, hours_carried_over | Zůstatek = nárok + převod − čerpáno |
 | `timesheet` | employee_id, month, status, confirmed_at, approved_by, approved_at, return_reason | Jeden řádek na zaměstnance a měsíc |
 | `period_close` | month, closed_by, closed_at, reopened_by, reopened_at, reopen_reason, export_version | |
-| `timesheet_settings` | key, value, valid_from | Prahy a limity |
+| `timesheet_settings` | key, value, valid_from | Prahy a limity; výchozí šablona „Obvyklý den“ |
+| `day_template` | employee_id, items (JSON: od, do, typ), updated_at | Šablona „Obvyklý den“ zaměstnance; bez ní platí výchozí z nastavení |
 
 ## Stavy výkazu
 

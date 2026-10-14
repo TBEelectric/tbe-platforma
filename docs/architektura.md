@@ -31,6 +31,21 @@ Zakázkový systém není samostatná aplikace: zakázky a zákazníci jsou v j�
 4. Sklad (množství) a nářadí (jednotlivé kusy s výrobním číslem) jsou dva moduly.
 5. Jedna PWA pro všechny moduly; offline se řeší po modulech.
 
+## Jazyky rozhraní
+
+**Rozhodnuto:** aplikace je od začátku připravená na víc jazyků. **Zatím se nepřekládá** – existuje jen čeština.
+Důvod: část montérů jsou Ukrajinci; ukrajinština se doplní později jen překladem, bez úprav obrazovek.
+
+Pravidla:
+- Všechny texty rozhraní jdou přes překladové klíče (`next-intl`), nikdy natvrdo v komponentách.
+  Soubory `messages/cs.json` (teď jediný), později `messages/uk.json`. Klíče po modulech
+  (`timesheets.day.addInterval`, `core.employees.title` …).
+- Platí i pro chybové hlášky, upozornění, e-maily, PDF/XLSX exporty (hlavičky sloupců) a stavy (např. „Potvrzeno“).
+- Data se nepřekládají: názvy zakázek, firem, míst, poznámky.
+- Formát data, času a čísel podle jazyka uživatele (`Intl`), časové pásmo vždy Europe/Prague.
+- `user.locale` (výchozí `cs`); přepínač jazyka v profilu se přidá až s druhým jazykem.
+- Ikony u klíčových akcí (přestávka, zakázka, absence) pomáhají i bez překladu.
+
 ## Provoz
 
 Jeden Next.js projekt bez monorepa; monorepo až při druhé nasazované aplikaci (např. nativní mobil, portál pro nájemníky).

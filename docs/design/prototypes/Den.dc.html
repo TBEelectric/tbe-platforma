@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Docházka – Můj den</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#f3f5f8;font-family:'Figtree',system-ui,sans-serif;color:#142433}
+a{color:#0b5f57}a:hover{color:#08463f}
+.side{flex:0 0 248px;background:#0f2f45;color:#d7e2ea;display:flex;flex-direction:column;padding:20px 14px;box-sizing:border-box;gap:4px}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 18px;color:#fff;font-weight:700;font-size:19px}
+.mod{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.08);border-radius:10px;padding:10px 12px;margin-bottom:14px;color:#fff;font-size:14px;text-decoration:none}
+.mod:hover{background:rgba(255,255,255,.14);color:#fff}
+.nav{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;color:#d7e2ea;text-decoration:none;font-size:15px}
+.nav:hover{background:rgba(255,255,255,.06);color:#fff}
+.nav.on{background:#0e7c72;color:#fff}
+.nav svg,.mod svg{width:20px;height:20px;flex:0 0 20px}
+.user{display:flex;align-items:center;gap:10px;border-top:1px solid rgba(255,255,255,.1);padding:16px 8px 0;margin-top:12px}
+.av{width:38px;height:38px;border-radius:50%;background:#c9d4dd;color:#0f2f45;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex:0 0 38px}
+.main{flex:999 1 560px;min-width:0;padding:28px 32px;box-sizing:border-box;display:flex;flex-direction:column;gap:20px}
+.card{background:#fff;border:1px solid #e2e7ee;border-radius:14px;padding:20px;box-sizing:border-box}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#0e7c72;color:#fff;border:0;border-radius:10px;padding:0 16px;height:44px;font:inherit;font-weight:600;font-size:15px;cursor:pointer;text-decoration:none;white-space:nowrap}
+.btn.sec{background:#fff;color:#142433;border:1px solid #d5dce5}
+.btn.icon{width:44px;padding:0}
+.kpi .l{font-size:14px;color:#5b6877}.kpi .v{font-size:28px;font-weight:700;margin-top:6px}.kpi .s{font-size:13px;color:#5b6877;margin-top:4px}
+.pill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;font-size:13px;font-weight:600;white-space:nowrap}
+.p-teal{background:#e3f3f1;color:#0b5f57}.p-orange{background:#fdf0e1;color:#9a4a06}.p-green{background:#e4f4ea;color:#14663d}
+.del{height:44px;border:0;background:none;font:inherit;font-size:14px;font-weight:600;color:#8a4205;cursor:pointer;padding:0 8px}
+.track{position:relative;height:64px;background:#f1f4f7;border-radius:10px;cursor:crosshair;user-select:none;touch-action:none}
+.seg{position:absolute;top:6px;bottom:6px;border-radius:8px;cursor:grab;display:flex;align-items:center;overflow:hidden;box-sizing:border-box}
+.seg .lbl{flex:1;min-width:0;padding:0 8px;font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:5px}
+.seg.brk{background-image:repeating-linear-gradient(135deg,rgba(138,66,5,.08) 0 6px,transparent 6px 12px)}
+.seg.brk .lbl{color:#6e3604}
+.hdl{width:10px;align-self:stretch;cursor:ew-resize;flex:0 0 10px;background:rgba(255,255,255,.25)}
+.hdl:hover{background:rgba(255,255,255,.55)}
+.seg.brk .hdl{background:rgba(138,66,5,.12)}
+.tick{position:absolute;top:0;bottom:0;width:1px;background:#e2e7ee}
+.tick.half{background:#eceff3}
+.ticklbl{position:absolute;font-size:12px;font-weight:600;color:#5b6877;transform:translateX(-50%)}
+.now{position:absolute;top:-6px;bottom:-6px;width:2px;background:#c2410c;pointer-events:none}
+.nowlbl{position:absolute;top:-30px;transform:translateX(-50%);background:#c2410c;color:#fff;font-size:12px;font-weight:700;padding:3px 7px;border-radius:6px;white-space:nowrap;pointer-events:none}
+.hov{position:absolute;top:0;bottom:0;width:1px;background:#142433;pointer-events:none}
+.hovlbl{position:absolute;bottom:-32px;transform:translateX(-50%);background:#142433;color:#fff;font-size:12px;font-weight:700;padding:3px 7px;border-radius:6px;white-space:nowrap;pointer-events:none}
+.row{display:flex;justify-content:space-between;align-items:center;font-size:14px;padding:10px 12px;margin-bottom:6px;border:1px solid #e2e7ee;background:#fff;gap:12px;border-radius:10px;cursor:pointer}
+.row:hover{border-color:#c3ccd6}
+.lab{font-size:12px;font-weight:700;color:#5b6877;text-transform:uppercase;letter-spacing:.04em}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{min-height:40px;padding:0 12px;border-radius:10px;border:1px solid #d5dce5;background:#fff;font:inherit;font-size:14px;font-weight:600;color:#142433;cursor:pointer;display:flex;align-items:center;gap:8px}
+.chip.on{background:#0f2f45;border-color:#0f2f45;color:#fff}
+.chip.brk{background:#fff4e6;border-color:#f0c48e;color:#7a3a05}
+.chip.brk.on{background:#8a4205;border-color:#8a4205;color:#fff}
+.vsep{flex:0 0 1px;background:#e2e7ee;margin:4px 2px}
+.dot{width:10px;height:10px;border-radius:3px;display:inline-block;flex:0 0 10px}
+.cup{width:18px;height:18px;flex:0 0 18px}
+.step{display:flex;align-items:center;gap:6px}
+.step button{width:40px;height:40px;border-radius:10px;border:1px solid #d5dce5;background:#fff;font:inherit;font-size:18px;font-weight:700;color:#142433;cursor:pointer}
+.step strong{min-width:52px;text-align:center;font-size:17px;font-variant-numeric:tabular-nums}
+.combo{position:relative}
+.combo input{height:44px;border:1px solid #cfd7e0;border-radius:10px;padding:0 12px 0 40px;font:inherit;font-size:15px;width:100%;box-sizing:border-box;background:#fff;color:#142433}
+.combo input:focus{outline:2px solid rgba(14,124,114,.25);border-color:#0e7c72}
+.drop{position:absolute;left:0;right:0;top:48px;background:#fff;border:1px solid #d5dce5;border-radius:12px;box-shadow:0 12px 30px rgba(15,47,69,.16);max-height:320px;overflow-y:auto;z-index:10}
+.dsec{position:sticky;top:0;z-index:1;font-size:11px;font-weight:700;color:#5b6877;text-transform:uppercase;letter-spacing:.04em;padding:8px 12px;background:#f3f5f8;border-bottom:1px solid #e2e7ee}
+.opt{display:flex;align-items:center;gap:12px;padding:10px 14px;min-height:56px;border:0;border-bottom:1px solid #eef1f5;background:#fff;width:100%;text-align:left;font:inherit;cursor:pointer;box-sizing:border-box}
+.opt:hover{background:#f1f4f7}
+.opt.on{background:#eef7f6}
+.sumrow{display:flex;flex-direction:column;gap:6px}
+.bar{height:8px;background:#eef1f4;border-radius:4px}
+@media(max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr)) !important}.side{flex:1 1 100%}.cols{flex-direction:column}}
+</style>
+</helmet>
+<div style="display: flex; flex-wrap: wrap; min-height: 1080px">
+<nav class="side" aria-label="Menu docházky">
+<div class="brand"><svg aria-hidden="true" viewBox="0 0 24 24" width="28" height="28"><path d="M13 2L4.5 13.5h6.2L9.5 22l9-12h-6.3z" fill="#2bb3a6"></path></svg><span>TBE electric</span></div>
+<a class="mod" href="Main.dc.html"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"></rect><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"></rect><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"></rect><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"></rect></svg><span style="flex: 1">Docházka</span><span style="font-size: 12px; color: #9fb3c2">Přepnout</span></a>
+<a class="nav on" href="Den.dc.html"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Můj den</a>
+<a class="nav" href="Mesic.dc.html"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="2"></rect><path d="M3.5 10h17M8 3v4M16 3v4"></path></svg>Můj měsíc</a>
+<a class="nav" href="#"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20h16M12 20V9M5 11a7 7 0 0 1 14 0z"></path></svg>Absence</a>
+<a class="nav" href="Schvalovani.dc.html"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="3.5" width="17" height="17" rx="3"></rect><path d="M8 12.5l3 3 5-6"></path></svg>Schvalování</a>
+<a class="nav" href="Uzaverka.dc.html"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="5" y="10.5" width="14" height="10" rx="2"></rect><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"></path></svg>Uzávěrka</a>
+<a class="nav" href="#"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="7" width="17" height="13" rx="2"></rect><path d="M9 7V5h6v2M3.5 12.5h17"></path></svg>Zakázky</a>
+<a class="nav" href="#"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="8.5" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0 1 13 0M16 5.2a3.5 3.5 0 0 1 0 6.6M18 14.5a6.5 6.5 0 0 1 3.5 5.5"></path></svg>Zaměstnanci</a>
+<div style="flex: 1"></div>
+<a class="nav" href="#"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"></path></svg>Nastavení</a>
+<div class="user"><div class="av">JN</div><div style="display: flex; flex-direction: column"><span style="color: #fff; font-weight: 600; font-size: 15px">Jan Novák</span><span style="font-size: 13px; color: #9fb3c2">Vedoucí party</span></div></div>
+</nav>
+<main class="main">
+<div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+<div>
+<h1 style="margin: 0; font-size: 28px; font-weight: 700">Můj den</h1>
+<p style="margin: 6px 0 0; font-size: 15px; color: #5b6877">Úterý 13. října 2026 · Jan Novák · HPP, pružná doba</p>
+</div>
+<div style="display: flex; gap: 8px; align-items: center">
+<button class="btn sec icon" aria-label="Předchozí den"><svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"></path></svg></button>
+<button class="btn sec">Dnes</button>
+<button class="btn sec icon" aria-label="Další den"><svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"></path></svg></button>
+<button class="btn sec">Zapsat za jiného</button>
+</div>
+</div>
+<div class="kpis" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px">
+<div class="card kpi"><div class="l">Odpracováno</div><div class="v">{{workTotal}}</div><div class="s">{{span}}</div></div>
+<div class="card kpi"><div class="l">Přestávky</div><div class="v">{{breakTotal}}</div><div class="s">{{breakCount}}</div></div>
+<div class="card kpi"><div class="l">Říjen k dnešku</div><div class="v">64:00</div><div class="s">fond 72:00 · chybí 12. 10.</div></div>
+<div class="card kpi"><div class="l">Dovolená zbývá</div><div class="v">92 h</div><div class="s">11,5 dne z nároku 160 h</div></div>
+</div>
+
+<section class="card" style="display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 12px">
+<h2 style="margin: 0; font-size: 18px">Intervaly dne</h2>
+<span style="font-size: 13px; color: #5b6877">Táhnutím po ose nakreslete interval · klik do mezery ji vyplní · tažením okrajů upravíte</span>
+<span class="pill p-teal">Říjen otevřený</span>
+</div>
+<div style="padding-top: 22px">
+<div class="track" data-track="1" onPointerDown="{{trackDown}}" onPointerMove="{{trackMove}}" onPointerLeave="{{trackLeave}}">
+<sc-for list="{{halves}}" as="t" hint-placeholder-count="13"><div class="tick half" style="left: {{t.left}}%"></div></sc-for>
+<sc-for list="{{ticks}}" as="t" hint-placeholder-count="14"><div class="tick" style="left: {{t.left}}%"></div></sc-for>
+<sc-for list="{{segs}}" as="s" hint-placeholder-count="4">
+<div class="{{s.cls}}" style="left: {{s.left}}%; width: {{s.width}}%; {{s.style}}" onPointerDown="{{s.down}}" title="{{s.title}}">
+<div class="hdl" onPointerDown="{{s.downL}}"></div>
+<div class="lbl"><sc-if value="{{s.isBreak}}" hint-placeholder-val="{{ false }}"><svg class="cup" style="width: 14px; height: 14px; flex: 0 0 14px" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"></path><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16"></path></svg></sc-if><span style="overflow: hidden; text-overflow: ellipsis">{{s.label}}</span></div>
+<div class="hdl" onPointerDown="{{s.downR}}"></div>
+</div>
+</sc-for>
+<div class="now" style="left: {{nowLeft}}%"><div class="nowlbl">teď {{nowText}}</div></div>
+<sc-if value="{{showHover}}" hint-placeholder-val="{{ false }}"><div class="hov" style="left: {{hoverLeft}}%"><div class="hovlbl">{{hoverText}}</div></div></sc-if>
+</div>
+<div style="position: relative; height: 16px; margin-top: 6px">
+<sc-for list="{{ticks}}" as="t" hint-placeholder-count="14"><span class="ticklbl" style="left: {{t.left}}%">{{t.label}}</span></sc-for>
+</div>
+</div>
+<sc-if value="{{hasMsg}}" hint-placeholder-val="{{ false }}">
+<div style="background: #fdf0e1; color: #6e3604; border-radius: 10px; padding: 10px 14px; font-size: 14px">{{msg}}</div>
+</sc-if>
+
+<div class="cols" style="display: flex; gap: 24px; align-items: flex-start">
+<div style="flex: 1 1 0; min-width: 0">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+<div class="row" style="{{r.rowStyle}}" onClick="{{r.pick}}">
+<span style="display: flex; align-items: center; gap: 10px; min-width: 0">
+<sc-if value="{{r.isBreak}}" hint-placeholder-val="{{ false }}"><svg class="cup" style="color: #8a4205" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"></path><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16"></path></svg></sc-if>
+<sc-if value="{{r.isWork}}" hint-placeholder-val="{{ true }}"><span class="dot" style="background: {{r.color}}; width: 14px; height: 14px; flex: 0 0 14px; margin: 0 2px"></span></sc-if>
+<strong style="font-variant-numeric: tabular-nums; white-space: nowrap">{{r.time}}</strong>
+<span style="min-width: 0; display: flex; flex-direction: column"><span style="font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{r.label}}</span><span style="font-size: 13px; color: #5b6877">{{r.sub}}</span></span>
+</span>
+<strong>{{r.dur}}</strong>
+</div>
+</sc-for>
+<sc-if value="{{isEmpty}}" hint-placeholder-val="{{ false }}">
+<div style="border: 1px dashed #c3ccd6; border-radius: 12px; padding: 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<span style="font-size: 14px; color: #3a4756">Den je prázdný. Nakreslete interval na ose, nebo:</span>
+<button class="btn sec" onClick="{{fillUsual}}">Obvyklý den</button>
+</div>
+</sc-if>
+</div>
+
+<aside style="flex: 0 0 420px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+<sc-if value="{{hasSel}}" hint-placeholder-val="{{ false }}">
+<div class="card" style="display: flex; flex-direction: column; gap: 14px; background: #f8fafb">
+<div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap">
+<div class="step"><button aria-label="Začátek o 5 minut dříve" onClick="{{startMinus}}">−</button><strong>{{selStart}}</strong><button aria-label="Začátek o 5 minut později" onClick="{{startPlus}}">+</button></div>
+<span style="color: #5b6877">–</span>
+<div class="step"><button aria-label="Konec o 5 minut dříve" onClick="{{endMinus}}">−</button><strong>{{selEnd}}</strong><button aria-label="Konec o 5 minut později" onClick="{{endPlus}}">+</button></div>
+<span style="margin-left: auto; font-weight: 600; color: #5b6877">{{selDur}}</span>
+</div>
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span class="lab">Zakázka nebo přestávka</span>
+<div class="chips">
+<button class="{{kindBreak}}" onClick="{{setBreak}}"><svg class="cup" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"></path><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16"></path><path d="M8 3.5c0 1 1 1.5 1 2.5M12 3.5c0 1 1 1.5 1 2.5"></path></svg>Přestávka</button>
+<span class="vsep"></span>
+<sc-for list="{{jobChips}}" as="j" hint-placeholder-count="3"><button class="{{j.cls}}" onClick="{{j.pick}}" title="{{j.full}}"><span class="dot" style="background: {{j.color}}"></span>{{j.label}}</button></sc-for>
+</div>
+<div class="combo">
+<svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#5b6877" stroke-width="2" stroke-linecap="round" style="position: absolute; left: 12px; top: 12px"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
+<input type="search" placeholder="Jiná zakázka – firma, místo, název nebo číslo" value="{{q}}" onChange="{{setQ}}" onFocus="{{openCombo}}" onBlur="{{closeCombo}}" aria-label="Hledat zakázku">
+<sc-if value="{{comboOpen}}" hint-placeholder-val="{{ false }}">
+<div class="drop">
+<sc-for list="{{sections}}" as="sec" hint-placeholder-count="3">
+<div class="dsec">{{sec.title}}</div>
+<sc-for list="{{sec.items}}" as="o" hint-placeholder-count="3">
+<button class="{{o.cls}}" onMouseDown="{{o.pick}}"><span class="dot" style="background: {{o.color}}"></span><span style="flex: 1; min-width: 0"><span style="display: block; font-size: 15px; font-weight: 700; color: #142433">{{o.firm}}</span><span style="display: block; font-size: 13px; color: #3a4756">{{o.place}}</span><span style="display: block; font-size: 12px; color: #6b7785">{{o.name}}</span></span></button>
+</sc-for>
+</sc-for>
+<sc-if value="{{noResults}}" hint-placeholder-val="{{ false }}"><div style="padding: 14px 12px; color: #5b6877; font-size: 14px">Nic nenalezeno.</div></sc-if>
+</div>
+</sc-if>
+</div>
+</div>
+<sc-if value="{{selIsWork}}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span class="lab">Druh práce</span>
+<div class="chips"><sc-for list="{{wtChips}}" as="w" hint-placeholder-count="4"><button class="{{w.cls}}" onClick="{{w.pick}}">{{w.label}}</button></sc-for></div>
+</div>
+</sc-if>
+<div style="display: flex; justify-content: space-between; align-items: center"><button class="del" onClick="{{deleteSel}}">Smazat interval</button><button class="btn" onClick="{{clearSel}}">Hotovo</button></div>
+</div>
+</sc-if>
+<sc-if value="{{noSel}}" hint-placeholder-val="{{ true }}">
+<section class="card" style="display: flex; flex-direction: column; gap: 14px">
+<h2 style="margin: 0; font-size: 16px">Dnes podle zakázek</h2>
+<sc-for list="{{byJob}}" as="b" hint-placeholder-count="2">
+<div class="sumrow">
+<div style="display: flex; justify-content: space-between; gap: 10px; font-size: 14px"><span style="display: flex; align-items: center; gap: 8px; min-width: 0"><span class="dot" style="background: {{b.color}}"></span><span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{b.label}}</span></span><strong>{{b.dur}}</strong></div>
+<div class="bar"><div style="width: {{b.pct}}%; height: 8px; background: {{b.color}}; border-radius: 4px"></div></div>
+</div>
+</sc-for>
+</section>
+<section class="card" style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; font-size: 16px">Kontroly</h2>
+<div style="display: flex; gap: 10px; align-items: flex-start; font-size: 14px"><span class="{{checkCls}}">{{checkTag}}</span><span>{{checkText}}</span></div>
+<div style="display: flex; gap: 10px; align-items: flex-start; font-size: 14px"><span class="pill p-orange">Chybí</span><span>Pondělí 12. 10. nemá záznam ani absenci. <a href="#">Doplnit</a></span></div>
+</section>
+<section class="card" style="display: flex; flex-direction: column; gap: 10px">
+<h2 style="margin: 0; font-size: 16px">Měsíční výkaz</h2>
+<p style="margin: 0; font-size: 14px; color: #3a4756">Říjen potvrdíte po skončení měsíce, nejpozději 2. 11. Pak ho schválí správce docházky.</p>
+<a href="Mesic.dc.html" style="font-weight: 600; font-size: 14px">Zobrazit můj měsíc</a>
+</section>
+</sc-if>
+</aside>
+</div>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1080}}'>
+const DS = 360, DE = 1140, SPAN = DE - DS, STEP = 5;
+const PAL = ['#0e7c72', '#3a68a8', '#7a4fb5', '#b45309', '#0f766e', '#be185d', '#4d7c0f', '#1d4ed8'];
+const RAW = [['250147', 'Rozvaděče hala A', 'Strojírny Vysočina s.r.o.', 'Jihlava, hala A'], ['250162', 'Elektroinstalace kanceláře', 'Kancelářský dům Na Poříčí a.s.', 'Praha 1, Na Poříčí 12'], ['250201', 'Servis technologie', 'Pekárna Zlatý klas s.r.o.', 'Kolín, pekárna'], ['250215', 'Revize hromosvodu – sklad', 'Logistika Brod s.r.o.', 'Český Brod, sklad 3'], ['250230', 'Fotovoltaika RD', 'Novotný Josef', 'Kolín, Polepská 8'], ['250244', 'Přípojka NN – dílna', 'Strojírny Vysočina s.r.o.', 'Jihlava, dílna'], ['250251', 'Osvětlení haly B', 'Strojírny Vysočina s.r.o.', 'Jihlava, hala B'], ['250258', 'Rekonstrukce rozvodny', 'Město Úvaly', 'Úvaly, náměstí'], ['250263', 'Datové rozvody 2. NP', 'Kancelářský dům Na Poříčí a.s.', 'Praha 1, Na Poříčí 12'], ['250270', 'Revize elektro', 'MŠ Sluníčko', 'Říčany, MŠ Sluníčko'], ['250277', 'Wallboxy parkoviště', 'Logistika Brod s.r.o.', 'Český Brod, parkoviště'], ['250284', 'Servis UPS', 'Nemocnice Kolín', 'Kolín, nemocnice'], ['250291', 'Hromosvod RD', 'Dvořáková Marie', 'Říčany, Lipová 5'], ['250298', 'Nouzové osvětlení', 'Pekárna Zlatý klas s.r.o.', 'Kolín, pekárna']];
+const JOBS = RAW.map((r, i) => [r[0], r[1], PAL[i % PAL.length], r[2], r[3]]);
+const TEAM = ['250147', '250201', '250251'];
+const WTS = ['Montáž', 'Revize', 'Cesta', 'Režie'];
+const BREAK = '#f6e6d2';
+const norm = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const job = (id) => JOBS.find((j) => j[0] === id) || JOBS[0];
+const firm = (j) => j[3].replace(/,? (s\.r\.o\.|a\.s\.)$/, '');
+const jl = (j) => firm(j) + ', ' + j[4];
+const cut = (t, n) => (t.length > n ? t.slice(0, n - 1) + '…' : t);
+const pad = (n) => (n < 10 ? '0' : '') + n;
+const fmt = (m) => pad(Math.floor(m / 60)) + ':' + pad(m % 60);
+const dur = (m) => Math.floor(m / 60) + ':' + pad(m % 60);
+const snap = (m) => Math.round(m / STEP) * STEP;
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+let uid = 100;
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = {
+now: 990, hover: null, sel: null, msg: '', q: '', comboOpen: false,
+day: [
+{ id: 1, s: 390, e: 495, kind: 'work', job: '250147', wt: 'Montáž' },
+{ id: 2, s: 495, e: 510, kind: 'break' },
+{ id: 3, s: 510, e: 660, kind: 'work', job: '250162', wt: 'Montáž' },
+{ id: 4, s: 660, e: 675, kind: 'break' },
+{ id: 5, s: 675, e: 720, kind: 'work', job: '250147', wt: 'Cesta' }
+]
+};
+this.drag = null;
+this.onMove = this.onMove.bind(this);
+this.onUp = this.onUp.bind(this);
+}
+componentDidMount() { window.addEventListener('pointermove', this.onMove); window.addEventListener('pointerup', this.onUp); }
+componentWillUnmount() { window.removeEventListener('pointermove', this.onMove); window.removeEventListener('pointerup', this.onUp); }
+list() { return this.state.day; }
+save(list, extra) { this.setState(Object.assign({ day: list.slice().sort((a, b) => a.s - b.s), msg: '' }, extra || {})); }
+maxEnd() { return this.state.now; }
+minAt(x, rect) { return clamp(snap(DS + (x - rect.left) / rect.width * SPAN), DS, DE); }
+lastJob() { const w = this.list().filter((e) => e.kind === 'work'); return w.length ? w[w.length - 1].job : '250147'; }
+bounds(id, s, e) {
+const others = this.list().filter((x) => x.id !== id);
+return { prevEnd: Math.max(DS, ...others.filter((x) => x.e <= s).map((x) => x.e)), nextStart: Math.min(this.maxEnd(), ...others.filter((x) => x.s >= e).map((x) => x.s)) };
+}
+trackDown(ev) {
+const rect = ev.currentTarget.getBoundingClientRect();
+const m = this.minAt(ev.clientX, rect);
+const list = this.list();
+if (list.some((e) => m >= e.s && m < e.e)) return;
+if (m >= this.maxEnd()) { this.setState({ msg: 'Do budoucna zapisovat nejde.' }); return; }
+const b = this.bounds(null, m, m);
+if (b.nextStart - m < STEP) { this.setState({ msg: 'Sem se další interval nevejde.' }); return; }
+const closed = list.some((x) => x.e <= m) && list.some((x) => x.s >= m && x.s <= this.maxEnd());
+const entry = { id: uid++, s: m, e: m + STEP, kind: 'work', job: this.lastJob(), wt: 'Montáž' };
+this.drag = { id: entry.id, type: 'create', x: ev.clientX, anchor: m, limit: b.nextStart, prevEnd: b.prevEnd, closed, moved: false, rect };
+this.save(list.concat([entry]), { sel: entry.id, q: '', comboOpen: false });
+}
+trackMove(ev) { const rect = ev.currentTarget.getBoundingClientRect(); this.setState({ hover: this.minAt(ev.clientX, rect) }); }
+trackLeave() { if (!this.drag) this.setState({ hover: null }); }
+startDrag(ev, id, type) {
+ev.stopPropagation(); ev.preventDefault();
+const list = this.list(), e = list.find((x) => x.id === id);
+if (!e) return;
+const prev = list.find((x) => x.id !== id && x.e === e.s);
+const next = list.find((x) => x.id !== id && x.s === e.e);
+this.drag = { id, type, x: ev.clientX, s: e.s, e: e.e, moved: false, rect: ev.currentTarget.closest('[data-track]').getBoundingClientRect(),
+prevId: prev ? prev.id : null, prevS: prev ? prev.s : null, nextId: next ? next.id : null, nextE: next ? next.e : null };
+this.setState({ sel: id, q: '', comboOpen: false });
+}
+onMove(ev) {
+const d = this.drag; if (!d) return;
+if (Math.abs(ev.clientX - d.x) > 3) d.moved = true;
+if (!d.moved) return;
+if (d.type === 'create') {
+const cur = this.minAt(ev.clientX, d.rect);
+let s = d.anchor, e = d.anchor + STEP;
+if (cur >= d.anchor) e = clamp(cur, d.anchor + STEP, d.limit); else { s = clamp(cur, d.prevEnd, d.anchor - STEP); e = d.anchor; }
+this.save(this.list().map((x) => (x.id === d.id ? Object.assign({}, x, { s, e }) : x)), { hover: cur });
+return;
+}
+const delta = snap((ev.clientX - d.x) / d.rect.width * SPAN);
+const b = this.bounds(d.id, d.s, d.e);
+let s = d.s, e = d.e;
+const patch = {};
+if (d.type === 'l') {
+if (d.prevId != null) { s = clamp(d.s + delta, d.prevS + STEP, d.e - STEP); patch[d.prevId] = { e: s }; }
+else s = clamp(d.s + delta, b.prevEnd, d.e - STEP);
+}
+if (d.type === 'r') {
+if (d.nextId != null) { e = clamp(d.e + delta, d.s + STEP, d.nextE - STEP); patch[d.nextId] = { s: e }; }
+else e = clamp(d.e + delta, d.s + STEP, b.nextStart);
+}
+if (d.type === 'move') { const len = d.e - d.s; s = clamp(d.s + delta, b.prevEnd, b.nextStart - len); e = s + len; }
+patch[d.id] = { s, e };
+this.save(this.list().map((x) => (patch[x.id] ? Object.assign({}, x, patch[x.id]) : x)), { hover: d.type === 'r' ? e : s });
+}
+onUp() {
+const d = this.drag; if (!d) return;
+this.drag = null;
+if (d.type === 'create' && !d.moved) {
+const patch = d.closed ? { s: d.prevEnd, e: d.limit } : { e: Math.min(d.anchor + 60, d.limit) };
+this.save(this.list().map((x) => (x.id === d.id ? Object.assign({}, x, patch) : x)), { sel: d.id });
+return;
+}
+this.setState({ sel: d.id });
+}
+nudge(which, delta) {
+const list = this.list(), x = list.find((e) => e.id === this.state.sel); if (!x) return;
+const b = this.bounds(x.id, x.s, x.e);
+const prev = list.find((y) => y.id !== x.id && y.e === x.s), next = list.find((y) => y.id !== x.id && y.s === x.e);
+let s = x.s, e = x.e;
+const patch = {};
+if (which === 's') { if (prev) { s = clamp(x.s + delta, prev.s + STEP, x.e - STEP); patch[prev.id] = { e: s }; } else s = clamp(x.s + delta, b.prevEnd, x.e - STEP); }
+else { if (next) { e = clamp(x.e + delta, x.s + STEP, next.e - STEP); patch[next.id] = { s: e }; } else e = clamp(x.e + delta, x.s + STEP, b.nextStart); }
+if (s === x.s && e === x.e) { this.setState({ msg: 'Dál to nejde – sousední interval už je nejkratší možný.' }); return; }
+patch[x.id] = { s, e };
+this.save(list.map((y) => (patch[y.id] ? Object.assign({}, y, patch[y.id]) : y)));
+}
+renderVals() {
+const st = this.state, list = this.list();
+const pct = (m) => ((m - DS) / SPAN) * 100;
+const segs = list.map((e) => {
+const work = e.kind === 'work', j = work ? job(e.job) : null;
+let style = 'background-color: ' + (work ? j[2] : BREAK) + ';';
+if (st.sel === e.id) style += ' box-shadow: 0 0 0 3px #142433;';
+return {
+left: pct(e.s).toFixed(3), width: Math.max(pct(e.e) - pct(e.s), 0.6).toFixed(3), style,
+cls: 'seg' + (work ? '' : ' brk'), isBreak: !work,
+label: work ? jl(j) + ' · ' + e.wt : 'Přestávka', title: fmt(e.s) + '–' + fmt(e.e) + (work ? ' · ' + jl(j) : ''),
+down: (ev) => this.startDrag(ev, e.id, 'move'), downL: (ev) => this.startDrag(ev, e.id, 'l'), downR: (ev) => this.startDrag(ev, e.id, 'r')
+};
+});
+const ticks = [], halves = [];
+for (let h = 6; h <= 19; h++) ticks.push({ left: pct(h * 60).toFixed(3), label: h + ':00' });
+for (let h = 6; h < 19; h++) halves.push({ left: pct(h * 60 + 30).toFixed(3) });
+const works = list.filter((e) => e.kind === 'work'), breaks = list.filter((e) => e.kind === 'break');
+const work = works.reduce((a, e) => a + e.e - e.s, 0);
+const brk = breaks.reduce((a, e) => a + e.e - e.s, 0);
+let longest = 0, run = 0, last = null;
+list.forEach((e) => { if (e.kind === 'work') { run = last === e.s ? run + e.e - e.s : e.e - e.s; longest = Math.max(longest, run); last = e.e; } else { run = 0; last = null; } });
+const totals = {};
+works.forEach((e) => { totals[e.job] = (totals[e.job] || 0) + e.e - e.s; });
+const byJob = Object.keys(totals).sort((a, b) => totals[b] - totals[a]).map((id) => ({ label: jl(job(id)), color: job(id)[2], dur: dur(totals[id]), pct: work ? Math.round(totals[id] / work * 100) : 0 }));
+const sel = list.find((e) => e.id === st.sel);
+const lj = this.lastJob();
+const update = (patch, extra) => this.save(list.map((x) => (x.id === st.sel ? Object.assign({}, x, patch) : x)), extra);
+const pickJob = (id) => update({ kind: 'work', job: id, wt: sel && sel.wt ? sel.wt : 'Montáž' }, { q: '', comboOpen: false });
+const recent = [];
+list.filter((e) => e.kind === 'work').sort((a, b) => b.id - a.id).forEach((e) => { if (recent.indexOf(e.job) < 0) recent.push(e.job); });
+['250201', '250147', '250162'].forEach((id) => { if (recent.indexOf(id) < 0) recent.push(id); });
+const chipIds = recent.slice(0, 4);
+if (sel && sel.kind === 'work' && chipIds.indexOf(sel.job) < 0) chipIds.unshift(sel.job);
+const opt = (j) => ({ firm: firm(j), place: j[4], name: j[1], color: j[2], cls: 'opt' + (sel && sel.job === j[0] ? ' on' : ''), pick: (ev) => { ev.preventDefault(); pickJob(j[0]); } });
+let sections;
+if (st.q.trim()) {
+const q = norm(st.q.trim());
+const hits = JOBS.filter((j) => norm(j[0] + ' ' + j[1] + ' ' + j[3] + ' ' + j[4]).indexOf(q) >= 0);
+sections = hits.length ? [{ title: 'Výsledky (' + hits.length + ')', items: hits.map(opt) }] : [];
+} else {
+const rec = recent.slice(0, 5).map(job);
+const team = TEAM.filter((id) => recent.slice(0, 5).indexOf(id) < 0).map(job);
+const rest = JOBS.filter((j) => rec.indexOf(j) < 0 && team.indexOf(j) < 0).sort((a, b) => firm(a).localeCompare(firm(b), 'cs'));
+sections = [{ title: 'Naposledy použité', items: rec.map(opt) }, { title: 'Zakázky party', items: team.map(opt) }, { title: 'Všechny aktivní', items: rest.map(opt) }].filter((x) => x.items.length);
+}
+return {
+trackDown: (ev) => this.trackDown(ev), trackMove: (ev) => this.trackMove(ev), trackLeave: () => this.trackLeave(),
+ticks, halves, segs,
+nowLeft: pct(st.now).toFixed(3), nowText: fmt(st.now),
+showHover: st.hover != null, hoverLeft: st.hover == null ? 0 : pct(st.hover).toFixed(3), hoverText: st.hover == null ? '' : fmt(st.hover),
+hasMsg: !!st.msg, msg: st.msg,
+workTotal: dur(work), breakTotal: dur(brk),
+span: list.length ? fmt(list[0].s) + ' – ' + fmt(list[list.length - 1].e) : 'zatím nic',
+breakCount: breaks.length === 1 ? '1 přestávka' : breaks.length + (breaks.length >= 2 && breaks.length <= 4 ? ' přestávky' : ' přestávek'),
+rows: list.map((e) => {
+const work = e.kind === 'work', j = work ? job(e.job) : null;
+return {
+time: fmt(e.s) + '–' + fmt(e.e), isBreak: !work, isWork: work,
+label: work ? firm(j) : 'Přestávka', sub: work ? j[4] + ' · ' + e.wt : '',
+dur: dur(e.e - e.s), color: work ? j[2] : BREAK,
+rowStyle: st.sel === e.id ? 'border-color: #0e7c72; background: #eef7f6;' : '',
+pick: () => this.setState({ sel: e.id, q: '', comboOpen: false })
+};
+}),
+isEmpty: list.length === 0,
+fillUsual: () => this.save([{ id: uid++, s: 420, e: 690, kind: 'work', job: lj, wt: 'Montáž' }, { id: uid++, s: 690, e: 720, kind: 'break' }, { id: uid++, s: 720, e: Math.min(930, this.maxEnd()), kind: 'work', job: lj, wt: 'Montáž' }]),
+byJob,
+checkCls: longest > 360 ? 'pill p-orange' : 'pill p-green', checkTag: longest > 360 ? 'Pozor' : 'OK',
+checkText: longest > 360 ? 'Přes 6 h práce bez přestávky (' + dur(longest) + '). Doplňte přestávku.' : 'Dnes bez upozornění: přestávky dodrženy, bez překryvů.',
+hasSel: !!sel, noSel: !sel,
+selStart: sel ? fmt(sel.s) : '', selEnd: sel ? fmt(sel.e) : '', selDur: sel ? dur(sel.e - sel.s) : '',
+startMinus: () => this.nudge('s', -STEP), startPlus: () => this.nudge('s', STEP), endMinus: () => this.nudge('e', -STEP), endPlus: () => this.nudge('e', STEP),
+kindBreak: 'chip brk' + (sel && sel.kind === 'break' ? ' on' : ''),
+setBreak: () => update({ kind: 'break' }),
+selIsWork: !!sel && sel.kind === 'work',
+jobChips: chipIds.map((id) => { const j = job(id); return { label: cut(jl(j), 30), full: jl(j) + ' · ' + j[1], color: j[2], cls: 'chip' + (sel && sel.kind === 'work' && sel.job === j[0] ? ' on' : ''), pick: () => pickJob(j[0]) }; }),
+q: st.q, comboOpen: st.comboOpen, sections, noResults: sections.length === 0,
+setQ: (ev) => this.setState({ q: ev.target.value, comboOpen: true }),
+openCombo: () => this.setState({ comboOpen: true }),
+closeCombo: () => this.setState({ comboOpen: false }),
+wtChips: WTS.map((w) => ({ label: w, cls: 'chip' + (sel && sel.wt === w ? ' on' : ''), pick: () => update({ wt: w }) })),
+deleteSel: () => this.save(list.filter((x) => x.id !== st.sel), { sel: null }),
+clearSel: () => this.setState({ sel: null })
+};
+}
+}
+</script>
+</body>
+</html>

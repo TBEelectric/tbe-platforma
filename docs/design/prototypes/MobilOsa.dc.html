@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Docházka – mobil, zápis dne na ose</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#f3f5f8;font-family:'Figtree',system-ui,sans-serif;color:#142433}
+.ib{width:44px;height:44px;border:0;border-radius:10px;background:rgba(255,255,255,.1);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.col{position:relative;margin-left:52px;margin-right:12px;user-select:none;touch-action:none;cursor:crosshair}
+.hr{position:absolute;left:-52px;right:0;border-top:1px solid #dfe5ec;height:0;pointer-events:none}
+.hr.half{left:0;border-top:1px dashed #e9edf2}
+.hrl{position:absolute;left:4px;top:-9px;width:42px;text-align:right;font-size:12px;font-weight:600;color:#5b6877;font-variant-numeric:tabular-nums;background:#f3f5f8;padding-right:4px;box-sizing:border-box}
+.blk{position:absolute;left:0;right:0;border-radius:10px;box-sizing:border-box;cursor:grab;overflow:hidden;display:flex;flex-direction:column}
+.blk .t{padding:2px 10px 0;font-size:12px;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.blk .s{padding:0 10px;font-size:12px;color:rgba(255,255,255,.9);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.blk.brk .t,.blk.brk .s{color:#6e3604}
+.h{height:12px;flex:0 0 12px;cursor:ns-resize;display:flex;align-items:center;justify-content:center}
+.h span{width:28px;height:4px;border-radius:2px;background:rgba(255,255,255,.7)}
+.blk.brk .h span{background:rgba(20,36,51,.35)}
+.mid{flex:1;min-height:0}
+.qa{flex:1;height:48px;border:1px solid #d5dce5;background:#fff;border-radius:12px;font:inherit;font-size:15px;font-weight:600;color:#142433;cursor:pointer}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:18px 18px 0 0;box-shadow:0 -8px 30px rgba(15,47,69,.18);padding:8px 16px 14px;display:flex;flex-direction:column;gap:10px}
+.scrollrow{display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:0 16px 2px;scrollbar-width:none}
+.scrollrow .chip{flex:0 0 auto;white-space:nowrap}
+.x{width:44px;height:44px;border:0;background:#f1f4f7;border-radius:12px;font:inherit;font-size:20px;color:#3a4756;cursor:pointer}
+.chip.brk{background:#fff4e6;border-color:#f0c48e;color:#7a3a05}
+.chip.brk.on{background:#8a4205;border-color:#8a4205;color:#fff}
+.chip.more{border-style:dashed;color:#0b5f57}
+.vsep{flex:0 0 1px;background:#e2e7ee;margin:6px 2px}
+.cup{width:18px;height:18px;flex:0 0 18px}
+.blk.brk{background-image:repeating-linear-gradient(135deg,rgba(138,66,5,.07) 0 6px,transparent 6px 12px)}
+.picker{position:absolute;inset:0;background:#fff;display:flex;flex-direction:column;z-index:5}
+.search{height:48px;border:1px solid #cfd7e0;border-radius:12px;padding:0 14px 0 42px;font:inherit;font-size:16px;width:100%;box-sizing:border-box;background:#fff}
+.sec{position:sticky;top:0;z-index:1;font-size:12px;font-weight:700;color:#5b6877;text-transform:uppercase;letter-spacing:.04em;padding:8px 16px;background:#f3f5f8;border-bottom:1px solid #e2e7ee;border-top:1px solid #e2e7ee}
+.jrow{display:flex;align-items:center;gap:12px;padding:12px 16px;min-height:64px;border:0;border-bottom:1px solid #eef1f5;background:#fff;width:100%;text-align:left;font:inherit;cursor:pointer;box-sizing:border-box}
+.jrow.on{background:#eef7f6}
+.del{height:44px;border:0;background:none;font:inherit;font-size:14px;font-weight:600;color:#8a4205;cursor:pointer;padding:0 8px}
+.grab{width:40px;height:5px;border-radius:3px;background:#d5dce5;align-self:center}
+.lab{font-size:12px;font-weight:700;color:#5b6877;text-transform:uppercase;letter-spacing:.04em}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{min-height:44px;padding:0 14px;border-radius:12px;border:1px solid #d5dce5;background:#fff;font:inherit;font-size:14px;font-weight:600;color:#142433;cursor:pointer;display:flex;align-items:center;gap:8px}
+.chip.on{background:#0f2f45;border-color:#0f2f45;color:#fff}
+.dot{width:10px;height:10px;border-radius:3px;display:inline-block;flex:0 0 10px}
+.step{display:flex;align-items:center;gap:6px;flex:1}
+.step button{width:44px;height:44px;border-radius:12px;border:1px solid #d5dce5;background:#fff;font:inherit;font-size:20px;font-weight:700;color:#142433;cursor:pointer}
+.step strong{flex:1;text-align:center;font-size:20px;font-variant-numeric:tabular-nums}
+.btn{height:48px;border-radius:12px;border:0;font:inherit;font-size:16px;font-weight:700;cursor:pointer;flex:1}
+.tb{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;color:#5b6877;min-width:64px;padding-top:8px}
+.tb svg{width:24px;height:24px}
+.tb.on{color:#0b5f57;font-weight:600}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; display: flex; flex-direction: column; background: #f3f5f8; overflow: hidden; position: relative">
+<header style="background: #0f2f45; color: #fff; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; align-items: center; justify-content: space-between">
+<button class="ib" aria-label="Předchozí den" onClick="{{prevDay}}"><svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"></path></svg></button>
+<div style="text-align: center"><div style="font-size: 17px; font-weight: 700">{{dayTitle}}</div><div style="font-size: 13px; color: #b6c6d2">{{daySub}}</div></div>
+<button class="ib" aria-label="Další den" onClick="{{nextDay}}"><svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"></path></svg></button>
+</div>
+<div style="display: flex; gap: 10px">
+<div style="flex: 1; background: rgba(255,255,255,.08); border-radius: 12px; padding: 8px 12px"><div style="font-size: 12px; color: #b6c6d2">Odpracováno</div><div style="font-size: 22px; font-weight: 700">{{workTotal}}</div></div>
+<div style="flex: 1; background: rgba(255,255,255,.08); border-radius: 12px; padding: 8px 12px"><div style="font-size: 12px; color: #b6c6d2">Přestávky</div><div style="font-size: 22px; font-weight: 700">{{breakTotal}}</div></div>
+<div style="flex: 1; background: rgba(255,255,255,.08); border-radius: 12px; padding: 8px 12px"><div style="font-size: 12px; color: #b6c6d2">Od – do</div><div style="font-size: 15px; font-weight: 600; margin-top: 5px">{{span}}</div></div>
+</div>
+</header>
+<sc-if value="{{isEmpty}}" hint-placeholder-val="{{ true }}">
+<div style="padding: 12px 16px 4px; display: flex; flex-direction: column; gap: 8px">
+<div style="font-size: 14px; color: #3a4756">Den je prázdný. Vyplňte ho jedním klepnutím, nebo táhněte prstem po ose.</div>
+<div style="display: flex; gap: 8px"><button class="qa" onClick="{{fillUsual}}">Obvyklý den</button><button class="qa" onClick="{{fillYesterday}}">Jako včera</button></div>
+</div>
+</sc-if>
+<sc-if value="{{hasMsg}}" hint-placeholder-val="{{ false }}">
+<div style="margin: 8px 16px 0; background: #fdf0e1; color: #6e3604; border-radius: 10px; padding: 8px 12px; font-size: 14px">{{msg}}</div>
+</sc-if>
+<div style="flex: 1; overflow-y: auto; padding: 18px 0 {{bottomPad}}px" onPointerDown="{{outsideDown}}">
+<div class="col" style="height: {{colHeight}}px" data-col="1" onPointerDown="{{colDown}}">
+<sc-for list="{{halves}}" as="h" hint-placeholder-count="13">
+<div class="hr half" style="top: {{h.top}}px"></div>
+</sc-for>
+<sc-for list="{{hours}}" as="h" hint-placeholder-count="14">
+<div class="hr" style="top: {{h.top}}px"><span class="hrl">{{h.label}}</span></div>
+</sc-for>
+<sc-for list="{{blocks}}" as="b" hint-placeholder-count="3">
+<div class="{{b.cls}}" style="top: {{b.top}}px; height: {{b.height}}px; {{b.style}}" onPointerDown="{{b.down}}">
+<div class="h" onPointerDown="{{b.downL}}"><span></span></div>
+<div class="mid"><div class="t" style="display: flex; align-items: center; gap: 6px"><sc-if value="{{b.isBreak}}" hint-placeholder-val="{{ false }}"><svg class="cup" style="width: 15px; height: 15px; flex: 0 0 15px" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"></path><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16"></path></svg></sc-if><span style="overflow: hidden; text-overflow: ellipsis">{{b.title}}</span></div><div class="s">{{b.sub}}</div></div>
+<div class="h" onPointerDown="{{b.downR}}"><span></span></div>
+</div>
+</sc-for>
+</div>
+</div>
+<nav aria-label="Hlavní navigace" style="display: flex; justify-content: space-around; background: #fff; border-top: 1px solid #e2e7ee; height: 68px">
+<span class="tb on"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>Den</span>
+<span class="tb"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="15" rx="2"></rect><path d="M3.5 10h17M8 3v4M16 3v4"></path></svg>Měsíc</span>
+<span class="tb"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 20h16M12 20V9M5 11a7 7 0 0 1 14 0z"></path></svg>Absence</span>
+<span class="tb"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"></path></svg>Více</span>
+</nav>
+<sc-if value="{{hasSel}}" hint-placeholder-val="{{ false }}">
+<div class="sheet">
+<div class="grab"></div>
+<div style="display: flex; align-items: center; gap: 8px">
+<div class="step" style="flex: 0 1 auto"><button aria-label="Začátek o 5 minut dříve" onClick="{{startMinus}}">−</button><strong style="font-size: 17px; min-width: 50px">{{selStart}}</strong><button aria-label="Začátek o 5 minut později" onClick="{{startPlus}}">+</button></div>
+<span style="color: #5b6877">–</span>
+<div class="step" style="flex: 0 1 auto"><button aria-label="Konec o 5 minut dříve" onClick="{{endMinus}}">−</button><strong style="font-size: 17px; min-width: 50px">{{selEnd}}</strong><button aria-label="Konec o 5 minut později" onClick="{{endPlus}}">+</button></div>
+<button class="x" aria-label="Zavřít" onClick="{{closeSel}}" style="margin-left: auto">×</button>
+</div>
+<div class="scrollrow">
+<button class="{{kindBreak}}" onClick="{{setBreak}}"><svg class="cup" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h12v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"></path><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16"></path><path d="M8 3.5c0 1 1 1.5 1 2.5M12 3.5c0 1 1 1.5 1 2.5"></path></svg>Přestávka</button>
+<span class="vsep"></span>
+<sc-for list="{{jobChips}}" as="j" hint-placeholder-count="3"><button class="{{j.cls}}" onClick="{{j.pick}}"><span class="dot" style="background: {{j.color}}"></span>{{j.label}}</button></sc-for>
+<button class="chip more" onClick="{{openPicker}}">Další zakázky…</button>
+</div>
+<sc-if value="{{selIsWork}}" hint-placeholder-val="{{ true }}">
+<div class="scrollrow">
+<sc-for list="{{wtChips}}" as="w" hint-placeholder-count="4"><button class="{{w.cls}}" onClick="{{w.pick}}">{{w.label}}</button></sc-for>
+</div>
+</sc-if>
+<div style="display: flex; justify-content: space-between; align-items: center"><span style="font-size: 14px; color: #5b6877; font-weight: 600">{{selDur}}</span><button class="del" onClick="{{deleteSel}}">Smazat interval</button></div>
+</div>
+</sc-if>
+<sc-if value="{{picker}}" hint-placeholder-val="{{ false }}">
+<div class="picker">
+<div style="display: flex; align-items: center; gap: 8px; padding: 12px 12px 8px">
+<button class="x" aria-label="Zpět" onClick="{{closePicker}}"><svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"></path></svg></button>
+<strong style="font-size: 18px">Vybrat zakázku</strong>
+</div>
+<div style="padding: 0 16px 8px; position: relative">
+<svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#5b6877" stroke-width="2" stroke-linecap="round" style="position: absolute; left: 30px; top: 14px"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg>
+<input class="search" type="search" placeholder="Firma, místo, název nebo číslo" value="{{q}}" onChange="{{setQ}}" aria-label="Hledat zakázku">
+</div>
+<div style="flex: 1; overflow-y: auto">
+<sc-for list="{{sections}}" as="sec" hint-placeholder-count="3">
+<div class="sec">{{sec.title}}</div>
+<sc-for list="{{sec.items}}" as="j" hint-placeholder-count="3">
+<button class="{{j.cls}}" onClick="{{j.pick}}"><span class="dot" style="background: {{j.color}}; width: 12px; height: 12px"></span><span style="flex: 1; min-width: 0"><span style="display: block; font-size: 16px; font-weight: 700; color: #142433">{{j.firm}}</span><span style="display: block; font-size: 14px; color: #3a4756">{{j.place}}</span><span style="display: block; font-size: 12px; color: #6b7785">{{j.name}}</span></span></button>
+</sc-for>
+</sc-for>
+<sc-if value="{{noResults}}" hint-placeholder-val="{{ false }}"><div style="padding: 24px 16px; color: #5b6877; font-size: 15px">Nic nenalezeno. Zkuste číslo zakázky nebo část názvu.</div></sc-if>
+</div>
+</div>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+const DS = 360, DE = 1140, SPAN = DE - DS, PXH = 56, DRAG = 15, FINE = 5;
+const PAL = ['#0e7c72', '#3a68a8', '#7a4fb5', '#b45309', '#0f766e', '#be185d', '#4d7c0f', '#1d4ed8'];
+const RAW = [['250147', 'Rozvaděče hala A', 'Strojírny Vysočina s.r.o.', 'Jihlava, hala A'], ['250162', 'Elektroinstalace kanceláře', 'Kancelářský dům Na Poříčí a.s.', 'Praha 1, Na Poříčí 12'], ['250201', 'Servis technologie', 'Pekárna Zlatý klas s.r.o.', 'Kolín, pekárna'], ['250215', 'Revize hromosvodu – sklad', 'Logistika Brod s.r.o.', 'Český Brod, sklad 3'], ['250230', 'Fotovoltaika RD', 'Novotný Josef', 'Kolín, Polepská 8'], ['250244', 'Přípojka NN – dílna', 'Strojírny Vysočina s.r.o.', 'Jihlava, dílna'], ['250251', 'Osvětlení haly B', 'Strojírny Vysočina s.r.o.', 'Jihlava, hala B'], ['250258', 'Rekonstrukce rozvodny', 'Město Úvaly', 'Úvaly, náměstí'], ['250263', 'Datové rozvody 2. NP', 'Kancelářský dům Na Poříčí a.s.', 'Praha 1, Na Poříčí 12'], ['250270', 'Revize elektro', 'MŠ Sluníčko', 'Říčany, MŠ Sluníčko'], ['250277', 'Wallboxy parkoviště', 'Logistika Brod s.r.o.', 'Český Brod, parkoviště'], ['250284', 'Servis UPS', 'Nemocnice Kolín', 'Kolín, nemocnice'], ['250291', 'Hromosvod RD', 'Dvořáková Marie', 'Říčany, Lipová 5'], ['250298', 'Nouzové osvětlení', 'Pekárna Zlatý klas s.r.o.', 'Kolín, pekárna']];
+const JOBS = RAW.map((r, i) => [r[0], r[1], PAL[i % PAL.length], r[2], r[3]]);
+const TEAM = ['250147', '250201', '250251'];
+const firm = (j) => j[3].replace(/,? (s\.r\.o\.|a\.s\.)$/, '');
+const jl = (j) => firm(j) + ', ' + j[4];
+const cut = (t, n) => (t.length > n ? t.slice(0, n - 1) + '…' : t);
+const norm = (t) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const WTS = ['Montáž', 'Revize', 'Cesta', 'Režie'];
+const BREAK = '#f6e6d2';
+const pad = (n) => (n < 10 ? '0' : '') + n;
+const fmt = (m) => pad(Math.floor(m / 60)) + ':' + pad(m % 60);
+const dur = (m) => Math.floor(m / 60) + ':' + pad(m % 60);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const job = (id) => JOBS.find((j) => j[0] === id) || JOBS[0];
+let uid = 500;
+const DAYS = [{ title: 'Pondělí 12. října', key: 'd12' }, { title: 'Úterý 13. října', key: 'd13' }];
+class Component extends DCLogic {
+constructor(props) {
+super(props);
+this.state = {
+day: 1, sel: null, msg: '', picker: false, q: '',
+d12: [
+{ id: 1, s: 420, e: 600, kind: 'work', job: '250147', wt: 'Montáž' },
+{ id: 2, s: 600, e: 630, kind: 'break' },
+{ id: 3, s: 630, e: 870, kind: 'work', job: '250147', wt: 'Montáž' },
+{ id: 4, s: 870, e: 915, kind: 'work', job: '250147', wt: 'Cesta' }
+],
+d13: []
+};
+this.drag = null;
+this.onMove = this.onMove.bind(this);
+this.onUp = this.onUp.bind(this);
+}
+componentDidMount() { window.addEventListener('pointermove', this.onMove); window.addEventListener('pointerup', this.onUp); }
+componentWillUnmount() { window.removeEventListener('pointermove', this.onMove); window.removeEventListener('pointerup', this.onUp); }
+key() { return DAYS[this.state.day].key; }
+list() { return this.state[this.key()]; }
+save(list, extra) { this.setState(Object.assign({ [this.key()]: list.slice().sort((a, b) => a.s - b.s), msg: '' }, extra || {})); }
+minAt(y, rect, step) { return clamp(Math.round((DS + (y - rect.top) / rect.height * SPAN) / step) * step, DS, DE); }
+lastJob() { const w = this.list().filter((e) => e.kind === 'work'); return w.length ? w[w.length - 1].job : '250147'; }
+bounds(id, s, e) {
+const others = this.list().filter((x) => x.id !== id);
+return {
+prevEnd: Math.max(DS, ...others.filter((x) => x.e <= s).map((x) => x.e)),
+nextStart: Math.min(DE, ...others.filter((x) => x.s >= e).map((x) => x.s))
+};
+}
+colDown(ev) {
+ev.stopPropagation();
+if (this.state.sel != null) { this.setState({ sel: null }); return; }
+const rect = ev.currentTarget.getBoundingClientRect();
+const m = this.minAt(ev.clientY, rect, DRAG);
+const list = this.list();
+if (list.some((e) => m >= e.s && m < e.e)) return;
+const b = this.bounds(null, m, m);
+b.closed = list.some((x) => x.e <= m) && list.some((x) => x.s >= m);
+if (b.nextStart - m < DRAG) { this.setState({ msg: 'Sem se další interval nevejde.' }); return; }
+const entry = { id: uid++, s: m, e: m + DRAG, kind: 'work', job: this.lastJob(), wt: 'Montáž' };
+this.drag = { id: entry.id, type: 'create', y: ev.clientY, anchor: m, prevEnd: b.prevEnd, limit: b.nextStart, closed: b.closed, moved: false, rect };
+this.save(list.concat([entry]), { sel: null });
+}
+startDrag(ev, id, type) {
+ev.stopPropagation(); ev.preventDefault();
+const e = this.list().find((x) => x.id === id);
+if (!e) return;
+const list = this.list();
+const prev = list.find((x) => x.id !== id && x.e === e.s);
+const next = list.find((x) => x.id !== id && x.s === e.e);
+this.drag = { id, type, y: ev.clientY, s: e.s, e: e.e, moved: false, rect: ev.currentTarget.closest('[data-col]').getBoundingClientRect(),
+prevId: prev ? prev.id : null, prevS: prev ? prev.s : null, nextId: next ? next.id : null, nextE: next ? next.e : null };
+this.setState({ sel: id });
+}
+onMove(ev) {
+const d = this.drag; if (!d) return;
+if (Math.abs(ev.clientY - d.y) > 4) d.moved = true;
+if (!d.moved) return;
+if (d.type === 'create') {
+const cur = this.minAt(ev.clientY, d.rect, DRAG);
+let s = d.anchor, e = d.anchor + DRAG;
+if (cur >= d.anchor) e = clamp(cur, d.anchor + DRAG, d.limit);
+else { s = clamp(cur, d.prevEnd, d.anchor - DRAG); e = d.anchor; }
+this.save(this.list().map((x) => (x.id === d.id ? Object.assign({}, x, { s, e }) : x)));
+return;
+}
+const delta = Math.round((ev.clientY - d.y) / d.rect.height * SPAN / DRAG) * DRAG;
+const b = this.bounds(d.id, d.s, d.e);
+let s = d.s, e = d.e;
+const patch = {};
+if (d.type === 'l') {
+if (d.prevId != null) { s = clamp(d.s + delta, d.prevS + FINE, d.e - FINE); patch[d.prevId] = { e: s }; }
+else s = clamp(d.s + delta, b.prevEnd, d.e - FINE);
+}
+if (d.type === 'r') {
+if (d.nextId != null) { e = clamp(d.e + delta, d.s + FINE, d.nextE - FINE); patch[d.nextId] = { s: e }; }
+else e = clamp(d.e + delta, d.s + FINE, b.nextStart);
+}
+if (d.type === 'move') { const len = d.e - d.s; s = clamp(d.s + delta, b.prevEnd, b.nextStart - len); e = s + len; }
+patch[d.id] = { s, e };
+this.save(this.list().map((x) => (patch[x.id] ? Object.assign({}, x, patch[x.id]) : x)));
+}
+onUp() {
+const d = this.drag; if (!d) return;
+this.drag = null;
+if (d.type === 'create') {
+if (!d.moved) {
+const patch = d.closed ? { s: d.prevEnd, e: d.limit } : { e: Math.min(d.anchor + 60, d.limit) };
+this.save(this.list().map((x) => (x.id === d.id ? Object.assign({}, x, patch) : x)), { sel: d.id });
+} else this.setState({ sel: d.id });
+return;
+}
+this.setState({ sel: d.id });
+}
+nudge(which, delta) {
+const list = this.list(), x = list.find((e) => e.id === this.state.sel); if (!x) return;
+const b = this.bounds(x.id, x.s, x.e);
+const prev = list.find((y) => y.id !== x.id && y.e === x.s);
+const next = list.find((y) => y.id !== x.id && y.s === x.e);
+let s = x.s, e = x.e;
+const patch = {};
+if (which === 's') {
+if (prev) { s = clamp(x.s + delta, prev.s + FINE, x.e - FINE); patch[prev.id] = { e: s }; }
+else s = clamp(x.s + delta, b.prevEnd, x.e - FINE);
+} else {
+if (next) { e = clamp(x.e + delta, x.s + FINE, next.e - FINE); patch[next.id] = { s: e }; }
+else e = clamp(x.e + delta, x.s + FINE, b.nextStart);
+}
+if (s === x.s && e === x.e) { this.setState({ msg: 'Dál to nejde – sousední interval už je nejkratší možný.' }); return; }
+patch[x.id] = { s, e };
+this.save(list.map((y) => (patch[y.id] ? Object.assign({}, y, patch[y.id]) : y)));
+}
+fill(entries) { this.save(entries.map((e) => Object.assign({}, e, { id: uid++ })), { sel: null }); }
+renderVals() {
+const st = this.state, list = this.list();
+const pxPerMin = PXH / 60;
+const blocks = list.map((e) => {
+const work = e.kind === 'work';
+const color = work ? job(e.job)[2] : BREAK;
+let style = 'background: ' + color + ';';
+if (st.sel === e.id) style += ' box-shadow: 0 0 0 3px #142433;';
+return {
+top: ((e.s - DS) * pxPerMin).toFixed(1), height: Math.max((e.e - e.s) * pxPerMin, 18).toFixed(1), style,
+cls: 'blk' + (work ? '' : ' brk'), isBreak: !work,
+title: fmt(e.s) + '–' + fmt(e.e) + ' · ' + (work ? firm(job(e.job)) : 'Přestávka'),
+sub: work ? job(e.job)[4] + ' · ' + e.wt + ' · ' + dur(e.e - e.s) : dur(e.e - e.s),
+down: (ev) => this.startDrag(ev, e.id, 'move'),
+downL: (ev) => this.startDrag(ev, e.id, 'l'),
+downR: (ev) => this.startDrag(ev, e.id, 'r')
+};
+});
+const hours = [], halves = [];
+for (let h = 6; h <= 19; h++) hours.push({ top: ((h * 60 - DS) * pxPerMin).toFixed(1), label: h + ':00' });
+for (let h = 6; h < 19; h++) halves.push({ top: ((h * 60 + 30 - DS) * pxPerMin).toFixed(1) });
+const work = list.filter((e) => e.kind === 'work').reduce((a, e) => a + e.e - e.s, 0);
+const brk = list.filter((e) => e.kind === 'break').reduce((a, e) => a + e.e - e.s, 0);
+const sel = list.find((e) => e.id === st.sel);
+const update = (patch) => this.save(list.map((x) => (x.id === st.sel ? Object.assign({}, x, patch) : x)));
+const lj = this.lastJob();
+const recent = [];
+st.d12.concat(st.d13).filter((e) => e.kind === 'work').sort((a, b) => b.id - a.id).forEach((e) => { if (recent.indexOf(e.job) < 0) recent.push(e.job); });
+const chipIds = recent.slice(0, 4);
+if (sel && sel.kind === 'work' && chipIds.indexOf(sel.job) < 0) chipIds.unshift(sel.job);
+if (chipIds.length === 0) chipIds.push(...TEAM);
+const pickJob = (id) => this.save(list.map((x) => (x.id === st.sel ? Object.assign({}, x, { kind: 'work', job: id, wt: x.wt || 'Montáž' }) : x)), { picker: false });
+const row = (j) => ({ firm: firm(j), place: j[4], name: j[1], color: j[2], cls: 'jrow' + (sel && sel.job === j[0] ? ' on' : ''), pick: () => pickJob(j[0]) });
+let sections;
+if (st.q.trim()) {
+const q = norm(st.q.trim());
+const hits = JOBS.filter((j) => norm(j[0] + ' ' + j[1] + ' ' + j[3] + ' ' + j[4]).indexOf(q) >= 0);
+sections = hits.length ? [{ title: 'Výsledky (' + hits.length + ')', items: hits.map(row) }] : [];
+} else {
+const rec = recent.slice(0, 5).map(job);
+const team = TEAM.filter((id) => recent.slice(0, 5).indexOf(id) < 0).map(job);
+const rest = JOBS.filter((j) => rec.indexOf(j) < 0 && team.indexOf(j) < 0).sort((a, b) => firm(a).localeCompare(firm(b), 'cs'));
+sections = [{ title: 'Naposledy použité', items: rec.map(row) }, { title: 'Zakázky party', items: team.map(row) }, { title: 'Všechny aktivní', items: rest.map(row) }].filter((x) => x.items.length);
+}
+return {
+dayTitle: DAYS[st.day].title, daySub: st.day === 1 ? 'Doplňte včerejší den' : 'Vyplněno',
+prevDay: () => this.setState({ day: 0, sel: null, msg: '' }), nextDay: () => this.setState({ day: 1, sel: null, msg: '' }),
+workTotal: dur(work), breakTotal: dur(brk),
+span: list.length ? fmt(list[0].s) + ' – ' + fmt(list[list.length - 1].e) : '–',
+isEmpty: list.length === 0,
+fillUsual: () => this.fill([
+{ s: 420, e: 690, kind: 'work', job: lj, wt: 'Montáž' },
+{ s: 690, e: 720, kind: 'break' },
+{ s: 720, e: 930, kind: 'work', job: lj, wt: 'Montáž' }
+]),
+fillYesterday: () => this.fill(st.d12),
+hasMsg: !!st.msg, msg: st.msg,
+colHeight: SPAN * pxPerMin, colDown: (ev) => this.colDown(ev),
+outsideDown: () => { if (st.sel != null && !this.drag) this.setState({ sel: null }); },
+bottomPad: sel ? 260 : 24,
+hours, halves, blocks,
+hasSel: !!sel,
+selRange: sel ? fmt(sel.s) + '–' + fmt(sel.e) : '', selDur: sel ? dur(sel.e - sel.s) : '',
+selStart: sel ? fmt(sel.s) : '', selEnd: sel ? fmt(sel.e) : '',
+startMinus: () => this.nudge('s', -FINE), startPlus: () => this.nudge('s', FINE),
+endMinus: () => this.nudge('e', -FINE), endPlus: () => this.nudge('e', FINE),
+kindWork: 'chip' + (sel && sel.kind === 'work' ? ' on' : ''), kindBreak: 'chip' + (sel && sel.kind === 'break' ? ' on' : ''),
+setWork: () => update({ kind: 'work', job: sel && sel.job ? sel.job : lj, wt: sel && sel.wt ? sel.wt : 'Montáž' }),
+setBreak: () => update({ kind: 'break' }),
+selIsWork: !!sel && sel.kind === 'work',
+jobChips: chipIds.map((id) => { const j = job(id); return { label: cut(jl(j), 26), color: j[2], cls: 'chip' + (sel && sel.kind === 'work' && sel.job === j[0] ? ' on' : ''), pick: () => update({ kind: 'work', job: j[0], wt: sel && sel.wt ? sel.wt : 'Montáž' }) }; }),
+openPicker: () => this.setState({ picker: true, q: '' }),
+closePicker: () => this.setState({ picker: false }),
+picker: st.picker, q: st.q,
+setQ: (ev) => this.setState({ q: ev.target.value }),
+sections, noResults: sections.length === 0,
+wtChips: WTS.map((w) => ({ label: w, cls: 'chip' + (sel && sel.wt === w ? ' on' : ''), pick: () => update({ wt: w }) })),
+deleteSel: () => this.save(list.filter((x) => x.id !== st.sel), { sel: null }),
+closeSel: () => this.setState({ sel: null })
+};
+}
+}
+</script>
+</body>
+</html>
