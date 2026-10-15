@@ -66,6 +66,27 @@ export function canDecideAbsence(actor: Actor, owner: TimeOwner): boolean {
   );
 }
 
+/**
+ * Seeing an employee's month (Můj měsíc, Schvalování): the employee themselves; a team lead for their
+ * team; the timesheets manager and the administrator for everyone.
+ */
+export function canViewTimeOf(actor: Actor, owner: TimeOwner): boolean {
+  if (owner.employeeId === actor.employeeId) return actor.tracksTime;
+  return canWriteForOthers(actor, owner);
+}
+
+/**
+ * Marking an interval as overtime (at approval): the team lead for their team and the timesheets
+ * manager, never on one's own intervals (a lead's own overtime is marked by the manager).
+ */
+export function canFlagOvertime(actor: Actor, owner: TimeOwner): boolean {
+  if (owner.employeeId === actor.employeeId) return false;
+  return (
+    actor.isTimesheetsManager ||
+    (owner.teamId !== null && actor.ledTeamIds.includes(owner.teamId))
+  );
+}
+
 /** The Absence screen: own absences, or deciding for others (team lead, timesheets manager). */
 export function canOpenAbsences(actor: Actor): boolean {
   return (

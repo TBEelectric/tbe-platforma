@@ -4,10 +4,12 @@ import {
   canApproveTimesheets,
   canCloseTimesheetPeriod,
   canDecideAbsence,
+  canFlagOvertime,
   canManageDayTemplates,
   canOpenAbsences,
   canRecordOwnTime,
   canSaveOwnDayTemplate,
+  canViewTimeOf,
   canWriteForSomeoneElse,
   canWriteTimeFor,
 } from "./permissions";
@@ -149,5 +151,33 @@ describe("absence screen", () => {
     expect(canOpenAbsences({ ...base, tracksTime: false, isAdmin: true })).toBe(
       false,
     );
+  });
+
+  it("shows a month to the employee, the lead of their team, the manager and the admin", () => {
+    const owner = { employeeId: "x", teamId: "t" };
+    expect(canViewTimeOf({ ...base, employeeId: "x" }, owner)).toBe(true);
+    expect(canViewTimeOf(base, owner)).toBe(false);
+    expect(canViewTimeOf({ ...base, ledTeamIds: ["t"] }, owner)).toBe(true);
+    expect(canViewTimeOf({ ...base, ledTeamIds: ["u"] }, owner)).toBe(false);
+    expect(canViewTimeOf({ ...base, isTimesheetsManager: true }, owner)).toBe(
+      true,
+    );
+    expect(canViewTimeOf({ ...base, isAdmin: true }, owner)).toBe(true);
+  });
+
+  it("lets the lead of the team and the manager flag overtime, never on own intervals", () => {
+    const owner = { employeeId: "x", teamId: "t" };
+    expect(canFlagOvertime({ ...base, ledTeamIds: ["t"] }, owner)).toBe(true);
+    expect(canFlagOvertime({ ...base, isTimesheetsManager: true }, owner)).toBe(
+      true,
+    );
+    expect(canFlagOvertime({ ...base, isAdmin: true }, owner)).toBe(false);
+    expect(canFlagOvertime(base, owner)).toBe(false);
+    expect(
+      canFlagOvertime(
+        { ...base, employeeId: "x", isTimesheetsManager: true },
+        owner,
+      ),
+    ).toBe(false);
   });
 });
