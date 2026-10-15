@@ -190,6 +190,12 @@ const settings: Record<string, unknown> = {
   daily_rest_minutes: 660,
   weekly_rest_minutes: 2100,
   dpp_yearly_limit_hours: 300,
+  dpc_weekly_average_limit_hours: 20,
+  // Deadlines: day of the following month; reminders are sent at reminder_time (Prague).
+  confirm_deadline_day: 2,
+  approve_deadline_day: 5,
+  close_deadline_day: 7,
+  reminder_time: "07:00",
   // Company "obvyklý den" (docs/design.md): used when an employee has no template of their own.
   default_day_template: [
     { from: "07:00", to: "11:30", kind: "work" },

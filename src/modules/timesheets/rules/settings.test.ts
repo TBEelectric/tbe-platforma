@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { resolveSettings } from "./settings";
+import { testSettings } from "./settings.fixture";
 
 const base = [
   { key: "night_start", value: "22:00", validFrom: "2020-01-01" },
@@ -11,21 +12,20 @@ const base = [
   { key: "daily_rest_minutes", value: 660, validFrom: "2020-01-01" },
   { key: "weekly_rest_minutes", value: 2100, validFrom: "2020-01-01" },
   { key: "dpp_yearly_limit_hours", value: 300, validFrom: "2020-01-01" },
+  {
+    key: "dpc_weekly_average_limit_hours",
+    value: 20,
+    validFrom: "2020-01-01",
+  },
+  { key: "confirm_deadline_day", value: 2, validFrom: "2020-01-01" },
+  { key: "approve_deadline_day", value: 5, validFrom: "2020-01-01" },
+  { key: "close_deadline_day", value: 7, validFrom: "2020-01-01" },
+  { key: "reminder_time", value: "07:00", validFrom: "2020-01-01" },
 ];
 
 describe("resolveSettings", () => {
   it("maps rows to typed settings", () => {
-    expect(resolveSettings(base, "2026-10-13")).toEqual({
-      nightStart: "22:00",
-      nightEnd: "06:00",
-      breakAfterWorkMinutes: 360,
-      breakMinMinutes: 30,
-      breakPartMinMinutes: 15,
-      dailyWorkWarningMinutes: 720,
-      dailyRestMinutes: 660,
-      weeklyRestMinutes: 2100,
-      dppYearlyLimitHours: 300,
-    });
+    expect(resolveSettings(base, "2026-10-13")).toEqual(testSettings);
   });
 
   it("uses the latest value valid on the date", () => {
@@ -35,6 +35,13 @@ describe("resolveSettings", () => {
     ];
     expect(resolveSettings(rows, "2026-12-31").dppYearlyLimitHours).toBe(300);
     expect(resolveSettings(rows, "2027-01-01").dppYearlyLimitHours).toBe(350);
+  });
+
+  it("rejects a deadline day that does not exist in every month", () => {
+    const rows = base.map((r) =>
+      r.key === "close_deadline_day" ? { ...r, value: 31 } : r,
+    );
+    expect(() => resolveSettings(rows, "2026-10-13")).toThrow();
   });
 
   it("fails loudly when a setting is missing", () => {

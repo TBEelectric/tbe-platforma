@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { cs } from "@/i18n/test-utils";
 import { pragueInstant } from "@/lib/dates";
-import type { TimesheetSettings } from "./settings";
+import { testSettings } from "./settings.fixture";
 import {
   breakWarning,
   dailyRestWarning,
@@ -13,17 +13,7 @@ import {
   type WarningEntry,
 } from "./warnings";
 
-const settings: TimesheetSettings = {
-  nightStart: "22:00",
-  nightEnd: "06:00",
-  breakAfterWorkMinutes: 360,
-  breakMinMinutes: 30,
-  breakPartMinMinutes: 15,
-  dailyWorkWarningMinutes: 720,
-  dailyRestMinutes: 660,
-  weeklyRestMinutes: 2100,
-  dppYearlyLimitHours: 300,
-};
+const settings = testSettings;
 
 const at = (date: string, time: string) => pragueInstant(date, time)!;
 const work = (date: string, from: string, to: string): WarningEntry => ({
