@@ -249,7 +249,7 @@ Značky jako v 3b: `[opus]`, `[zastavit po]`, `[ručně]`.
       podle DPČ platné v měsíci; pohotovost patří měsíci podle dne začátku; stav dne `free` pro minulý den bez
       povinnosti (DPP); hodiny z předchozích měsíců pro DPP/DPČ dostává `monthSummary` jako vstup (načte 4.2).
 
-- [ ] **4.2 – Data měsíce a pohotovost (server)**
+- [x] **4.2 – Data měsíce a pohotovost (server)**
       Migrace: `time_entry.overtime` (boolean, výchozí false), tabulka `period_export` (month, version, created_at,
       created_by, `data` jsonb = snímek pro export), tabulka `reminder_log` (employee_id, kind, ref_date, sent_at;
       unikátní employee+kind+ref_date). Služba `getMonth(employeeId, month)` (jedno načtení: intervaly, absence,
@@ -260,6 +260,21 @@ Značky jako v 3b: `[opus]`, `[zastavit po]`, `[ručně]`.
       zrušit“ (jen vedoucí své party a správce, i u potvrzeného výkazu před schválením; audit s důvodem).
       Seed: pohotovost o víkendu a jeden interval s přesčasem u ukázkových zaměstnanců.
       Hotovo, když: akce mají testy oprávnění a zámku; `getMonth` ověřen proti lokální DB.
+      Výsledek: migrace `0009_month_data` (`time_entry.overtime`, `period_export`, `reminder_log`); `month-data.ts`
+      s `getMonth(viewer, employeeId, month)` a `getTeamMonth(viewer, month, teamIds | "all")` (každá tabulka se
+      načte jednou pro všechny, hodiny DPP od 1. 1. a DPČ od začátku dohody jedním dotazem → `monthSummary`, k tomu
+      stav výkazu, zámek, intervaly, pohotovosti, popisky zakázek a druhů práce); `standbys.ts` + akce
+      `create/update/deleteStandbyAction` a `setOvertimeAction`; pravidla `rules/month-changes.ts` s testy.
+      Ověřeno skriptem proti lokální DB (říjen 2026): Jan Novák odpracováno 86:30, fond 168:00, k dnešku 88:00,
+      rozdíl −1:30, pohotovost 40:00 (k odměně 37:30, práce v pohotovosti 2:30), přesčas 2:30; `getTeamMonth`
+      pro správce 14 zaměstnanců za 44 ms, vedoucí vidí jen svou partu, kolega dostane `null`; odmítnutí překryvu,
+      zámku, chybějícího důvodu, přesčasu u přestávky a u schváleného výkazu fungují.
+      Vyzkoušet: po `pnpm db:seed` má Jan Novák a Petr Svoboda víkendovou pohotovost (so 6:00 – ne 22:00) a Jan
+      v sobotu výjezd 9:00–11:30 označený jako přesčas; v UI zatím nic (obrazovky 4.6–4.8).
+      Rozhodl jsem: smazání pohotovosti je skutečné (zůstává v auditu); pohotovost za jiného smí vedoucí, správce
+      i administrátor (jako intervaly); přesčas označí jen vedoucí party a správce, nikdo sám sobě, jen u práce,
+      ve stavu otevřený nebo potvrzený; pohotovost se zamyká podle měsíce svého začátku (u úpravy starý i nový
+      měsíc); `getMonth` vrací `null` bez oprávnění; parta v měsíci = poslední členství v měsíci.
 
 - [ ] **4.3 – Stavy výkazu a uzávěrka (pravidla a server)** [opus]
       Čistá funkce přechodů podle „Stavy výkazu“ v `technicky-navrh.md` s testy: kdo smí, za jakých podmínek,
