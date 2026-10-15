@@ -64,6 +64,13 @@
       "when": 1791983401628,
       "tag": "0008_team_job_day_template",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792089479876,
+      "tag": "0009_month_data",
+      "breakpoints": true
     }
   ]
 }

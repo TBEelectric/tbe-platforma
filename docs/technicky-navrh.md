@@ -68,12 +68,14 @@ Sazby se zatím neevidují, `employment` i `job` je mohou dostat později.
 | Tabulka | Klíčová pole | Poznámka |
 | --- | --- | --- |
 | `work_type` | code, name, counts_as_work, requires_job | Montáž, revize, cesta (se zakázkou), režie (bez zakázky) |
-| `time_entry` | employee_id, work_date, start_at, end_at, kind (`work`,`break`), job_id, work_type_id, note, created_by_user_id, source (`self`,`manager`) | Práce vyžaduje druh práce a zakázku; druh „režie“ (`requires_job = false`) zakázku nevyžaduje. `work_date` = den začátku (Europe/Prague). Smazání v otevřeném měsíci je skutečné, zůstává v auditu |
+| `time_entry` | employee_id, work_date, start_at, end_at, kind (`work`,`break`), job_id, work_type_id, note, overtime, created_by_user_id, source (`self`,`manager`) | Práce vyžaduje druh práce a zakázku; druh „režie“ (`requires_job = false`) zakázku nevyžaduje. `work_date` = den začátku (Europe/Prague). Smazání v otevřeném měsíci je skutečné, zůstává v auditu. `overtime` (výchozí false) nastavuje vedoucí nebo správce |
 | `absence` | employee_id, type (`vacation`,`sick`,`ocr`,`doctor`,`other`), date_from, date_to, hours, note, status (`requested`,`approved`,`rejected`), decided_by, decided_at, decision_reason | `hours` jen u jednoho dne (část dne); bez `hours` celé dny podle úvazku. Absenci zadanou vedoucím nebo správcem rovnou schválí |
-| `standby` | employee_id, start_at, end_at, note | |
+| `standby` | employee_id, start_at, end_at, note, created_by_user_id | Patří měsíci podle dne začátku. Vlastní pohotovosti se nepřekrývají (výjimkové omezení), překryv s prací je povolený. Smazání v otevřeném měsíci je skutečné, zůstává v auditu |
 | `leave_entitlement` | employee_id, year, hours_entitled, hours_carried_over | Zůstatek = nárok + převod − čerpáno |
 | `timesheet` | employee_id, month, status, confirmed_at, approved_by, approved_at, return_reason | Jeden řádek na zaměstnance a měsíc |
 | `period_close` | month, closed_by, closed_at, reopened_by, reopened_at, reopen_reason, export_version | |
+| `period_export` | month, version (unikátně s month), created_at, created_by_user_id, data (JSON) | Snímek dat podkladu pro mzdy při každém uzavření; exporty čtou jen snímek |
+| `reminder_log` | employee_id, kind, ref_date, sent_at (unikátně employee_id + kind + ref_date) | Odeslané připomínky; nic se nepošle dvakrát |
 | `timesheet_settings` | key, value, valid_from | Prahy a limity; výchozí šablona „Obvyklý den“ |
 | `day_template` | employee_id (unikátní), items (JSON: od, do, typ `work`/`break`), updated_at | „Můj obvyklý den“ – ukládá zaměstnanec sám z vyplněného dne; správce může smazat; bez něj platí výchozí šablona firmy z `timesheet_settings`; změny do auditu |
 
@@ -167,6 +169,8 @@ Prahy a lhůty jsou v `timesheet_settings` (platnost od `valid_from`), ne v kód
 | Zaměstnanci, týmy, úvazky, nároky | Ne | Ne | Ano | Ano |
 | Uložit vlastní obvyklý den | Ano | Ano | Ano | Ano |
 | Smazat obvyklý den zaměstnance, nastavit výchozí šablonu firmy | Ne | Ne | Ano | Ano |
+| Pohotovost (vlastní v otevřeném měsíci / za jiného s důvodem) | Vlastní | Ano | Ano | Ano |
+| Označit interval jako přesčas (do schválení, s důvodem) | Ne | Ano | Ano | Ne |
 | Připnout zakázky party | Ne | Ano | Ano | Ano |
 | Role a povolené účty | Ne | Ne | Ne | Ano |
 

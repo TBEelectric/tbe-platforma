@@ -108,6 +108,8 @@ export const timeEntry = timesheetsSchema.table(
     jobId: uuid().references(() => job.id),
     workTypeId: uuid().references(() => workType.id),
     note: text(),
+    /** Overtime (přesčas), set by the team lead or the manager at approval (§ 96: start and end). */
+    overtime: boolean().notNull().default(false),
     createdByUserId: uuid().references(() => user.id),
     source: timeEntrySource().notNull().default("self"),
     ...timestamps,
@@ -237,6 +239,47 @@ export const periodClose = timesheetsSchema.table(
       sql`extract(day from ${table.month}) = 1`,
     ),
   ],
+);
+
+/**
+ * Snapshot of the payroll export data taken at each close of a month (version = period_close
+ * export_version). Exports read the snapshot, never live data, so every version can be re-downloaded.
+ */
+export const periodExport = timesheetsSchema.table(
+  "period_export",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    /** First day of the month. */
+    month: date({ mode: "string" }).notNull(),
+    version: integer().notNull(),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    createdByUserId: uuid().references(() => user.id),
+    data: jsonb().notNull(),
+  },
+  (table) => [
+    uniqueIndex().on(table.month, table.version),
+    check(
+      "period_export_month_start",
+      sql`extract(day from ${table.month}) = 1`,
+    ),
+  ],
+);
+
+/** Every sent reminder (worker, manual „Připomenout“), so nothing is sent twice. */
+export const reminderLog = timesheetsSchema.table(
+  "reminder_log",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    employeeId: uuid()
+      .notNull()
+      .references(() => employee.id),
+    /** Reminder kind, e.g. missing_day, confirm_month, approve, close. */
+    kind: text().notNull(),
+    /** The day or month the reminder is about. */
+    refDate: date({ mode: "string" }).notNull(),
+    sentAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex().on(table.employeeId, table.kind, table.refDate)],
 );
 
 /** Yearly leave entitlement in hours. Balance = entitled + carried over − taken. */
