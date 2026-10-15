@@ -221,7 +221,7 @@ Značky jako v 3b: `[opus]`, `[zastavit po]`, `[ručně]`.
 - Měsíční podklad se po uzávěrce nemění: každá verze exportu je **uložený snímek** dat (ne nový výpočet
   ze živých dat), aby šla kdykoli znovu stáhnout přesně ta verze, kterou dostala účetní.
 
-- [ ] **4.1 – Výpočty měsíce (čisté funkce)** [opus]
+- [x] **4.1 – Výpočty měsíce (čisté funkce)** [opus]
       Nejdřív do `docs/technicky-navrh.md` doplnit právní rámec výše (slovník: přesčas = `overtime`, svátek
       neodpracovaný = `holiday_not_worked`, verze podkladu = `period_export`, připomínka = `reminder`; pravidla
       a tabulku výpočtů). Pak jen `src/modules/timesheets/rules` + testy: rozdělení intervalu podle kalendáře
@@ -237,6 +237,17 @@ Značky jako v 3b: `[opus]`, `[zastavit po]`, `[ručně]`.
       `close_deadline_day` (7) a `reminder_time` ("07:00").
       Hotovo, když: testy pokrývají každé pravidlo včetně DST, přes půlnoc, svátku v sobotu, změny úvazku a DPP;
       žádné UI.
+      Výsledek: hotové `rules/calendar-split.ts` (noc / sobota / neděle / svátek podle kalendářního času, DST),
+      `fund.ts` (fond měsíce a k dnešku, svátek neodpracovaný), `standby.ts` (pohotovost k odměně a práce
+      v pohotovosti), `totalsByWorkType` a `overtimeMinutes` v `totals.ts` a `month-summary.ts` (`monthSummary`
+      + stav dnů + upozornění měsíce; kontroly měsíce jsou seznam `MONTH_CHECKS`, nová kontrola = jedna funkce).
+      Nová nastavení v `resolveSettings` a seedu; `settings.fixture.ts` pro testy. Právní rámec, slovník a tabulka
+      výpočtů v `technicky-navrh.md`. Vyzkoušet: nic v UI; po `pnpm db:seed` jsou v `timesheet_settings` nové klíče.
+      Rozhodl jsem: svátek neodpracovaný jen bez jakékoli práce toho dne (i noční směny zasahující do svátku);
+      rozdíl proti fondu = odpracováno + schválené absence do dneška − fond do dneška (vychází −6:00 jako v náhledu);
+      DPP upozorní až nad limitem; DPČ průměr od začátku dohody do jejího konce (bez konce do konce měsíce)
+      podle DPČ platné v měsíci; pohotovost patří měsíci podle dne začátku; stav dne `free` pro minulý den bez
+      povinnosti (DPP); hodiny z předchozích měsíců pro DPP/DPČ dostává `monthSummary` jako vstup (načte 4.2).
 
 - [ ] **4.2 – Data měsíce a pohotovost (server)**
       Migrace: `time_entry.overtime` (boolean, výchozí false), tabulka `period_export` (month, version, created_at,
