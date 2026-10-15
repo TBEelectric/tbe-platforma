@@ -25,8 +25,15 @@ Nový pojem se nejdřív zapíše sem.
 | Žádost o absenci | `absence.status = requested` | Absence podaná zaměstnancem, čeká na schválení (`approved`) nebo zamítnutí (`rejected`) |
 | Celodenní absence | `absence.hours is null` | Absence na celé dny; s `hours` jde o část jednoho dne (např. lékař) |
 | Pohotovost | `standby` | Pracovní pohotovost od–do |
+| Práce v pohotovosti | `standby_work` | Odpracovaná doba, která se překrývá s pohotovostí; vykazuje se zvlášť |
+| Přesčas | `overtime` (`time_entry.overtime`) | Interval označený vedoucím nebo správcem při schválení jako práce přesčas |
+| Svátek neodpracovaný | `holiday_not_worked` | Svátek na pracovní den, kdy zaměstnanec (HPP, DPČ) nepracoval; hodiny denního úvazku |
+| Fond (orientační) | `fund` | Denní úvazek × pracovní dny (po–pá bez svátků) podle úvazku platného v daný den; DPP fond nemá |
+| Rozdíl proti fondu | `fund_difference` | Odpracováno + absence − fond k dnešku; jen informace, **nikdy se nenazývá přesčas** |
 | Měsíční výkaz | `timesheet` | Měsíc jednoho zaměstnance se stavem schválení |
 | Uzávěrka | `period_close` | Uzavření měsíce pro všechny zaměstnance |
+| Verze podkladu | `period_export` | Uložený snímek dat měsíce pro mzdovou účetní; každé uzavření = nová verze |
+| Připomínka | `reminder` | E-mail o nevyplněném dni nebo lhůtě; odeslání se zapisuje do `reminder_log` |
 | Zakázky party | `team_job` | Zakázky připnuté vedoucím pro rychlý výběr |
 | Šablona dne | `day_template` | „Obvyklý den“ zaměstnance pro rychlé vyplnění |
 | Fond pracovní doby | `work_schedule` | Plánovaná doba a režim (pružná, nerovnoměrná) |
@@ -95,20 +102,55 @@ s celodenní absencí (žádost nebo schválená; zamítnutá a absence na hodin
 může končit nejpozději v 6:00 následujícího dne a nesmí se překrývat s intervaly dalšího dne (hlídá exclusion constraint
 nad `start_at`/`end_at`).
 
+**Právní rámec (zákoník práce):**
+- § 96 – evidence ukazuje u každého zaměstnance (i DPP a DPČ) začátek a konec odpracované směny, práci přesčas,
+  noční práci, pracovní pohotovost a práci během pohotovosti. Přestávky se evidovat nemusí, firma ale musí doložit,
+  že je poskytla. Zaměstnanec smí nahlížet do své evidence a dostat kopii.
+- Upozornění (přestávka § 88, 12 h § 83, odpočinek § 90 a § 92, limity dohod) **nikdy neblokují** uložení
+  skutečného času. Ukazují se v měsíci, při schválení a v exportu.
+- Noc (§ 78), sobota a neděle (§ 118) a svátek (§ 115) se počítají **podle kalendářního času** v Europe/Prague,
+  ne podle `work_date`. Kategorie se nevylučují (hodina v noci ze soboty na svátek je noc + sobota + svátek).
+- Od 1. 10. 2023 mají DPP a DPČ nárok na příplatky za noc, víkend a svátek (ne za přesčas): výpočty platí pro
+  všechny typy úvazku. DPP: limit hodin za kalendářní rok u firmy, jen odpracovaná doba (ne absence). DPČ:
+  v průměru nejvýš limit hodin týdně za dobu trvání dohody.
+- Pohotovost (§ 78, § 95) není pracovní doba; práce během pohotovosti je odpracovaná doba.
+- Svátek na pracovní den, kdy se nepracovalo: u HPP a DPČ „Svátek (neodpracováno)“ v hodinách denního úvazku.
+- Přesčas se pravidly pružné a nerovnoměrné doby zatím nepočítá (otevřený bod s účetní). Eviduje se označením
+  intervalu (`time_entry.overtime`), které nastaví vedoucí nebo správce při schválení. „Rozdíl proti fondu“ je
+  jen informace a nikdy se nenazývá přesčas.
+- Měsíční podklad se po uzávěrce nemění: každá verze exportu je uložený snímek (`period_export`), ne nový výpočet.
+
 **Upozornění (neblokuje):** přes 6 h práce bez přestávky ≥ 30 min (přestávka = interval `break` nebo mezera
-mezi intervaly; části aspoň 15 min); přes 12 h za den; odpočinek mezi dny
-pod 11 h, týdenní pod 35 h; pracovní den bez záznamu a absence (e-mail další ráno); DPP u limitu.
+mezi intervaly; části aspoň 15 min); přes 12 h za den; odpočinek mezi dny pod 11 h; týdenní odpočinek pod 35 h
+(týden po–ne, i přes hranici měsíce); pracovní den bez záznamu a absence (e-mail další ráno); DPP nad ročním
+limitem (odpracováno od 1. 1. do konce měsíce); DPČ nad průměrem hodin týdně (od začátku dohody do jejího konce,
+u dohody bez konce do konce měsíce). Upozornění měsíce = upozornění všech dnů a týdnů měsíce + limity dohod.
+
+**Měsíc:** jedna čistá funkce `monthSummary` vrací vše pro Můj měsíc, Schvalování, Uzávěrku a export. Interval
+a pohotovost patří měsíci podle dne začátku (Europe/Prague); noc, víkend a svátek se ale dělí podle skutečného času.
 
 | Hodnota | Výpočet |
 | --- | --- |
 | Odpracováno | Součet intervalů `work` |
 | Podle zakázek a druhů práce | Součet `work` po `job_id` a `work_type_id` |
-| Noční práce | Část intervalů 22:00–6:00 |
-| Sobota, neděle | Část intervalů v těchto dnech |
-| Svátky | Část intervalů ve dnech z `public_holiday` |
-| Pohotovost | Součet `standby` mimo odpracované intervaly |
-| Absence | Hodiny po typech; dovolená snižuje zůstatek |
-| Fond a přesčasy | Fond podle úvazku a pracovních dnů; přesčas až po potvrzení pravidel s účetní |
+| Noční práce | Část intervalů `work` mezi `night_start` a `night_end` (výchozí 22:00–6:00) podle kalendářního času |
+| Sobota, neděle | Část intervalů `work` v kalendářní sobotu a neděli |
+| Svátek odpracovaný | Část intervalů `work` v kalendářní den z `public_holiday` |
+| Svátek neodpracovaný | Svátek po–pá bez intervalu `work` toho dne, úvazek HPP nebo DPČ: denní úvazek |
+| Přesčas | Součet intervalů `work` s `overtime = true` |
+| Pohotovost (k odměně) | Součet `standby` mimo odpracované intervaly |
+| Práce v pohotovosti | Překryv intervalů `work` s `standby` (je zároveň v Odpracováno) |
+| Absence | Schválené hodiny po typech (`absenceHours`); žádosti zvlášť; dovolená snižuje zůstatek |
+| Fond měsíce | Σ denní úvazek (týdenní hodiny / 5) přes pracovní dny (po–pá bez svátků) podle úvazku platného v daný den; DPP 0 |
+| Fond k dnešku | Totéž od 1. dne měsíce do dneška včetně (u minulého měsíce celý měsíc) |
+| Rozdíl proti fondu | Odpracováno + absence − fond k dnešku; jen informace, u DPP se nezobrazuje |
+| Stav dne | `filled` (má práci), `absence`, `holiday`, `weekend`, `missing` (pracovní den do včerejška bez záznamu), `today`, `future`, `free` (den bez povinnosti, např. DPP) |
+
+Prahy a lhůty jsou v `timesheet_settings` (platnost od `valid_from`), ne v kódu: `night_start`, `night_end`,
+`break_after_work_minutes`, `break_min_minutes`, `break_part_min_minutes`, `daily_work_warning_minutes`,
+`daily_rest_minutes`, `weekly_rest_minutes`, `dpp_yearly_limit_hours`, `dpc_weekly_average_limit_hours` (20),
+`confirm_deadline_day` (2), `approve_deadline_day` (5), `close_deadline_day` (7) – dny dalšího měsíce,
+`reminder_time` ("07:00").
 
 ## Oprávnění
 

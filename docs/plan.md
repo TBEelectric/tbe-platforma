@@ -188,12 +188,151 @@ hotových krocích před ním. Značky: `[ručně]` = skript krok nespustí, ud�
 
 ## Milník 4 – Měsíc, schválení, uzávěrka
 
-- [ ] Výpočty za měsíc s testy (noc, víkend, svátek, pohotovost, fond); zadávání pohotovosti
-- [ ] Můj měsíc, potvrzení zaměstnancem
-- [ ] Schvalování vedoucím, vrácení s důvodem
-- [ ] Uzávěrka, znovuotevření, verze exportu
-- [ ] Export XLSX + PDF pro mzdy, CSV po zakázkách
-- [ ] Připomínky nevyplněných dnů (worker, e-mail)
+Výsledek milníku: zaměstnanec vidí a potvrdí svůj měsíc, vedoucí ho schválí nebo vrátí, správce měsíc uzavře
+a stáhne podklad pro mzdovou účetní; aplikace sama připomíná nevyplněné dny a lhůty.
+
+Kroky jdou po sobě; každý se pouští v nové session (`scripts/milestone.sh 4`). **Kroky 4.1–4.5 jsou jen logika
+a server (žádné obrazovky), kroky 4.6–4.9 jen obrazovky** nad hotovou logikou. Obrazovkový krok nesmí přidávat
+obchodní pravidla: když nějaké chybí, doplní ho jako čistou funkci v `rules/` s testem a uvede to ve „Výsledek:“.
+Značky jako v 3b: `[opus]`, `[zastavit po]`, `[ručně]`.
+
+**Právní rámec (zákoník práce; platí pro všechny kroky):**
+- § 96 – evidence musí u každého zaměstnance (i DPP/DPČ) ukázat **začátek a konec** odpracované směny, práce
+  přesčas, noční práce, pracovní pohotovosti a práce odvedené během pohotovosti. Přestávky se evidovat nemusí,
+  ale firma musí doložit, že je poskytla. Zaměstnanec má právo nahlížet do své evidence a dostat kopii.
+- Upozornění (přestávka § 88, 12 h § 83, odpočinek § 90 a § 92, limity dohod) **nikdy neblokují** uložení
+  skutečného času – evidence musí odpovídat skutečnosti. Ukazují se v měsíci, při schválení a v exportu.
+- Noc (22–6, § 78), sobota a neděle (§ 118) a svátek (§ 115) se počítají **podle kalendářního času** v
+  Europe/Prague, ne podle `work_date`: interval pá 20:00 – so 2:00 má 2 h v pátek, 2 h v sobotu a 4 h noci.
+  Kategorie se nevylučují (hodina v noci ze soboty na svátek je noc + sobota + svátek). Pozor na změnu času.
+- Od 1. 10. 2023 mají **DPP a DPČ** nárok na příplatky za noc, víkend a svátek (ne za přesčas) – výpočty
+  platí pro všechny typy úvazku. DPP: limit 300 h za kalendářní rok u firmy, počítá se jen odpracovaná doba
+  (ne absence). DPČ: v průměru nejvýš polovina týdenní pracovní doby (20 h/týden) za dobu trvání dohody.
+- **Pohotovost** (§ 78, § 95) není pracovní doba; práce během pohotovosti je odpracovaná doba. Pohotovost
+  k odměně = pohotovost mimo odpracované intervaly; práce v pohotovosti se vykazuje zvlášť.
+- **Svátek na pracovní den**, kdy se nepracovalo: u HPP/DPČ se vykáže jako „Svátek (neodpracováno)“ v hodinách
+  denního úvazku – mzdová účetní z toho počítá náhradu mzdy u hodinové mzdy.
+- **Přesčas** se pravidly pružné a nerovnoměrné doby (vyrovnávací období, rozvrh směn) zatím počítat nedá
+  (otevřený bod s účetní). Rozhodnuto: „Rozdíl proti fondu“ je jen informace, **nikdy se nenazývá přesčas**.
+  Přesčas se eviduje **označením intervalu** (`time_entry.overtime`), které nastavuje vedoucí nebo správce
+  při schválení – tím je z evidence patrný začátek a konec přesčasu (§ 96).
+- Fond je **orientační**: denní úvazek (týdenní hodiny / 5) × pracovní dny (po–pá bez svátků) podle úvazku
+  platného v daný den; DPP fond nemá. V rozhraní se tak i označí („fond podle úvazku“).
+- Měsíční podklad se po uzávěrce nemění: každá verze exportu je **uložený snímek** dat (ne nový výpočet
+  ze živých dat), aby šla kdykoli znovu stáhnout přesně ta verze, kterou dostala účetní.
+
+- [ ] **4.1 – Výpočty měsíce (čisté funkce)** [opus]
+      Nejdřív do `docs/technicky-navrh.md` doplnit právní rámec výše (slovník: přesčas = `overtime`, svátek
+      neodpracovaný = `holiday_not_worked`, verze podkladu = `period_export`, připomínka = `reminder`; pravidla
+      a tabulku výpočtů). Pak jen `src/modules/timesheets/rules` + testy: rozdělení intervalu podle kalendáře
+      na noc / sobotu / neděli / svátek (DST, přes půlnoc, přes konec měsíce – interval patří měsíci podle
+      `work_date`); fond měsíce a fond „k dnešku“ (změna úvazku v půlce měsíce, zkrácený úvazek, DPP bez fondu);
+      svátek neodpracovaný; pohotovost mínus překryv s prací a práce v pohotovosti; absence po typech
+      v hodinách (`absenceHours`); součty po zakázkách a druzích práce; přesčas = součet intervalů s příznakem;
+      rozdíl proti fondu; souhrn upozornění měsíce (přestávka, 12 h, denní a týdenní odpočinek – týden přes
+      hranici měsíce –, DPP roční limit, DPČ průměr 20 h/týden); stav dnů pro kalendář (vyplněno, chybí,
+      absence, víkend, svátek, budoucí, dnes). Jedna funkce `monthSummary` vrací vše, co potřebuje Můj měsíc,
+      Schvalování, Uzávěrka i export. Nové prahy do `timesheet_settings` (seed + `resolveSettings`):
+      `dpc_weekly_average_limit_hours` (20), lhůty `confirm_deadline_day` (2), `approve_deadline_day` (5),
+      `close_deadline_day` (7) a `reminder_time` ("07:00").
+      Hotovo, když: testy pokrývají každé pravidlo včetně DST, přes půlnoc, svátku v sobotu, změny úvazku a DPP;
+      žádné UI.
+
+- [ ] **4.2 – Data měsíce a pohotovost (server)**
+      Migrace: `time_entry.overtime` (boolean, výchozí false), tabulka `period_export` (month, version, created_at,
+      created_by, `data` jsonb = snímek pro export), tabulka `reminder_log` (employee_id, kind, ref_date, sent_at;
+      unikátní employee+kind+ref_date). Služba `getMonth(employeeId, month)` (jedno načtení: intervaly, absence,
+      pohotovosti, svátky, úvazky, nastavení, stav výkazu a uzávěrky → `monthSummary`) a `getTeamMonth(month,
+      teamIds | all)` pro schvalování a uzávěrku. Server akce pohotovosti vytvořit / upravit / smazat:
+      zaměstnanec sám v otevřeném měsíci, vedoucí a správce za jiného s důvodem, zamčený měsíc odmítne, překryv
+      vlastních pohotovostí odmítne (překryv s prací je povolený), audit. Akce „označit interval jako přesčas /
+      zrušit“ (jen vedoucí své party a správce, i u potvrzeného výkazu před schválením; audit s důvodem).
+      Seed: pohotovost o víkendu a jeden interval s přesčasem u ukázkových zaměstnanců.
+      Hotovo, když: akce mají testy oprávnění a zámku; `getMonth` ověřen proti lokální DB.
+
+- [ ] **4.3 – Stavy výkazu a uzávěrka (pravidla a server)** [opus]
+      Čistá funkce přechodů podle „Stavy výkazu“ v `technicky-navrh.md` s testy: kdo smí, za jakých podmínek,
+      hláška při odmítnutí. Potvrdit (zaměstnanec, nejdřív 1. den dalšího měsíce, bez chybějících pracovních dnů,
+      bez nerozhodnutých žádostí o absenci v měsíci); schválit (vedoucí své party, správce kohokoli; nikdo sám
+      sebe – výkaz vedoucího schvaluje správce, výkaz správce jiný správce, je-li jediný, schválí si ho sám a audit
+      to označí); vrátit s povinným důvodem (zpět na otevřený, důvod se ukáže zaměstnanci); hromadně schválit
+      výkazy bez upozornění; uzavřít měsíc (správce; všechny výkazy zaměstnanců s docházkou a úvazkem v měsíci
+      schválené, žádné nerozhodnuté absence) → výkazy `closed`, uloží se snímek `period_export` verze n; znovu
+      otevřít (správce, povinný důvod, výběr zaměstnanců, jejichž výkazy se vrátí na otevřený, ostatní zůstanou
+      schválené) → nové uzavření = verze n+1. Kontroly před uzávěrkou jako čistá funkce (seznam položek
+      ok / chyba / info podle `05-uzaverka`). Server akce s oprávněními, auditem v jedné transakci a událostmi
+      pro e-mail (fronta pro 4.5, zatím jen zápis).
+      Hotovo, když: všechny přechody a odmítnutí jsou otestované; zámek intervalů a absencí po potvrzení platí.
+
+- [ ] **4.4 – Exporty (server)**
+      Ze snímku `period_export` (jen uzavřený měsíc, vybraná verze): XLSX pro mzdy – list Souhrn (řádek na
+      zaměstnance: osobní číslo, jméno, úvazek, fond, odpracováno, přesčas, noc, sobota, neděle, svátek odpracovaný,
+      svátek neodpracovaný, pohotovost, práce v pohotovosti, absence po typech, zůstatek dovolené, upozornění),
+      list Intervaly (každý interval s od–do, zakázkou s číslem, druhem práce, příznakem přesčasu), list Absence
+      (typ, od–do, hodiny – účetní potřebuje data kvůli nemocenské), list Pohotovost (od–do). PDF: výkaz na
+      zaměstnance (jedna stránka/oddíl na osobu, hlavička firmy, měsíc, verze, tabulka dnů, součty), i jako
+      jeden soubor za všechny. Vlastní PDF zaměstnance z živých dat pro Můj měsíc s označením „Pracovní verze –
+      neuzavřeno“, dokud měsíc není uzavřený. CSV hodin po zakázkách za libovolné období (středník, UTF-8 s BOM,
+      podle prototypu). Hlavičky a texty přes `next-intl`, čeština s diakritikou v PDF (vložené písmo Figtree).
+      Route handlery s `requireUser()` a oprávněním (mzdový export jen správce; vlastní PDF jen zaměstnanec,
+      jeho vedoucí a správce). Knihovny vyber aktuální a udržované (např. exceljs, pdfkit / @react-pdf/renderer).
+      Hotovo, když: data řádků exportu jsou čisté funkce s testy; soubory se vygenerují a otevřou (ověřit
+      jednorázovým skriptem); stejná verze dá stejná data i po změně živých dat.
+
+- [ ] **4.5 – Připomínky a e-maily (worker)**
+      `src/worker.ts`: plánovač v jednom procesu (každý den v `reminder_time`, Europe/Prague, jen pracovní dny):
+      (a) nevyplněný včerejší pracovní den (podle `missingWorkdays`, bez DPP, bez absence, jen aktivní
+      zaměstnanci s docházkou), (b) potvrzení měsíce 1. a v den `confirm_deadline_day`, (c) vedoucím a správci
+      čekající schválení před `approve_deadline_day`, (d) správci den před `close_deadline_day`. E-mail i při
+      vrácení výkazu (zaměstnanci). Ruční akce „Připomenout“ (jednomu zaměstnanci / všem chybějícím) pro vedoucí
+      a správce. Každé odeslání zapíše `reminder_log` (nic se nepošle dvakrát). Odesílání přes SMTP (`SMTP_*`
+      do `.env.example`); bez `SMTP_HOST` se e-mail jen vypíše do logu. Texty e-mailů přes `next-intl` podle
+      `user.locale`, odkaz rovnou na den / měsíc.
+      Hotovo, když: výběr příjemců je čistá funkce s testy (víkend, svátek, absence, DPP, už odesláno);
+      `pnpm worker` běží a bez SMTP vypíše e-maily do logu.
+
+- [ ] **4.6 – Obrazovka Můj měsíc** [zastavit po]
+      Podle `docs/design/screens/03-muj-mesic.png` (desktop) nad `getMonth` a akcemi z 4.2–4.4: hlavička (měsíc,
+      stav, úvazek, fond podle úvazku), přepínání měsíců, karty Odpracováno / Absence / Rozdíl proti fondu /
+      Pohotovost, kalendář (hodiny a druhy práce, chybí, dnes, víkend, svátek s názvem, absence, pohotovost;
+      klik na den = Můj den daného dne), lišta „Měsíc půjde potvrdit od … / Doplnit …“, pravý sloupec Podle
+      zakázek („Firma, místo“, ne číslo), Podle druhu práce, Průběh schválení, Upozornění měsíce; tlačítka
+      Potvrdit měsíc (s potvrzovacím dialogem) a Stáhnout PDF. Vrácený výkaz: nahoře hláška s důvodem.
+      Pohotovost: přidat / upravit / smazat z detailu dne v kalendáři (panel jako na Můj den). Mobil (< 1024 px):
+      karty 2×2, kompaktní kalendář (číslo dne a hodiny, barva stavu), seznamy pod ním, Potvrdit měsíc jako
+      tlačítko dole nad spodní navigací; položka „Měsíc“ ve spodní navigaci. Odstranit placeholder `month`.
+      Hotovo, když: obrazovka odpovídá náhledu na desktopu a funguje na 375 px; potvrzení zamkne Můj den.
+
+- [ ] **4.7 – Obrazovka Schvalování**
+      Podle `04-schvalovani.png`: měsíc (výchozí minulý), parta (vedoucí vidí své party, správce všechny + výběr),
+      lhůta „schválit do …“, karty počtů, záložky Všechny / Ke schválení / S upozorněním / Schválené, tabulka
+      (zaměstnanec, úvazek, odpracováno, rozdíl, noc+víkend, absence, upozornění, stav; nepotvrzený má
+      „Připomenout“). Detail vpravo: stav, upozornění s daty, podle zakázek, přesčas, odkaz „Otevřít všechny
+      intervaly a historii změn“ (Můj den zaměstnance jen pro čtení + audit), u intervalů přepínač „Přesčas“,
+      důvod vrácení, Schválit / Vrátit k opravě, hromadně „Schválit N bez upozornění“. Poznámka „Váš vlastní
+      výkaz schvaluje správce docházky“. Mobil: seznam karet místo tabulky, detail přes celou obrazovku.
+      Odstranit placeholder `approval`.
+      Hotovo, když: vedoucí projde schválení i vrácení na desktopu i 375 px.
+
+- [ ] **4.8 – Obrazovka Uzávěrka a nastavení lhůt**
+      Podle `05-uzaverka.png`: hlavička se stavem a lhůtou, Připomenout chybějícím, Uzavřít měsíc (dialog se
+      souhrnem kontrol, aktivní jen když kontroly projdou), karty počtů, Kontrola před uzávěrkou, Stav podle
+      part (průběh, „čeká na vás“), Podklad pro mzdy (XLSX, PDF; před uzávěrkou neaktivní s vysvětlením),
+      Export hodin podle zakázek (CSV, výběr období), Uzavřené měsíce s verzemi, stažením každé verze a
+      Znovu otevřít (dialog: důvod, výběr zaměstnanců). Nastavení modulu (`/timesheets/settings`, správce): lhůty
+      a čas připomínek z 4.1 (zápis nové hodnoty s `valid_from`, audit). Mobil: jednosloupcové.
+      Odstranit placeholdery `close` a `settings`.
+      Hotovo, když: správce uzavře, stáhne, znovu otevře a uzavře znovu jako verzi 2.
+
+- [ ] **4.9 – Dokončení milníku** [zastavit po]
+      (1) Launcher „Čeká na vás“ podle `01-launcher.png` (doplnit chybějící den, potvrdit měsíc, schválit N výkazů,
+      uzavřít měsíc) z dat 4.2–4.3. (2) Můj den: vrácený výkaz ukáže důvod; potvrzený měsíc hlášku „Měsíc je
+      potvrzený“ (rozšířit `dayEditability`). (3) Přístupnost nových obrazovek (aria-label u ikon, fokus, tabulka
+      s hlavičkami, dialogy). (4) `docs/design.md` (seznam obrazovek a mobilní rozložení měsíce, schvalování,
+      uzávěrky) a `docs/zadani-dochazky.md` (otevřené body: přesčas, rozvrh, vyrovnávací období) uvést do
+      souladu s hotovým stavem. (5) Úklid: `[section]` placeholder, pokud už nic nepokrývá.
+      Hotovo, když: lint/typecheck/test/build prochází; člověk vyzkouší celý cyklus otevřený → potvrzený →
+      vrácený → potvrzený → schválený → uzavřený → export → znovu otevřený → verze 2 v Chromu na desktopu i 375 px.
 
 ## Milník 5 – Pilot
 
