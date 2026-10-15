@@ -19,6 +19,10 @@ export * from "./rules/timeline-change";
 export * from "./rules/day-editable";
 export * from "./rules/timeline-view";
 export * from "./rules/timeline-local";
+export * from "./rules/calendar-split";
+export * from "./rules/fund";
+export * from "./rules/standby";
+export * from "./rules/month-summary";
 
 export const timesheetsModule: ModuleInfo = {
   id: "timesheets",

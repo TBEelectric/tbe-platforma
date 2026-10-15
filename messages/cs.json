@@ -176,7 +176,9 @@
       "break": "Přes {work} práce bez přestávky {pause} (od {from}).",
       "longDay": "Přes {limit} práce za den ({total}).",
       "dailyRest": "Odpočinek mezi dny jen {rest} (nejméně {minimum}).",
-      "weeklyRest": "Nejdelší odpočinek v týdnu {rest} (nejméně {minimum})."
+      "weeklyRest": "Nejdelší odpočinek v týdnu {rest} (nejméně {minimum}).",
+      "dppYearlyLimit": "DPP: v roce {year} odpracováno {total}, roční limit je {limit}.",
+      "dpcWeeklyAverage": "DPČ: průměr {average} týdně za dobu dohody, limit je {limit}."
     },
     "absences": {
       "title": "Absence",
