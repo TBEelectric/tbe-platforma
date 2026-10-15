@@ -5,11 +5,28 @@ import { msg } from "@/i18n/messages";
 import { requirePermission, type CurrentUser } from "@/lib/current-user";
 import { handleFormAction } from "@/lib/form-action";
 import type { FormState } from "@/lib/form-state";
-import { canManageEmployees, leaveFormSchema } from "../core/shared";
+import {
+  canManageEmployees,
+  leaveFormSchema,
+  type Actor,
+} from "../core/shared";
 import { cancelAbsence, createAbsence, decideAbsence } from "./absences";
 import { setLeaveEntitlement } from "./leave";
 import { deleteDayTemplate, setDefaultDayTemplate } from "./day-template";
-import { canManageDayTemplates, canOpenAbsences } from "./permissions";
+import {
+  canApproveTimesheets,
+  canManageDayTemplates,
+  canOpenAbsences,
+  canRecordOwnTime,
+  canWriteForSomeoneElse,
+} from "./permissions";
+import { standbyFormSchema } from "./rules/month-changes";
+import {
+  createStandby,
+  deleteStandby,
+  setEntryOvertime,
+  updateStandby,
+} from "./standbys";
 import { absenceFormSchema, type AbsenceDecision } from "./rules/absence";
 import { dayTemplateFormSchema } from "./rules/day-template";
 
@@ -120,5 +137,86 @@ export async function cancelAbsenceAction(
       return msg("timesheets.messages.absenceCancelled");
     },
     ABSENCES,
+  );
+}
+
+// ── Standby (pohotovost) and overtime ──
+
+const MONTH = "/timesheets/month";
+
+/** Coarse check; the service decides for the concrete employee and month. */
+const canOpenStandby = (actor: Actor) =>
+  canRecordOwnTime(actor) || canWriteForSomeoneElse(actor);
+
+export async function createStandbyAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  return handleFormAction(
+    canOpenStandby,
+    standbyFormSchema,
+    formData,
+    async (user, data) => {
+      await createStandby(writerOf(user), data);
+      return msg("timesheets.messages.standbySaved");
+    },
+    MONTH,
+  );
+}
+
+export async function updateStandbyAction(
+  id: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  return handleFormAction(
+    canOpenStandby,
+    standbyFormSchema,
+    formData,
+    async (user, data) => {
+      await updateStandby(writerOf(user), id, data);
+      return msg("timesheets.messages.standbySaved");
+    },
+    MONTH,
+  );
+}
+
+const changeReasonSchema = standbyFormSchema.pick({ reason: true });
+
+export async function deleteStandbyAction(
+  id: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  return handleFormAction(
+    canOpenStandby,
+    changeReasonSchema,
+    formData,
+    async (user, data) => {
+      await deleteStandby(writerOf(user), id, data.reason);
+      return msg("timesheets.messages.standbyDeleted");
+    },
+    MONTH,
+  );
+}
+
+/** Marks an interval as overtime or clears it (team lead, timesheets manager; with a reason). */
+export async function setOvertimeAction(
+  entryId: string,
+  overtime: boolean,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  return handleFormAction(
+    canApproveTimesheets,
+    changeReasonSchema,
+    formData,
+    async (user, data) => {
+      await setEntryOvertime(writerOf(user), entryId, overtime, data.reason);
+      return overtime
+        ? msg("timesheets.messages.overtimeSet")
+        : msg("timesheets.messages.overtimeCleared");
+    },
+    "/timesheets",
   );
 }

@@ -132,7 +132,14 @@
       "cannotDecide": "O této absenci nemůžete rozhodnout.",
       "cannotCancel": "Tuto absenci nemůžete zrušit.",
       "cancelReasonRequired": "Uveďte důvod zrušení.",
-      "cancelMonthLocked": "Měsíc je potvrzený nebo uzavřený, absenci nelze zrušit."
+      "cancelMonthLocked": "Měsíc je potvrzený nebo uzavřený, absenci nelze zrušit.",
+      "standbyEndBeforeStart": "Konec pohotovosti musí být po jejím začátku.",
+      "standbyMonthLocked": "Měsíc je potvrzený nebo uzavřený, pohotovost nelze měnit.",
+      "standbyOverlap": "Překrývá se s jinou pohotovostí.",
+      "cannotFlagOvertime": "Přesčas u tohoto intervalu nemůžete označit.",
+      "overtimeOnlyWork": "Jako přesčas lze označit jen práci.",
+      "overtimeLocked": "Výkaz je schválený nebo měsíc uzavřený, přesčas nelze měnit.",
+      "overtimeReasonRequired": "Uveďte důvod změny přesčasu."
     },
     "messages": {
       "absenceRequested": "Žádost odeslána ke schválení.",
@@ -141,7 +148,11 @@
       "rejected": "Zamítnuto.",
       "absenceCancelled": "Absence zrušena.",
       "templateSaved": "Obvyklý den uložen.",
-      "defaultTemplateSaved": "Výchozí obvyklý den firmy uložen."
+      "defaultTemplateSaved": "Výchozí obvyklý den firmy uložen.",
+      "standbySaved": "Pohotovost uložena.",
+      "standbyDeleted": "Pohotovost smazána.",
+      "overtimeSet": "Interval označen jako přesčas.",
+      "overtimeCleared": "Označení přesčasu zrušeno."
     },
     "dayTemplate": {
       "title": "Obvyklý den",

@@ -1,7 +1,7 @@
 // Sample data for local development (pnpm db:seed), matching the screen references and the
 // import template (same personal numbers, so importing the template updates these records).
 // Safe to run repeatedly: existing records are left as they are.
-import { and, eq, gte, inArray, lte } from "drizzle-orm";
+import { and, eq, gte, inArray, lt, lte } from "drizzle-orm";
 import { writeAudit } from "@/lib/audit";
 import {
   addDays,
@@ -25,6 +25,7 @@ import {
 import {
   absence,
   leaveEntitlement,
+  standby,
   timeEntry,
   timesheet,
   timesheetSettings,
@@ -654,6 +655,107 @@ async function seedAbsences(tx: DbOrTx) {
   }
 }
 
+/**
+ * Weekend standby (Sat 6:00 – Sun 22:00) for Jan Novák and Petr Svoboda on the last weekend of this
+ * month up to today (else the first one). Jan had a call-out on Saturday during it, marked as
+ * overtime. Replaces their standby of this month on every run (open months only).
+ */
+async function seedStandby(tx: DbOrTx) {
+  const today = todayInPrague();
+  const month = monthStart(today);
+  const nextMonth = monthStart(addDays(month, 31));
+  const saturdays: string[] = [];
+  for (let day = month; day < nextMonth; day = addDays(day, 1))
+    if (new Date(`${day}T12:00:00Z`).getUTCDay() === 6) saturdays.push(day);
+  const saturday =
+    saturdays.filter((d) => addDays(d, 1) <= today).at(-1) ?? saturdays[0];
+  const [jobRow] = await tx.select().from(job).where(eq(job.code, "250147"));
+  const [montaz] = await tx
+    .select()
+    .from(workType)
+    .where(eq(workType.code, "montaz"));
+
+  let count = 0;
+  for (const personalNumber of ["1001", "1002"]) {
+    const [emp] = await tx
+      .select()
+      .from(employee)
+      .where(eq(employee.personalNumber, personalNumber));
+    if (!emp) continue;
+    const [sheet] = await tx
+      .select()
+      .from(timesheet)
+      .where(and(eq(timesheet.employeeId, emp.id), eq(timesheet.month, month)));
+    if (sheet && sheet.status !== "open") continue;
+
+    const old = await tx
+      .delete(standby)
+      .where(
+        and(
+          eq(standby.employeeId, emp.id),
+          gte(standby.startAt, pragueInstant(month, "00:00")!),
+          lt(standby.startAt, pragueInstant(nextMonth, "00:00")!),
+        ),
+      )
+      .returning();
+    for (const row of old)
+      await writeAudit(tx, {
+        actorUserId: null,
+        entity: "standby",
+        entityId: row.id,
+        action: "delete",
+        before: row,
+        after: null,
+        reason: "Seed: nová ukázková data",
+      });
+    const [row] = await tx
+      .insert(standby)
+      .values({
+        employeeId: emp.id,
+        startAt: pragueInstant(saturday, "06:00")!,
+        endAt: pragueInstant(addDays(saturday, 1), "22:00")!,
+        note: "Pohotovost o víkendu",
+      })
+      .returning();
+    await writeAudit(tx, {
+      actorUserId: null,
+      entity: "standby",
+      entityId: row.id,
+      action: "create",
+      before: null,
+      after: row,
+    });
+    count++;
+
+    // Call-out during standby (work during standby), marked as overtime.
+    if (personalNumber === "1001" && saturday <= today && jobRow && montaz) {
+      const [entry] = await tx
+        .insert(timeEntry)
+        .values({
+          employeeId: emp.id,
+          workDate: saturday,
+          startAt: pragueInstant(saturday, "09:00")!,
+          endAt: pragueInstant(saturday, "11:30")!,
+          kind: "work",
+          jobId: jobRow.id,
+          workTypeId: montaz.id,
+          note: "Výjezd k poruše",
+          overtime: true,
+        })
+        .returning();
+      await writeAudit(tx, {
+        actorUserId: null,
+        entity: "time_entry",
+        entityId: entry.id,
+        action: "create",
+        before: null,
+        after: entry,
+      });
+    }
+  }
+  return count;
+}
+
 async function main() {
   const holidays = await syncPublicHolidays(db, YEAR - 1, YEAR + 5);
   await db.transaction(async (tx) => {
@@ -664,6 +766,8 @@ async function main() {
   // Absences first: days with an absence get no entries.
   await db.transaction(seedAbsences);
   const entries = await db.transaction(seedMonthEntries);
+  // After the entries: they are replaced on every run, the call-out during standby with them.
+  const standbys = await db.transaction(seedStandby);
   await ensureAdmin(db, {
     email: "marketing@tbeelectric.cz",
     firstName: "Marketing",
@@ -672,7 +776,7 @@ async function main() {
     tracksTime: false,
   });
   console.log(
-    `Seed done (${holidays} public holidays added, ${entries} time entries this month).`,
+    `Seed done (${holidays} public holidays added, ${entries} time entries and ${standbys} standbys this month).`,
   );
 }
 

@@ -23,6 +23,7 @@ export * from "./rules/calendar-split";
 export * from "./rules/fund";
 export * from "./rules/standby";
 export * from "./rules/month-summary";
+export * from "./rules/month-changes";
 
 export const timesheetsModule: ModuleInfo = {
   id: "timesheets",
