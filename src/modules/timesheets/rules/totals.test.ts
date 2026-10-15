@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { pragueInstant } from "@/lib/dates";
-import { dayTotals, totalsByJob, type TotalsEntry } from "./totals";
+import {
+  dayTotals,
+  overtimeMinutes,
+  totalsByJob,
+  totalsByWorkType,
+  type TotalsEntry,
+} from "./totals";
 
 const at = (date: string, time: string) => pragueInstant(date, time)!;
 const entry = (
@@ -60,5 +66,24 @@ describe("totalsByJob", () => {
     expect(totalsByJob([entry("06:00", "07:00", null, "rezie")])).toEqual([
       { jobId: null, minutes: 60 },
     ]);
+  });
+});
+
+describe("totalsByWorkType", () => {
+  it("sums work per work type, largest first, without breaks", () => {
+    expect(totalsByWorkType(referenceDay)).toEqual([
+      { workTypeId: "montaz", minutes: 450 },
+      { workTypeId: "cesta", minutes: 45 },
+    ]);
+  });
+});
+
+describe("overtimeMinutes", () => {
+  it("sums only work entries flagged as overtime", () => {
+    const entries = referenceDay.map((e, i) => ({ ...e, overtime: i >= 4 }));
+    expect(overtimeMinutes(entries)).toBe(45 + 195);
+    expect(
+      overtimeMinutes(referenceDay.map((e) => ({ ...e, overtime: false }))),
+    ).toBe(0);
   });
 });

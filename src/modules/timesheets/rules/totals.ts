@@ -48,3 +48,32 @@ export function totalsByJob(
     .map(([jobId, minutes]) => ({ jobId, minutes }))
     .sort((a, b) => b.minutes - a.minutes);
 }
+
+/** Work minutes per work type, largest first. */
+export function totalsByWorkType(
+  entries: TotalsEntry[],
+): Array<{ workTypeId: string | null; minutes: number }> {
+  const sums = new Map<string | null, number>();
+  for (const e of entries) {
+    if (e.kind !== "work") continue;
+    sums.set(
+      e.workTypeId,
+      (sums.get(e.workTypeId) ?? 0) + entryDurationMinutes(e),
+    );
+  }
+  return [...sums]
+    .map(([workTypeId, minutes]) => ({ workTypeId, minutes }))
+    .sort((a, b) => b.minutes - a.minutes);
+}
+
+/**
+ * Overtime = work entries flagged by the team lead or manager at approval (time_entry.overtime).
+ * It is never derived from the difference against the fund.
+ */
+export function overtimeMinutes(
+  entries: Array<TotalsEntry & { overtime: boolean }>,
+): number {
+  return entries
+    .filter((e) => e.kind === "work" && e.overtime)
+    .reduce((sum, e) => sum + entryDurationMinutes(e), 0);
+}
