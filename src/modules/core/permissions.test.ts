@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  canChangeEmployeeState,
   canManageAccess,
   canManageEmployees,
   canManageJobs,
@@ -71,5 +72,35 @@ describe("permissions", () => {
     expect(roleKey(manager)).toBe("timesheetsManager");
     expect(roleKey(lead)).toBe("teamLead");
     expect(roleKey(employee)).toBe("employee");
+  });
+});
+
+describe("canChangeEmployeeState", () => {
+  const worker = { employeeId: "w", isAdmin: false };
+  const anAdmin = { employeeId: "a", isAdmin: true };
+  const changes = ["activate", "deactivate", "archive", "restore"] as const;
+
+  it("is for those who manage employees", () => {
+    for (const change of changes) {
+      expect(canChangeEmployeeState(employee, worker, change)).toBe(false);
+      expect(canChangeEmployeeState(lead, worker, change)).toBe(false);
+      expect(canChangeEmployeeState(manager, worker, change)).toBe(true);
+      expect(canChangeEmployeeState(admin, worker, change)).toBe(true);
+    }
+  });
+
+  it("lets only an administrator change an administrator, restoring included", () => {
+    for (const change of changes) {
+      expect(canChangeEmployeeState(manager, anAdmin, change)).toBe(false);
+      expect(canChangeEmployeeState(admin, anAdmin, change)).toBe(true);
+    }
+  });
+
+  it("never deactivates or archives oneself", () => {
+    const self = { employeeId: manager.employeeId, isAdmin: false };
+    expect(canChangeEmployeeState(manager, self, "deactivate")).toBe(false);
+    expect(canChangeEmployeeState(manager, self, "archive")).toBe(false);
+    const selfAdmin = { employeeId: admin.employeeId, isAdmin: true };
+    expect(canChangeEmployeeState(admin, selfAdmin, "archive")).toBe(false);
   });
 });

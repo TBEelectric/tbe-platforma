@@ -17,7 +17,9 @@ export { coreMenu, visibleMenu } from "./menu";
 
 export { czechPublicHolidays, type PublicHoliday } from "./rules/holidays";
 export {
+  EMPLOYEE_STATE_CHANGES,
   ROLES,
+  canChangeEmployeeState,
   canManageAccess,
   canManageEmployees,
   canManageJobs,
@@ -27,6 +29,7 @@ export {
   roleKey,
   rolesFromAssignments,
   type Actor,
+  type EmployeeStateChange,
   type RoleKey,
 } from "./permissions";
 export {

@@ -112,15 +112,13 @@ export async function createFixtures(secret: string) {
   for (const s of settings)
     if (!earliest.has(s.key) || s.validFrom < earliest.get(s.key)!.validFrom)
       earliest.set(s.key, s);
-  await db
-    .insert(timesheetSettings)
-    .values(
-      [...earliest.values()].map((s) => ({
-        key: s.key,
-        value: s.value,
-        validFrom: "2015-01-01",
-      })),
-    );
+  await db.insert(timesheetSettings).values(
+    [...earliest.values()].map((s) => ({
+      key: s.key,
+      value: s.value,
+      validFrom: "2015-01-01",
+    })),
+  );
 
   const [jobType] = await db
     .select()

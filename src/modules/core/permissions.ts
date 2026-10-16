@@ -44,6 +44,33 @@ export function canManageAccess(actor: Actor): boolean {
   return actor.isAdmin;
 }
 
+export const EMPLOYEE_STATE_CHANGES = [
+  "activate",
+  "deactivate",
+  "archive",
+  "restore",
+] as const;
+export type EmployeeStateChange = (typeof EMPLOYEE_STATE_CHANGES)[number];
+
+/**
+ * Activating, deactivating, archiving or restoring an employee (the right to sign in): whoever manages
+ * employees, but nobody deactivates or archives themselves, and only an administrator changes the
+ * state of an administrator (restoring one would give the administrator role back to an account).
+ */
+export function canChangeEmployeeState(
+  actor: Actor,
+  target: { employeeId: string; isAdmin: boolean },
+  change: EmployeeStateChange,
+): boolean {
+  if (!canManageEmployees(actor)) return false;
+  if (
+    target.employeeId === actor.employeeId &&
+    (change === "deactivate" || change === "archive")
+  )
+    return false;
+  return !target.isAdmin || canManageAccess(actor);
+}
+
 /** Pinning jobs to teams: the team's lead for their team; the timesheets manager and administrator for all. */
 export function canPinTeamJobs(actor: Actor, teamId: string): boolean {
   return (

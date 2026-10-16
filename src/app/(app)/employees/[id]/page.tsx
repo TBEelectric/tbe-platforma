@@ -10,11 +10,13 @@ import { requirePermission } from "@/lib/current-user";
 import { calendarDate } from "@/i18n/format";
 import { todayInPrague } from "@/lib/dates";
 import {
+  canChangeEmployeeState,
   canManageAccess,
   canManageEmployees,
   getEmployeeDetail,
   listTeamOptions,
   periodOn,
+  type EmployeeStateChange,
 } from "@/modules/core";
 import {
   addEmploymentAction,
@@ -68,10 +70,15 @@ export default async function EmployeeDetailPage({
   const today = todayInPrague();
   const year = Number(today.slice(0, 4));
   const isAdmin = canManageAccess(user.actor);
-  const isSelf = emp.id === user.actor.employeeId;
   const currentTeam = periodOn(memberships, today);
-  // Only an administrator may deactivate an administrator; nobody deactivates themselves.
-  const canChangeState = !isSelf && (isAdmin || !roles.includes("admin"));
+  // Same rule as setEmployeeStateAction: only an administrator changes an administrator's state;
+  // nobody deactivates or archives themselves.
+  const target = { employeeId: emp.id, isAdmin: roles.includes("admin") };
+  const may = (change: EmployeeStateChange) =>
+    canChangeEmployeeState(user.actor, target, change);
+  const stateChange: EmployeeStateChange = emp.active
+    ? "deactivate"
+    : "activate";
 
   return (
     <>
@@ -91,9 +98,9 @@ export default async function EmployeeDetailPage({
           </span>
         }
         actions={
-          canChangeState && (
-            <>
-              {emp.archivedAt ? (
+          <>
+            {emp.archivedAt ? (
+              may("restore") && (
                 <form
                   action={setEmployeeStateAction.bind(null, emp.id, "restore")}
                 >
@@ -101,13 +108,15 @@ export default async function EmployeeDetailPage({
                     {t("core.detail.restore")}
                   </ConfirmButton>
                 </form>
-              ) : (
-                <>
+              )
+            ) : (
+              <>
+                {may(stateChange) && (
                   <form
                     action={setEmployeeStateAction.bind(
                       null,
                       emp.id,
-                      emp.active ? "deactivate" : "activate",
+                      stateChange,
                     )}
                   >
                     <ConfirmButton
@@ -122,6 +131,8 @@ export default async function EmployeeDetailPage({
                         : t("core.detail.activate")}
                     </ConfirmButton>
                   </form>
+                )}
+                {may("archive") && (
                   <form
                     action={setEmployeeStateAction.bind(
                       null,
@@ -133,10 +144,10 @@ export default async function EmployeeDetailPage({
                       {t("core.detail.archive")}
                     </ConfirmButton>
                   </form>
-                </>
-              )}
-            </>
-          )
+                )}
+              </>
+            )}
+          </>
         }
       />
 

@@ -26,11 +26,14 @@ import {
   updateJob,
 } from "./jobs";
 import {
+  EMPLOYEE_STATE_CHANGES,
+  canChangeEmployeeState,
   canManageAccess,
   canManageEmployees,
   canManageJobs,
   canPinAnyTeamJobs,
   canPinTeamJobs,
+  type EmployeeStateChange,
 } from "./permissions";
 import {
   customerFormSchema,
@@ -118,20 +121,28 @@ export async function updateEmployeeAction(
   );
 }
 
+const stateChangeSchema = z.object({
+  id: z.uuid(),
+  change: z.enum(EMPLOYEE_STATE_CHANGES),
+});
+
 export async function setEmployeeStateAction(
   id: string,
-  change: "activate" | "deactivate" | "archive" | "restore",
+  change: EmployeeStateChange,
 ): Promise<void> {
   const user = await requirePermission(canManageEmployees);
-  if (change === "deactivate" || change === "archive") {
-    if (id === user.actor.employeeId)
-      throw new Error("Cannot deactivate own account");
-    const detail = await getEmployeeDetail(id);
-    if (detail?.roles.includes("admin") && !canManageAccess(user.actor)) {
-      throw new Error("Only an administrator may deactivate an administrator");
-    }
-  }
-  await setEmployeeState(ctxOf(user), id, change);
+  // Bound arguments come from the client: an unknown change or id is "not found".
+  const input = stateChangeSchema.safeParse({ id, change });
+  if (!input.success) notFound();
+  const detail = await getEmployeeDetail(input.data.id);
+  if (!detail) notFound();
+  const target = {
+    employeeId: detail.employee.id,
+    isAdmin: detail.roles.includes("admin"),
+  };
+  if (!canChangeEmployeeState(user.actor, target, input.data.change))
+    notFound();
+  await setEmployeeState(ctxOf(user), input.data.id, input.data.change);
   revalidatePath(EMPLOYEES, "layout");
 }
 
@@ -154,13 +165,16 @@ export async function updateEmploymentAction(
   _prev: FormState,
   formData: FormData,
 ) {
-  const validTo = String(formData.get("validTo") ?? "") || null;
   return handle(
     canManageEmployees,
     employmentFormSchema,
     formData,
     (user, data) =>
-      updateEmployment(ctxOf(user), employmentId, { ...data, validTo }),
+      updateEmployment(ctxOf(user), employmentId, {
+        ...data,
+        // Read after the permission check (handle), never before it.
+        validTo: String(formData.get("validTo") ?? "") || null,
+      }),
     EMPLOYEES,
   );
 }

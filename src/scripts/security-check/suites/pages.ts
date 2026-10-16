@@ -1,3 +1,4 @@
+import cs from "../../../../messages/cs.json";
 import { BASE_URL } from "../config";
 import type { Ctx, Who } from "../context";
 import {
@@ -289,6 +290,22 @@ export async function pagesSuite(ctx: Ctx) {
         assert(!res.body.includes(mark), `${who}: ${path} shows ${mark}`);
       }
   });
+  await report.check(
+    "employee detail: an administrator's state buttons only for administrators",
+    async () => {
+      const labels = cs.core.detail;
+      const buttons = [labels.deactivate, labels.archive];
+      const mg = await ctx.as("mg").get(`/employees/${fx.ids.ad}`);
+      for (const label of buttons)
+        assert(!mg.body.includes(`>${label}<`), `manager sees "${label}"`);
+      const ad = await ctx.as("ad").get(`/employees/${fx.ids.mg}`);
+      for (const label of buttons)
+        assert(
+          ad.body.includes(`>${label}<`),
+          `administrator misses "${label}"`,
+        );
+    },
+  );
   await report.check(
     "launcher and Docházka show no one else's data",
     async () => {
