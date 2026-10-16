@@ -124,10 +124,6 @@
       "settings": "Nastavení",
       "monthSomeone": "Měsíc zaměstnance"
     },
-    "placeholder": {
-      "subtitle": "Připravujeme",
-      "text": "Tato obrazovka vznikne v milníku {milestone} podle plánu vývoje."
-    },
     "errors": {
       "outOfAxis": "Interval musí začít v tento den a skončit nejpozději v 6:00 dalšího dne.",
       "tooShort": "Interval musí mít aspoň 5 minut.",
