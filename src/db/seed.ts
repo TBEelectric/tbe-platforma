@@ -197,6 +197,8 @@ const settings: Record<string, unknown> = {
   approve_deadline_day: 5,
   close_deadline_day: 7,
   reminder_time: "07:00",
+  // A day without a record is reminded this many working days later.
+  missing_day_reminder_delay_days: 1,
   // Company "obvyklý den" (docs/design.md): used when an employee has no template of their own.
   default_day_template: [
     { from: "07:00", to: "11:30", kind: "work" },

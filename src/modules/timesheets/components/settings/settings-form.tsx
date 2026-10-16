@@ -29,6 +29,7 @@ const INPUT: Record<
   duration: { type: "text", inputMode: "numeric", placeholder: "H:MM" },
   minutes: { type: "number", inputMode: "numeric" },
   day: { type: "number", inputMode: "numeric" },
+  workdays: { type: "number", inputMode: "numeric" },
   hours: { type: "text", inputMode: "decimal" },
 };
 

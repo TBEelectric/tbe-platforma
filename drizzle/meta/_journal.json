@@ -78,6 +78,13 @@
       "when": 1792147980000,
       "tag": "0010_notification",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792171682588,
+      "tag": "0011_missing_day_reminder_setting",
+      "breakpoints": true
     }
   ]
 }

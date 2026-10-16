@@ -819,6 +819,10 @@
           "label": "Čas odeslání připomínek",
           "hint": "v pracovní dny, český čas"
         },
+        "missingDayReminderDelayDays": {
+          "label": "Připomenout nevyplněný den po",
+          "hint": "pracovních dnech (1 = hned další pracovní den)"
+        },
         "nightStart": {
           "label": "Noc od",
           "hint": "čas"
@@ -865,7 +869,8 @@
         "time": "{value}",
         "duration": "{value} h",
         "minutes": "{value} min",
-        "hours": "{value} h"
+        "hours": "{value} h",
+        "workdays": "{value, plural, one {# pracovní den} few {# pracovní dny} other {# pracovních dnů}}"
       },
       "validFrom": "Platí od",
       "validFromHint": "dnes nebo později; zpětně měnit nejde",
@@ -877,6 +882,20 @@
       "errors": {
         "validFromPast": "Změna nemůže platit zpětně; zvolte dnešek nebo pozdější den.",
         "noChanges": "Žádná hodnota se nezměnila."
+      }
+    },
+    "reminders": {
+      "sentOne": "Připomínka odeslána: {name}.",
+      "sentMany": "{count, plural, =0 {Nikomu nebylo potřeba připomínat.} one {Připomínka odeslána # zaměstnanci.} few {Připomínka odeslána # zaměstnancům.} other {Připomínka odeslána # zaměstnancům.}}",
+      "skipped": "{count, plural, one {# zaměstnanec přeskočen} few {# zaměstnanci přeskočeni} other {# zaměstnanců přeskočeno}} (už potvrdil, nemá e-mail nebo už dnes připomínku dostal).",
+      "remindHint": "Pošle e-mail s výzvou k doplnění a potvrzení měsíce; nejvýš jednou denně.",
+      "remindMissingHint": "Pošle e-mail všem, kdo ještě nepotvrdili měsíc; každému nejvýš jednou denně.",
+      "errors": {
+        "notOpen": "Výkaz už je potvrzený nebo měsíc uzavřený; není co připomínat.",
+        "noEmail": "Zaměstnanec nemá e-mail nebo není aktivní.",
+        "alreadyToday": "Dnes už připomínku dostal.",
+        "cannotRemind": "Tomuto zaměstnanci nemůžete připomínat.",
+        "sendFailed": "E-mail se nepodařilo odeslat. Zkuste to znovu později."
       }
     }
   },
@@ -1171,5 +1190,48 @@
     "title": "Zaměstnanci",
     "subtitle": "Import zaměstnanců a zakázek z Excelu. Nejdřív uvidíte náhled změn, uloží se až po potvrzení. Nic se nemaže.",
     "downloadTemplate": "Stáhnout šablonu"
+  },
+  "emails": {
+    "greeting": "Dobrý den, {name},",
+    "footer": "Tento e-mail poslala automaticky aplikace TBE platforma. Neodpovídejte na něj.",
+    "openMonth": "Otevřít měsíc",
+    "missingDays": "{count, plural, one {Chybí záznam za # pracovní den} few {Chybí záznamy za # pracovní dny} other {Chybí záznamy za # pracovních dnů}}: {days}{more, select, yes { a další} other {}}.",
+    "reason": "Důvod: {reason}",
+    "missingDay": {
+      "subject": "Doplňte docházku za {date, date, weekday}",
+      "text": "za {date, date, long} nemáte v docházce žádný záznam ani absenci. Doplňte prosím, kdy a na čem jste pracovali, nebo zadejte absenci.",
+      "link": "Doplnit den"
+    },
+    "confirmStart": {
+      "subject": "Potvrďte docházku za {month, date, month}",
+      "text": "měsíc {month, date, month} skončil. Zkontrolujte prosím svou docházku a potvrďte ji nejpozději {deadline, date, short}."
+    },
+    "confirmDeadline": {
+      "subject": "Lhůta pro potvrzení docházky za {month, date, month}: {deadline, date, short}",
+      "text": "docházku za {month, date, month} jste ještě nepotvrdili. Lhůta pro potvrzení je {deadline, date, short}; doplňte prosím chybějící dny a měsíc potvrďte."
+    },
+    "manual": {
+      "subject": "Připomínka: docházka za {month, date, month}",
+      "text": "váš vedoucí nebo správce docházky vám připomíná doplnění a potvrzení docházky za {month, date, month}."
+    },
+    "approve": {
+      "subject": "Ke schválení: {count, plural, one {# výkaz} few {# výkazy} other {# výkazů}} za {month, date, month}",
+      "text": "{count, plural, one {na vaše schválení čeká # výkaz} few {na vaše schválení čekají # výkazy} other {na vaše schválení čeká # výkazů}} za {month, date, month}. Schvalte je prosím nejpozději {deadline, date, short}.",
+      "names": "Zaměstnanci: {names}.",
+      "link": "Otevřít schvalování"
+    },
+    "close": {
+      "subject": "Blíží se lhůta uzávěrky za {month, date, month}: {deadline, date, short}",
+      "text": "měsíc {month, date, month} je potřeba uzavřít a předat mzdové účetní do {deadline, date, short}. Schváleno je {approved} z {total} výkazů.",
+      "link": "Otevřít uzávěrku"
+    },
+    "returned": {
+      "subject": "Výkaz za {month, date, month} vám byl vrácen k opravě",
+      "text": "váš výkaz za {month, date, month} byl vrácen k opravě. Opravte prosím docházku a potvrďte měsíc znovu."
+    },
+    "reopened": {
+      "subject": "Měsíc {month, date, month} byl znovu otevřen",
+      "text": "správce docházky znovu otevřel váš výkaz za {month, date, month}. Opravte prosím docházku a potvrďte měsíc znovu."
+    }
   }
 }

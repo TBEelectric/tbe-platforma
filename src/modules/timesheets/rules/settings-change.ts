@@ -14,9 +14,10 @@ export type SettingField = keyof TimesheetSettings;
 
 /**
  * How a setting is entered: time of day "HH:MM", a duration "H:MM" (stored in minutes), whole
- * minutes, hours (decimal comma allowed) or a day of the following month.
+ * minutes, hours (decimal comma allowed), a day of the following month or a number of working days.
  */
-export type SettingKind = "time" | "duration" | "minutes" | "hours" | "day";
+export type SettingKind =
+  "time" | "duration" | "minutes" | "hours" | "day" | "workdays";
 
 export const SETTING_FIELDS: Record<
   SettingField,
@@ -26,6 +27,7 @@ export const SETTING_FIELDS: Record<
   approveDeadlineDay: { kind: "day", min: 1, max: 28 },
   closeDeadlineDay: { kind: "day", min: 1, max: 28 },
   reminderTime: { kind: "time" },
+  missingDayReminderDelayDays: { kind: "workdays", min: 1, max: 10 },
   nightStart: { kind: "time" },
   nightEnd: { kind: "time" },
   breakAfterWorkMinutes: { kind: "duration", min: 60, max: 1440 },
@@ -53,6 +55,7 @@ export const SETTING_GROUPS: Array<{
       "approveDeadlineDay",
       "closeDeadlineDay",
       "reminderTime",
+      "missingDayReminderDelayDays",
     ],
   },
   { id: "night", fields: ["nightStart", "nightEnd"] },
@@ -132,6 +135,7 @@ function fieldSchema(field: SettingField) {
       return hours(min, max);
     case "minutes":
     case "day":
+    case "workdays":
       return wholeNumber(min, max);
   }
 }

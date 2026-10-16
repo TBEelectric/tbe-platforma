@@ -21,6 +21,11 @@ const base = [
   { key: "approve_deadline_day", value: 5, validFrom: "2020-01-01" },
   { key: "close_deadline_day", value: 7, validFrom: "2020-01-01" },
   { key: "reminder_time", value: "07:00", validFrom: "2020-01-01" },
+  {
+    key: "missing_day_reminder_delay_days",
+    value: 1,
+    validFrom: "2020-01-01",
+  },
 ];
 
 describe("resolveSettings", () => {

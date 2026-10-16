@@ -22,6 +22,8 @@ const settingsSchema = z.object({
   approveDeadlineDay: deadlineDay,
   closeDeadlineDay: deadlineDay,
   reminderTime: time,
+  /** Working days after a day without a record when its reminder is sent (1 = the next working day). */
+  missingDayReminderDelayDays: z.number().int().min(1).max(10),
 });
 
 export type TimesheetSettings = z.infer<typeof settingsSchema>;
@@ -42,6 +44,7 @@ export const SETTING_KEYS: Record<keyof TimesheetSettings, string> = {
   approveDeadlineDay: "approve_deadline_day",
   closeDeadlineDay: "close_deadline_day",
   reminderTime: "reminder_time",
+  missingDayReminderDelayDays: "missing_day_reminder_delay_days",
 };
 
 export type SettingRow = { key: string; value: unknown; validFrom: string };

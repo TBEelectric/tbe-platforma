@@ -16,4 +16,5 @@ export const testSettings: TimesheetSettings = {
   approveDeadlineDay: 5,
   closeDeadlineDay: 7,
   reminderTime: "07:00",
+  missingDayReminderDelayDays: 1,
 };

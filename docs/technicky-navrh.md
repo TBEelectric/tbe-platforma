@@ -169,7 +169,21 @@ Prahy a lhůty jsou v `timesheet_settings` (platnost od `valid_from`), ne v kód
 `break_after_work_minutes`, `break_min_minutes`, `break_part_min_minutes`, `daily_work_warning_minutes`,
 `daily_rest_minutes`, `weekly_rest_minutes`, `dpp_yearly_limit_hours`, `dpc_weekly_average_limit_hours` (20),
 `confirm_deadline_day` (2), `approve_deadline_day` (5), `close_deadline_day` (7) – dny dalšího měsíce,
-`reminder_time` ("07:00").
+`reminder_time` ("07:00"), `missing_day_reminder_delay_days` (1 – za kolik pracovních dnů připomenout nevyplněný den).
+
+**Připomínky (e-maily, `rules/reminders.ts`):** worker posílá v pracovní dny od `reminder_time` (Europe/Prague):
+- nevyplněný den – pracovní den před `missing_day_reminder_delay_days` pracovními dny (1 = předchozí pracovní den,
+  v pondělí tedy pátek) bez záznamu práce a bez absence (žádost i schválená); jen aktivní zaměstnanci s docházkou,
+  e-mailem, úvazkem jiným než DPP a otevřeným výkazem;
+- potvrzení minulého měsíce 1. den a v den `confirm_deadline_day` (víkend nebo svátek → další pracovní den; padnou-li
+  na stejný den, jen jedna) zaměstnancům s otevřeným výkazem;
+- schválení den před `approve_deadline_day` (víkend nebo svátek → předchozí pracovní den) každému, na koho čekají
+  potvrzené výkazy (vedoucí party; správce u výkazů vedoucích, správců a part bez vedoucího), se seznamem jmen;
+- uzávěrka den před `close_deadline_day` (posun jako u schválení) správcům, není-li měsíc uzavřený.
+Ruční „Připomenout“ (Schvalování, jednomu) a „Připomenout chybějícím“ (Uzávěrka, všem s otevřeným výkazem) jde
+jen na otevřený výkaz neuzavřeného měsíce, nejvýš jednou denně. Každé odeslání zapíše `reminder_log` (příjemce,
+druh, den nebo měsíc), takže opakovaný běh ani restart nic nepošle dvakrát; frontu `notification` worker odesílá
+a nastaví `sent_at`. Texty podle `user.locale`, odkaz na den nebo měsíc vede na adresu aplikace (`BETTER_AUTH_URL`).
 
 ## Oprávnění
 
@@ -188,6 +202,7 @@ Prahy a lhůty jsou v `timesheet_settings` (platnost od `valid_from`), ne v kód
 | Smazat obvyklý den zaměstnance, nastavit výchozí šablonu firmy | Ne | Ne | Ano | Ano |
 | Pohotovost (vlastní v otevřeném měsíci / za jiného s důvodem) | Vlastní | Ano | Ano | Ano |
 | Označit interval jako přesčas (do schválení, s důvodem) | Ne | Ano | Ano | Ne |
+| Připomenout e-mailem nepotvrzený měsíc (jednomu / všem chybějícím) | Ne | Ano / Ne | Ano | Ne |
 | Připnout zakázky party | Ne | Ano | Ano | Ano |
 | Role a povolené účty | Ne | Ne | Ne | Ano |
 
