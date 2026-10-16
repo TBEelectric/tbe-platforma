@@ -1,6 +1,6 @@
 "use client";
 
-import { Coffee, Lock, Minus, Plus, X } from "lucide-react";
+import { Coffee, Lock, Minus, Plus, Trash2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
   useCallback,
@@ -677,7 +677,6 @@ export function MobileTimeline({
       {selected && !readOnly && (
         <EntryPanel
           entry={selected}
-          label={titleOf(selected)}
           night={isNightEntry(selected)}
           chips={chips}
           workTypes={day.workTypes}
@@ -737,7 +736,6 @@ function Handle({
 
 function EntryPanel({
   entry,
-  label,
   night,
   chips,
   workTypes,
@@ -750,7 +748,6 @@ function EntryPanel({
   onClose,
 }: {
   entry: TimelineEntry;
-  label: string;
   night: boolean;
   chips: TimelineJob[];
   workTypes: TimelineDay["workTypes"];
@@ -806,33 +803,46 @@ function EntryPanel({
           <X aria-hidden className="size-5" />
         </button>
       </div>
-      <div className="-mx-4 flex [scrollbar-width:none] items-center gap-2 overflow-x-auto px-4">
-        <KindChip
-          brk
-          active={isBreak}
-          onClick={() => onKind(isBreak ? "work" : "break")}
-        >
-          <Coffee className="size-[18px]" aria-hidden />
-          {t("break")}
-        </KindChip>
-        <span aria-hidden className="h-7 w-px shrink-0 bg-border" />
-        {chips.map((j) => (
+      {/* Kind and job chips scroll; deleting stays at the row's end, always visible. */}
+      <div className="-mx-4 flex items-center gap-2 pr-4">
+        <div className="flex min-w-0 flex-1 [scrollbar-width:none] items-center gap-2 overflow-x-auto pl-4">
           <KindChip
-            key={j.id}
-            active={!isBreak && entry.jobId === j.id}
-            onClick={() => onJob(j.id)}
+            brk
+            active={isBreak}
+            onClick={() => onKind(isBreak ? "work" : "break")}
           >
-            <span
-              aria-hidden
-              className="size-2.5 shrink-0 rounded-full"
-              style={{ background: j.color }}
-            />
-            <span className="max-w-[9.5rem] truncate">{jobLabel(j)}</span>
+            <Coffee className="size-[18px]" aria-hidden />
+            {t("break")}
           </KindChip>
-        ))}
-        <KindChip active={false} onClick={onMore}>
-          {t("moreJobs")}
-        </KindChip>
+          <span aria-hidden className="h-7 w-px shrink-0 bg-border" />
+          {chips.map((j) => (
+            <KindChip
+              key={j.id}
+              active={!isBreak && entry.jobId === j.id}
+              onClick={() => onJob(j.id)}
+            >
+              <span
+                aria-hidden
+                className="size-2.5 shrink-0 rounded-full"
+                style={{ background: j.color }}
+              />
+              <span className="max-w-[9.5rem] truncate">{jobLabel(j)}</span>
+            </KindChip>
+          ))}
+          <KindChip active={false} onClick={onMore}>
+            {t("moreJobs")}
+          </KindChip>
+        </div>
+        <span aria-hidden className="h-7 w-px shrink-0 bg-border" />
+        <button
+          type="button"
+          aria-label={t("delete")}
+          title={t("delete")}
+          onClick={onDelete}
+          className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-[#8a4205] [&_svg]:size-5"
+        >
+          <Trash2 aria-hidden />
+        </button>
       </div>
       {!isBreak && (
         <div className="-mx-4 flex [scrollbar-width:none] items-center gap-2 overflow-x-auto px-4">
@@ -852,19 +862,6 @@ function EntryPanel({
           {t("night.note")}
         </p>
       )}
-      <div className="flex items-center justify-between">
-        <span className="min-w-0 truncate text-sm font-semibold text-muted-foreground">
-          {t("duration", { duration: formatMinutes(entry.end - entry.start) })}
-          {!isBreak && ` · ${label}`}
-        </span>
-        <button
-          type="button"
-          onClick={onDelete}
-          className="h-11 shrink-0 px-2 text-sm font-semibold whitespace-nowrap text-[#8a4205]"
-        >
-          {t("delete")}
-        </button>
-      </div>
     </div>
   );
 }
