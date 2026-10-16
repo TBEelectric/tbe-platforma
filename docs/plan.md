@@ -439,7 +439,10 @@ na hotových obrazovkách), nakonec 4.9. Obrazovky do té doby ukazují tato tla
       důvod vrácení, Schválit / Vrátit k opravě, hromadně „Schválit N bez upozornění“. Poznámka „Váš vlastní
       výkaz schvaluje správce docházky“. Mobil: seznam karet místo tabulky, detail přes celou obrazovku.
       Odstranit placeholder `approval`.
-      Hotovo, když: vedoucí projde schválení i vrácení na desktopu i 375 px.
+      **Přepínání měsíců** (navíc proti náhledu, jen textově): v hlavičce ‹ › na předchozí / další měsíc stejně jako
+      v Můj měsíc (stejná komponenta a URL `?month=YYYY-MM-01`, zvolená parta zůstane); výchozí je minulý měsíc,
+      dopředu nejvýš aktuální měsíc. „Připomenout“ zatím neaktivní s nápovědou (zapojí 4.5).
+      Hotovo, když: vedoucí projde schválení i vrácení na desktopu i 375 px; přepnutí měsíce ukáže jeho výkazy.
 
 - [ ] **4.8 – Obrazovka Uzávěrka a nastavení lhůt**
       Podle `05-uzaverka.png`: hlavička se stavem a lhůtou, Připomenout chybějícím, Uzavřít měsíc (dialog se
