@@ -71,8 +71,9 @@ export const timesheetsMenu: MenuItem[] = [
     visible: canCloseTimesheetPeriod,
   },
   {
+    // Screens of the core (Zaměstnanci tile); a second way in from Docházka.
     label: "timesheets.menu.employees",
-    href: "/timesheets/employees",
+    href: "/employees",
     icon: Users,
     visible: canManageEmployees,
   },

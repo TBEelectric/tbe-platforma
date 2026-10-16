@@ -19,7 +19,7 @@ export default async function ImportPage() {
         subtitle={t("subtitle")}
         actions={
           <a
-            href="/timesheets/employees/import/template"
+            href="/employees/import/template"
             className={buttonVariants({ variant: "outline" })}
             download
           >
@@ -27,7 +27,7 @@ export default async function ImportPage() {
           </a>
         }
       />
-      <EmployeeTabs active="/timesheets/employees/import" showImport />
+      <EmployeeTabs active="/employees/import" showImport />
       <ImportPanel />
     </>
   );

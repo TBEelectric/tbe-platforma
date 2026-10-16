@@ -17,10 +17,7 @@ const employeeColumns = (t: ReturnType<typeof useTranslations<never>>) =>
     col.accessor("name", {
       header: t("core.employees.employee"),
       cell: ({ row }) => (
-        <Link
-          href={`/timesheets/employees/${row.original.id}`}
-          className="font-semibold"
-        >
+        <Link href={`/employees/${row.original.id}`} className="font-semibold">
           {row.original.name}
         </Link>
       ),

@@ -18,6 +18,11 @@ const nextConfig: NextConfig = {
         destination: "/jobs/:path*",
         permanent: true,
       },
+      {
+        source: "/timesheets/employees/:path*",
+        destination: "/employees/:path*",
+        permanent: true,
+      },
     ];
   },
   turbopack: {

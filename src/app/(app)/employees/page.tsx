@@ -24,13 +24,13 @@ export default async function EmployeesPage() {
         title={t("core.tabs.employees")}
         subtitle={t("core.pages.employeesSubtitle")}
         actions={
-          <Link href="/timesheets/employees/new" className={buttonVariants()}>
+          <Link href="/employees/new" className={buttonVariants()}>
             <Plus /> {t("core.pages.newEmployee")}
           </Link>
         }
       />
       <EmployeeTabs
-        active="/timesheets/employees"
+        active="/employees"
         showImport={canManageAccess(user.actor)}
       />
       <EmployeesTable rows={rows} />

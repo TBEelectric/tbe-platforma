@@ -29,7 +29,7 @@ export default async function TeamsPage() {
         subtitle={t("core.pages.teamsSubtitle")}
       />
       <EmployeeTabs
-        active="/timesheets/employees/teams"
+        active="/employees/teams"
         showImport={canManageAccess(user.actor)}
       />
       <TeamsTable rows={teams} />

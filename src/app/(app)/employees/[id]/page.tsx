@@ -27,21 +27,10 @@ import {
 import {
   EditEmployeeForm,
   EmploymentForm,
-  LeaveForm,
   RolesForm,
   TeamChangeForm,
 } from "@/modules/core/components/employee-forms";
-import {
-  canManageDayTemplates,
-  effectiveDayTemplate,
-  getDefaultDayTemplate,
-  getOwnDayTemplate,
-  listLeaveEntitlements,
-} from "@/modules/timesheets";
-import {
-  deleteDayTemplateAction,
-  setLeaveAction,
-} from "@/modules/timesheets/actions";
+import { EmployeeTimesheetsSections } from "@/modules/timesheets/components/employee/employee-sections";
 
 export const instant = false;
 
@@ -58,18 +47,13 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 
 export default async function EmployeeDetailPage({
   params,
-}: PageProps<"/timesheets/employees/[id]">) {
+}: PageProps<"/employees/[id]">) {
   const user = await requirePermission(canManageEmployees);
   const { id } = await params;
-  const [detail, teams, leave, ownTemplate, defaultTemplate] =
-    await Promise.all([
-      getEmployeeDetail(id),
-      listTeamOptions(),
-      listLeaveEntitlements(id),
-      getOwnDayTemplate(id),
-      getDefaultDayTemplate(),
-    ]);
-  const template = effectiveDayTemplate(ownTemplate, defaultTemplate);
+  const [detail, teams] = await Promise.all([
+    getEmployeeDetail(id),
+    listTeamOptions(),
+  ]);
   if (!detail) notFound();
   const t = await getTranslations();
   const format = await getFormatter();
@@ -86,15 +70,12 @@ export default async function EmployeeDetailPage({
   const isAdmin = canManageAccess(user.actor);
   const isSelf = emp.id === user.actor.employeeId;
   const currentTeam = periodOn(memberships, today);
-  const thisYearLeave = leave.find((l) => l.year === year);
   // Only an administrator may deactivate an administrator; nobody deactivates themselves.
   const canChangeState = !isSelf && (isAdmin || !roles.includes("admin"));
 
   return (
     <>
-      <BackLink href="/timesheets/employees">
-        {t("core.tabs.employees")}
-      </BackLink>
+      <BackLink href="/employees">{t("core.tabs.employees")}</BackLink>
       <PageHeader
         title={`${emp.firstName} ${emp.lastName}`}
         subtitle={
@@ -268,60 +249,12 @@ export default async function EmployeeDetailPage({
           )}
         </Section>
 
-        <Section title={t("core.detail.leave")}>
-          <LeaveForm
-            action={setLeaveAction.bind(null, emp.id)}
-            year={year}
-            initial={thisYearLeave}
-          />
-          {leave.filter((l) => l.year !== year).length > 0 && (
-            <ul className="text-sm text-muted-foreground">
-              {leave
-                .filter((l) => l.year !== year)
-                .map((l) => (
-                  <li key={l.id}>
-                    {t("core.detail.leaveYear", {
-                      year: String(l.year),
-                      entitled: l.hoursEntitled,
-                      carried: l.hoursCarriedOver,
-                    })}
-                  </li>
-                ))}
-            </ul>
-          )}
-        </Section>
-
-        <Section title={t("timesheets.dayTemplate.title")}>
-          <p className="text-[15px]">
-            {!template
-              ? t("timesheets.dayTemplate.none")
-              : template.source === "own"
-                ? t("timesheets.dayTemplate.own")
-                : t("timesheets.dayTemplate.usesDefault")}
-          </p>
-          {template && (
-            <ul className="text-sm text-muted-foreground">
-              {template.items.map((item) => (
-                <li key={`${item.from}-${item.to}`}>
-                  {t("timesheets.dayTemplate.item", {
-                    from: item.from,
-                    to: item.to,
-                    kind: t(`timesheets.dayTemplate.${item.kind}`),
-                  })}
-                </li>
-              ))}
-            </ul>
-          )}
-          {ownTemplate && canManageDayTemplates(user.actor) && (
-            <form action={deleteDayTemplateAction.bind(null, emp.id)}>
-              <ConfirmButton
-                confirm={t("timesheets.dayTemplate.confirmDelete")}
-              >
-                {t("timesheets.dayTemplate.delete")}
-              </ConfirmButton>
-            </form>
-          )}
-        </Section>
+        {/* Cards of other modules about this employee; the page composes them, core does not import them. */}
+        <EmployeeTimesheetsSections
+          employeeId={emp.id}
+          actor={user.actor}
+          year={year}
+        />
       </div>
     </>
   );

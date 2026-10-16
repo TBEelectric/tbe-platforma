@@ -54,7 +54,7 @@ const teamColumns = (t: T) =>
       header: t("team"),
       cell: ({ row }) => (
         <Link
-          href={`/timesheets/employees/teams/${row.original.id}`}
+          href={`/employees/teams/${row.original.id}`}
           className="font-semibold"
         >
           {row.original.name}

@@ -64,7 +64,7 @@ export async function setLeaveAction(
     formData,
     (user, data) =>
       setLeaveEntitlement({ userId: user.userId }, employeeId, data),
-    "/timesheets/employees",
+    "/employees",
   );
 }
 
@@ -75,7 +75,7 @@ export async function deleteDayTemplateAction(
 ): Promise<void> {
   const user = await requirePermission(canManageDayTemplates);
   await deleteDayTemplate({ userId: user.userId }, employeeId);
-  revalidatePath("/timesheets/employees", "layout");
+  revalidatePath("/employees", "layout");
   revalidatePath(DAY, "layout");
 }
 

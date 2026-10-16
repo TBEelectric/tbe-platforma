@@ -55,8 +55,8 @@
       "description": "Zakázky a zákazníci pro docházku i vozidla"
     },
     "core": {
-      "name": "Jádro",
-      "description": "Kmenová data sdílená moduly"
+      "name": "Zaměstnanci",
+      "description": "Zaměstnanci, party a import z Excelu"
     },
     "fleet": {
       "name": "Vozový park",
@@ -933,6 +933,13 @@
     "endNotBeforeStart": "Konec nesmí být před začátkem."
   },
   "core": {
+    "menu": {
+      "employees": "Zaměstnanci",
+      "employeesShort": "Zaměstnanci",
+      "teams": "Party",
+      "teamsShort": "Party",
+      "import": "Import z Excelu"
+    },
     "errors": {
       "emailOnlyAdmin": "Přihlašovací e-mail může zadat a měnit jen administrátor.",
       "personalNumberTaken": "Osobní číslo už má jiný zaměstnanec.",

@@ -25,7 +25,7 @@ export const instant = false;
 
 export default async function TeamDetailPage({
   params,
-}: PageProps<"/timesheets/employees/teams/[id]">) {
+}: PageProps<"/employees/teams/[id]">) {
   await requirePermission(canManageEmployees);
   const t = await getTranslations();
   const { id } = await params;
@@ -39,9 +39,7 @@ export default async function TeamDetailPage({
   const archived = !!team.archivedAt;
   return (
     <>
-      <BackLink href="/timesheets/employees/teams">
-        {t("core.tabs.teams")}
-      </BackLink>
+      <BackLink href="/employees/teams">{t("core.tabs.teams")}</BackLink>
       <PageHeader
         title={team.name}
         subtitle={

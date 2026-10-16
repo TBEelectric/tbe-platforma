@@ -10,11 +10,9 @@ export function EmployeeTabs({
 }) {
   const t = useTranslations("core.tabs");
   const tabs = [
-    { href: "/timesheets/employees", label: t("employees") },
-    { href: "/timesheets/employees/teams", label: t("teams") },
-    ...(showImport
-      ? [{ href: "/timesheets/employees/import", label: t("import") }]
-      : []),
+    { href: "/employees", label: t("employees") },
+    { href: "/employees/teams", label: t("teams") },
+    ...(showImport ? [{ href: "/employees/import", label: t("import") }] : []),
   ];
   return <LinkTabs tabs={tabs} active={active} />;
 }
