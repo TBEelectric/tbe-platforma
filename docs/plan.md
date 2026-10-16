@@ -364,7 +364,7 @@ Obrazovky do té doby ukazují tlačítka, jejichž krok ještě není hotový, 
       zakázky jako „Režie (bez zakázky)“, období nejvýš 400 dní; PDF má podpisové řádky zaměstnance a vedoucího.
       Řádky exportu čtou `ExportMonth` (MonthView i snímek), takže tvar snímku zůstal `format: 1`.
 
-- [ ] **4.5 – Připomínky a e-maily (worker)**
+- [x] **4.5 – Připomínky a e-maily (worker)**
       `src/worker.ts`: plánovač v jednom procesu (každý den v `reminder_time`, Europe/Prague, jen pracovní dny):
       (a) nevyplněný včerejší pracovní den (podle `missingWorkdays`, bez DPP, bez absence, jen aktivní
       zaměstnanci s docházkou), (b) potvrzení měsíce 1. a v den `confirm_deadline_day`, (c) vedoucím a správci
@@ -377,6 +377,40 @@ Obrazovky do té doby ukazují tlačítka, jejichž krok ještě není hotový, 
       `pnpm worker` běží a bez SMTP vypíše e-maily do logu.
       Zapojit tlačítka na hotových obrazovkách: Připomenout ve Schvalování (4.7) a Připomenout chybějícím
       v Uzávěrce (4.8).
+      Výsledek: pravidla `rules/reminders.ts` s testy: kdy (`dailyRunDue` – pracovní den od `reminder_time` v Praze,
+      i po změně času; `missingDayRefDate`; `monthRemindersDue` – potvrzení 1. a v den lhůty, víkend/svátek → další
+      pracovní den, padnou-li na stejný den jen jedna; schválení a uzávěrka den před lhůtou, víkend/svátek → předchozí
+      pracovní den), komu (`missingDayRecipients` – víkend, svátek, absence i žádost, DPP, bez úvazku, neaktivní,
+      bez docházky, bez e-mailu, nepotvrzený výkaz, už odesláno; `confirmRecipients`, `approveRecipients` – vedoucí
+      své partě, správci výkazy vedoucích, správců a part bez vedoucího; `closeRecipients`; ruční `canRemind`
+      a `manualReminderError`) a co (`emailContent`, `renderEmail` – prostý text, pozdrav, odkaz na den nebo měsíc
+      z `BETTER_AUTH_URL`). Nové nastavení `missing_day_reminder_delay_days` (výchozí 1 = další pracovní den;
+      v Nastavení „Připomenout nevyplněný den po … pracovních dnech“, migrace `0011` + seed). Služba `reminders.ts`
+      (`runDailyReminders`, `sendPendingNotifications`, `remindEmployee`, `remindMissing`): zápis do `reminder_log`
+      a odeslání v jedné transakci (`ON CONFLICT DO NOTHING`; selhání odeslání zápis vrátí), fronta `notification`
+      přes `FOR UPDATE SKIP LOCKED` a `sent_at`. `src/lib/mail.ts` (nodemailer 10.0.16; bez `SMTP_HOST` jen výpis
+      do logu), `SMTP_*` v `.env.example`. `src/worker.ts`: tik každou minutu (oznámení + denní připomínky,
+      po chybě nový pokus za 10 min), `--once` = jeden průchod, čisté ukončení na SIGINT/SIGTERM. Akce
+      `remindEmployeeAction` (vedoucí party, správce) a `remindMissingAction` (správce) s auditem; `handleFormAction`
+      umí `revalidate: null`, aby výsledek u tlačítka nezmizel. Texty `emails.*` a `timesheets.reminders.*`.
+      Ověřeno: lint, typecheck, 508 testů, build. `pnpm worker --once` na lokální DB (pá 16. 10.): 12 oznámení
+      (znovu otevřené září) a 5 připomínek nevyplněného 15. 10. vypsaných do logu (R. Kučera jako neaktivní ne),
+      druhý běh 0. Na kopii DB simulace dnů: 2. 11. připomínka 30. 10. + „Lhůta pro potvrzení“ (1. 11. je neděle,
+      jen jedna), druhý běh téhož dne 0; 4. 11. „Ke schválení“ – J. Novák 4 výkazy své party, O. Marek 5, správci
+      výkazy vedoucích a navzájem své; 6. 11. uzávěrka oběma správcům. `pnpm worker` 70 s a SIGTERM: start, běh,
+      čisté ukončení. V prohlížeči přes vývojové přihlášení: vedoucí J. Novák – Připomenout u L. Beneše „nemá e-mail“,
+      u M. Dvořáka odesláno a podruhé „Dnes už připomínku dostal“, u T. Krále „Připomínka odeslána“ (řádek
+      `reminder_log` + audit s autorem); správce L. Černá – Připomenout chybějícím po potvrzení: 9 odesláno, 4
+      přeskočeni, podruhé 0 a 13 přeskočeno; desktop i 375 px.
+      Vyzkoušet: Schvalování → Připomenout; Uzávěrka → Připomenout chybějícím; e-maily ruční připomínky vypisuje
+      do konzole `pnpm dev`, ostatní `pnpm worker`.
+      Na VPS: worker je samostatný proces se stejným kódem a `.env` jako web (DATABASE_URL, BETTER_AUTH_URL =
+      veřejná adresa, SMTP_*); v Docker Compose služba `worker` ze stejného obrazu s příkazem `pnpm worker`
+      a `restart: unless-stopped`, jedna instance stačí (dvě by nic neposlaly dvakrát). Nastavení Compose pro VPS
+      přijde s nasazením.
+      Rozhodl jsem: ruční připomínka jde jen na otevřený výkaz neuzavřeného měsíce, nejvýš jednou denně, nikdy sobě
+      (administrátor bez role nepřipomíná); oznámení zaměstnanci bez e-mailu nebo neaktivnímu se označí `sent_at`
+      bez odeslání (jinak by čekalo navždy); připomínky jen prostým textem; worker nedohání dny, kdy neběžel.
 
 - [x] **4.6 – Obrazovka Můj měsíc** [zastavit po]
       Podle `docs/design/screens/03-muj-mesic.png` (desktop) nad `getMonth` a akcemi z 4.2–4.3: hlavička (měsíc,
