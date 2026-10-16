@@ -276,7 +276,7 @@ Značky jako v 3b: `[opus]`, `[zastavit po]`, `[ručně]`.
       ve stavu otevřený nebo potvrzený; pohotovost se zamyká podle měsíce svého začátku (u úpravy starý i nový
       měsíc); `getMonth` vrací `null` bez oprávnění; parta v měsíci = poslední členství v měsíci.
 
-- [ ] **4.3 – Stavy výkazu a uzávěrka (pravidla a server)** [opus]
+- [x] **4.3 – Stavy výkazu a uzávěrka (pravidla a server)** [opus]
       Čistá funkce přechodů podle „Stavy výkazu“ v `technicky-navrh.md` s testy: kdo smí, za jakých podmínek,
       hláška při odmítnutí. Potvrdit (zaměstnanec, nejdřív 1. den dalšího měsíce, bez chybějících pracovních dnů,
       bez nerozhodnutých žádostí o absenci v měsíci); schválit (vedoucí své party, správce kohokoli; nikdo sám
@@ -289,6 +289,31 @@ Značky jako v 3b: `[opus]`, `[zastavit po]`, `[ručně]`.
       ok / chyba / info podle `05-uzaverka`). Server akce s oprávněními, auditem v jedné transakci a událostmi
       pro e-mail (fronta pro 4.5, zatím jen zápis).
       Hotovo, když: všechny přechody a odmítnutí jsou otestované; zámek intervalů a absencí po potvrzení platí.
+      Výsledek: pravidla `rules/timesheet-transitions.ts` (`timesheetTransition` pro potvrdit / schválit / vrátit,
+      `approverCheck`, `bulkApprovable`) a `rules/period-close.ts` (`periodCloseChecks` podle 05-uzaverka:
+      schválené výkazy, absence, chybějící dny jako chyba, upozornění jen jako info; `periodCloseError`,
+      `periodReopenError`, `reopenedStatus`, `nextExportVersion`) s testy. Služba `timesheet-flow.ts`:
+      `changeTimesheet`, `bulkApproveTimesheets`, `getPeriodState`, `closePeriod`, `reopenPeriod`, vše v jedné
+      transakci se zámkem řádku, auditem a oznámeními. Server akce `confirmTimesheetAction`,
+      `decideTimesheetAction` (approve / return), `bulkApproveAction`, `closePeriodAction`, `reopenPeriodAction`.
+      Migrace `0010_notification` (fronta e-mailů pro 4.5). Snímek `period_export` = celý `getTeamMonth("all")`
+      (souhrny, intervaly, absence, pohotovosti, zůstatek dovolené, popisky, kontroly; `format: 1`), `MonthView`
+      nově nese i absence měsíce. Zámek: stávající `isMonthLocked` už zamyká intervaly, absence i pohotovost
+      od potvrzení a vrácením odemyká, takže jsem ho jen pokryl testy. Ověřeno skriptem na kopii lokální DB
+      (říjen 2026, „dnes“ 3. 11.): potvrzení před koncem měsíce / s chybějícími dny odmítnuto; po potvrzení
+      pohotovost odmítnuta, po vrácení jde zapsat; vrácení bez důvodu i cizím vedoucím odmítnuto; vedoucí
+      ani správce (je-li jiný) si sám neschválí; uzávěrka s neschválenými odmítnuta, pak verze 1; znovuotevření
+      jen pro Petra (ostatní zůstanou schválení a zamčení), znovu uzavřeno jako verze 2; jediný správce si
+      schválil vlastní výkaz s `selfApproval: true` v auditu; oznámení `timesheet_returned` / `timesheet_reopened`
+      zapsaná s prázdným `sent_at`.
+      Vyzkoušet: zatím nic v UI (obrazovky 4.6–4.8); po `pnpm db:migrate` existuje tabulka
+      `timesheets.notification`.
+      Rozhodl jsem: vrátit jde potvrzený i schválený výkaz až do uzávěrky (tvoje rozhodnutí); potvrzuje jen
+      zaměstnanec sám; administrátor bez role správce neschvaluje; výkaz vedoucího i správce schvaluje správce;
+      chybějící dny jsou v kontrole před uzávěrkou chyba; uzavřít jde až po skončení měsíce; při znovuotevření
+      je nutné vybrat aspoň jednoho zaměstnance a důvod se mu ukáže jako důvod vrácení; potvrzení smaže starý
+      důvod vrácení; e-mailová oznámení se zapisují jen při vrácení a znovuotevření (při potvrzení a uzávěrce
+      zatím ne, připomínky lhůt řeší 4.5).
 
 - [ ] **4.4 – Exporty (server)**
       Ze snímku `period_export` (jen uzavřený měsíc, vybraná verze): XLSX pro mzdy – list Souhrn (řádek na
