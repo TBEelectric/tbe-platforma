@@ -28,6 +28,9 @@ export * from "./rules/timesheet-transitions";
 export * from "./rules/period-close";
 export * from "./rules/approval-overview";
 export * from "./rules/audit-history";
+export * from "./rules/export-rows";
+export * from "./rules/export-snapshot";
+export * from "./rules/job-hours";
 
 export const timesheetsModule: ModuleInfo = {
   id: "timesheets",
