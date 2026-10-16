@@ -26,6 +26,7 @@ export * from "./rules/month-summary";
 export * from "./rules/month-changes";
 export * from "./rules/timesheet-transitions";
 export * from "./rules/period-close";
+export * from "./rules/approval-overview";
 
 export const timesheetsModule: ModuleInfo = {
   id: "timesheets",
