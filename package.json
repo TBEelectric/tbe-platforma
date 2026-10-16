@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:lan": "tsx --env-file=.env src/scripts/dev-lan.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

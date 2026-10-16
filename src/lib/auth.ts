@@ -1,9 +1,11 @@
+import { networkInterfaces } from "node:os";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { devLogin } from "@/lib/dev-login-plugin";
+import { lanAddresses, lanOrigins } from "@/lib/lan";
 import { findEmployeeByEmail, signInRejection } from "@/modules/core";
 import * as coreSchema from "@/modules/core/schema";
 
@@ -22,6 +24,15 @@ export const auth = betterAuth({
   appName: "TBE platforma",
   secret: authEnv.BETTER_AUTH_SECRET,
   baseURL: authEnv.BETTER_AUTH_URL,
+  // Development only: the dev server opened from a phone at http://<Mac IP>:<port> (pnpm dev:lan).
+  // next dev sets PORT; a production build inlines NODE_ENV, so production trusts only baseURL.
+  trustedOrigins:
+    process.env.NODE_ENV === "development"
+      ? lanOrigins(
+          lanAddresses(networkInterfaces()),
+          process.env.PORT ?? "3000",
+        )
+      : [],
   database: drizzleAdapter(db, {
     provider: "pg",
     schema: {
