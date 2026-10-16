@@ -7,6 +7,8 @@ import { loadActions, loadRoutes, sessionCookie } from "./http";
 import { Report } from "./report";
 import { startServer } from "./server";
 import { actionsSuite, reopenAction } from "./suites/actions";
+import { exportsSuite } from "./suites/exports";
+import { mailSuite } from "./suites/mail";
 import { pagesSuite } from "./suites/pages";
 import { devLoginSuite, sessionSuite } from "./suites/session";
 
@@ -27,7 +29,11 @@ export async function runChecks(
     // Pages first: they expect the test data as created.
     await pagesSuite(ctx);
     await actionsSuite(ctx);
+    // The closed month (closed by the manager in actionsSuite) before it is reopened.
+    await exportsSuite(ctx);
+    await mailSuite(ctx, "manual");
     await reopenAction(ctx);
+    await mailSuite(ctx, "worker");
     await devLoginSuite(ctx);
     // Last: archives people and removes roles.
     await sessionSuite(ctx);
