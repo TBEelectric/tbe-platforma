@@ -497,7 +497,7 @@ function ConfirmBar({
       {first && dayHref && (
         <Link
           href={dayHref(first)}
-          className="font-semibold text-warning-foreground"
+          className="-my-2.5 inline-flex min-h-11 items-center font-semibold text-warning-foreground"
         >
           {t("timesheets.month.barFill", { day: calendarDate(first) })}
         </Link>

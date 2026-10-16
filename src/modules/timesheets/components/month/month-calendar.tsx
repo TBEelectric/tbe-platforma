@@ -136,6 +136,24 @@ export function MonthCalendar({
     if (!selected) return;
     const onKey = (event: KeyboardEvent) => {
       if (event.defaultPrevented) return;
+      // The phone sheet is modal: Tab stays inside it.
+      if (event.key === "Tab" && !desktop) {
+        const focusable = [
+          ...(popoverRef.current?.querySelectorAll<HTMLElement>(
+            "button:not([disabled]), a[href]",
+          ) ?? []),
+        ];
+        if (focusable.length === 0) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        const active = document.activeElement;
+        if (event.shiftKey && active === first) last.focus();
+        else if (!event.shiftKey && active === last) first.focus();
+        else if (!popoverRef.current?.contains(active)) first.focus();
+        else return;
+        event.preventDefault();
+        return;
+      }
       if (event.key === "Escape") close();
       else if (event.key === "ArrowLeft") step(-1);
       else if (event.key === "ArrowRight") step(1);
@@ -365,6 +383,9 @@ function DayCell({
     );
 
   const label = t("month.openDay", { date: calendarDate(day.date) });
+  const spoken = [main, ...lines].filter(Boolean);
+  if (spoken.length === 0 && day.state === "weekend")
+    spoken.push(t("month.dayWeekend"));
   // Cells have one size; long texts (holiday names) are cut and shown whole on hover.
   const tooltip = [
     format.dateTime(calendarDate(day.date), "weekday"),
@@ -377,7 +398,7 @@ function DayCell({
       onClick={onOpen}
       aria-haspopup="dialog"
       aria-expanded={selected}
-      aria-label={`${label}: ${[main, ...lines].filter(Boolean).join(", ")}`}
+      aria-label={spoken.length ? `${label}: ${spoken.join(", ")}` : label}
       title={tooltip}
       className={cn(
         "flex h-14 min-w-0 cursor-pointer flex-col overflow-hidden rounded-lg border px-1.5 py-1.5 text-left no-underline hover:border-primary/60 sm:h-24 sm:rounded-[10px] sm:px-3 sm:py-2",
@@ -521,7 +542,7 @@ function DayDetail({
   }
 
   const iconButton =
-    "inline-flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border bg-card hover:bg-muted disabled:cursor-default disabled:opacity-40 [&_svg]:size-4";
+    "inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-border bg-card hover:bg-muted disabled:cursor-default disabled:opacity-40 [&_svg]:size-4";
 
   return (
     <>

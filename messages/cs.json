@@ -710,7 +710,8 @@
         "standby_deleted": "Pohotovost smazána"
       },
       "waitingConfirm": "Čeká na potvrzení zaměstnancem.",
-      "subtitleNoFund": "{scope} · schválit do {deadline, date, dayMonth}"
+      "subtitleNoFund": "{scope} · schválit do {deadline, date, dayMonth}",
+      "tableCaption": "Výkazy zaměstnanců"
     },
     "monthSomeone": {
       "subtitle": "Vyberte zaměstnance, jehož měsíc chcete vidět.",

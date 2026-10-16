@@ -318,6 +318,7 @@ function TeamTable({ teams }: { teams: TeamProgress[] }) {
   return (
     <>
       <table className="w-full text-[15px] max-sm:hidden">
+        <caption className="sr-only">{t("teamsTitle")}</caption>
         <thead>
           <tr className="bg-[#f6f8fa] text-left text-[13px] font-semibold text-muted-foreground">
             <th scope="col" className="rounded-l-lg px-3 py-2.5 font-semibold">

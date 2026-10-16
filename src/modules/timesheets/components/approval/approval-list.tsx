@@ -175,6 +175,7 @@ export function ApprovalList({
       {/* Desktop: table. */}
       <div className="hidden overflow-x-auto lg:block">
         <table className="w-full border-collapse text-sm">
+          <caption className="sr-only">{t("tableCaption")}</caption>
           <thead>
             {table.getHeaderGroups().map((group) => (
               <tr key={group.id}>
