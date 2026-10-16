@@ -5,7 +5,6 @@ import { PageHeader } from "@/components/shell/page-header";
 import { buttonVariants } from "@/components/ui/button";
 import { requirePermission } from "@/lib/current-user";
 import { canManageJobs, listCustomers } from "@/modules/core";
-import { JobTabs } from "@/modules/core/components/job-tabs";
 import { CustomersTable } from "@/modules/core/components/lists";
 
 export const instant = false;
@@ -17,7 +16,7 @@ export default async function CustomersPage() {
   return (
     <>
       <PageHeader
-        title={t("core.tabs.jobs")}
+        title={t("core.tabs.customers")}
         subtitle={t("core.pages.customersSubtitle")}
         actions={
           <Link href="/jobs/customers/new" className={buttonVariants()}>
@@ -25,7 +24,6 @@ export default async function CustomersPage() {
           </Link>
         }
       />
-      <JobTabs active="/jobs/customers" />
       <CustomersTable rows={customers} />
     </>
   );

@@ -4,18 +4,13 @@ import Link from "next/link";
 import { PageHeader } from "@/components/shell/page-header";
 import { buttonVariants } from "@/components/ui/button";
 import { requirePermission } from "@/lib/current-user";
-import {
-  canManageAccess,
-  canManageEmployees,
-  listEmployees,
-} from "@/modules/core";
-import { EmployeeTabs } from "@/modules/core/components/employee-tabs";
+import { canManageEmployees, listEmployees } from "@/modules/core";
 import { EmployeesTable } from "@/modules/core/components/employees-table";
 
 export const instant = false;
 
 export default async function EmployeesPage() {
-  const user = await requirePermission(canManageEmployees);
+  await requirePermission(canManageEmployees);
   const t = await getTranslations();
   const rows = await listEmployees();
   return (
@@ -28,10 +23,6 @@ export default async function EmployeesPage() {
             <Plus /> {t("core.pages.newEmployee")}
           </Link>
         }
-      />
-      <EmployeeTabs
-        active="/employees"
-        showImport={canManageAccess(user.actor)}
       />
       <EmployeesTable
         rows={rows}

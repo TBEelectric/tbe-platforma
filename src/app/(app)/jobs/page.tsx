@@ -5,7 +5,6 @@ import { PageHeader } from "@/components/shell/page-header";
 import { buttonVariants } from "@/components/ui/button";
 import { requirePermission } from "@/lib/current-user";
 import { canManageJobs, listJobs } from "@/modules/core";
-import { JobTabs } from "@/modules/core/components/job-tabs";
 import { JobsTable } from "@/modules/core/components/lists";
 
 export const instant = false;
@@ -25,7 +24,6 @@ export default async function JobsPage() {
           </Link>
         }
       />
-      <JobTabs active="/jobs" />
       <JobsTable rows={jobs} />
     </>
   );

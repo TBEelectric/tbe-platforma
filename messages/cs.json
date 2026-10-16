@@ -1001,8 +1001,7 @@
       "jobs": "Zakázky",
       "customers": "Zákazníci",
       "employees": "Zaměstnanci",
-      "teams": "Party",
-      "import": "Import z Excelu"
+      "teams": "Party"
     },
     "lists": {
       "archiveFilter": "Filtr archivace",

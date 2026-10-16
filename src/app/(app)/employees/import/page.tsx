@@ -4,7 +4,6 @@ import { PageHeader } from "@/components/shell/page-header";
 import { buttonVariants } from "@/components/ui/button";
 import { requirePermission } from "@/lib/current-user";
 import { canManageAccess } from "@/modules/core";
-import { EmployeeTabs } from "@/modules/core/components/employee-tabs";
 import { ImportPanel } from "@/modules/timesheets/components/import-panel";
 
 export const instant = false;
@@ -27,7 +26,6 @@ export default async function ImportPage() {
           </a>
         }
       />
-      <EmployeeTabs active="/employees/import" showImport />
       <ImportPanel />
     </>
   );
