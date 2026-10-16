@@ -301,9 +301,9 @@ export function MonthScreen({
               const job = view.jobs.find((x) => x.id === j.jobId);
               return {
                 key: j.jobId ?? "none",
-                label: job
-                  ? `${job.code} ${job.label}`
-                  : t("timesheets.month.noJob"),
+                label: job ? job.label : t("timesheets.month.noJob"),
+                // The name under „Firma, místo“ (the label already is the name without them).
+                detail: job && job.name !== job.label ? job.name : undefined,
                 color: job?.color,
                 minutes: j.minutes,
               };
@@ -692,7 +692,13 @@ function BreakdownCard({
   empty,
 }: {
   title: string;
-  rows: Array<{ key: string; label: string; color?: string; minutes: number }>;
+  rows: Array<{
+    key: string;
+    label: string;
+    detail?: string;
+    color?: string;
+    minutes: number;
+  }>;
   empty: string;
 }) {
   return (
@@ -707,15 +713,22 @@ function BreakdownCard({
             key={row.key}
             className="flex items-baseline justify-between gap-3 border-b border-border py-2 first:pt-0 last:border-b-0 last:pb-0"
           >
-            <span className="flex min-w-0 items-center gap-2">
+            <span className="flex min-w-0 items-start gap-2">
               {row.color && (
                 <span
                   aria-hidden
-                  className="size-2.5 shrink-0 rounded-full"
+                  className="mt-[7px] size-2.5 shrink-0 rounded-full"
                   style={{ background: row.color }}
                 />
               )}
-              <span className="truncate">{row.label}</span>
+              <span className="flex min-w-0 flex-col">
+                <span className="truncate">{row.label}</span>
+                {row.detail && (
+                  <span className="truncate text-sm text-muted-foreground">
+                    {row.detail}
+                  </span>
+                )}
+              </span>
             </span>
             <span className="font-bold tabular-nums">
               {formatMinutes(row.minutes)}

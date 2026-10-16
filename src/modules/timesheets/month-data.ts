@@ -107,8 +107,14 @@ export type MonthView = {
 };
 
 export type MonthLookups = {
-  /** Jobs used in the month(s): "Firma, místo", number and colour. */
-  jobs: Array<{ id: string; code: string; label: string; color: string }>;
+  /** Jobs used in the month(s): "Firma, místo", job name, number and colour. */
+  jobs: Array<{
+    id: string;
+    code: string;
+    label: string;
+    name: string;
+    color: string;
+  }>;
   workTypes: Array<{ id: string; name: string; code: string }>;
 };
 
@@ -434,6 +440,7 @@ async function lookups(views: MonthView[]): Promise<MonthLookups> {
       id: j.id,
       code: j.code,
       label: jobLabel(j),
+      name: j.name,
       color: jobColor(j),
     })),
     workTypes,
