@@ -139,7 +139,29 @@
       "cannotFlagOvertime": "Přesčas u tohoto intervalu nemůžete označit.",
       "overtimeOnlyWork": "Jako přesčas lze označit jen práci.",
       "overtimeLocked": "Výkaz je schválený nebo měsíc uzavřený, přesčas nelze měnit.",
-      "overtimeReasonRequired": "Uveďte důvod změny přesčasu."
+      "overtimeReasonRequired": "Uveďte důvod změny přesčasu.",
+      "periodClosed": "Měsíc je uzavřený. Změnu udělá správce docházky po znovuotevření.",
+      "confirmOwnOnly": "Potvrdit lze jen vlastní výkaz.",
+      "alreadyConfirmed": "Výkaz už je {status}.",
+      "confirmTooEarly": "Měsíc lze potvrdit nejdřív {date, date, dayMonth}.",
+      "confirmMissingDays": "{count, plural, one {Chybí zápis za # pracovní den} few {Chybí zápis za # pracovní dny} other {Chybí zápis za # pracovních dní}} (první {first, date, dayMonth}). Doplňte intervaly nebo absenci.",
+      "confirmPendingAbsences": "{count, plural, one {# žádost o absenci ještě nebyla rozhodnuta} few {# žádosti o absenci ještě nebyly rozhodnuty} other {# žádostí o absenci ještě nebylo rozhodnuto}}.",
+      "cannotApproveOwn": "Vlastní výkaz schválit ani vrátit nemůžete.",
+      "approvedByManagerOnly": "Výkaz vedoucího nebo správce schvaluje správce docházky.",
+      "cannotApprove": "Tento výkaz nemůžete schválit ani vrátit.",
+      "approveNotConfirmed": "Zaměstnanec výkaz ještě nepotvrdil.",
+      "alreadyApproved": "Výkaz už je {status}.",
+      "returnNotConfirmed": "Vrátit lze jen potvrzený nebo schválený výkaz.",
+      "returnReasonRequired": "Uveďte důvod vrácení – zaměstnanec ho uvidí.",
+      "bulkHasWarnings": "Výkaz má upozornění, projděte ho jednotlivě.",
+      "cannotClosePeriod": "Uzávěrku a znovuotevření dělá jen správce docházky.",
+      "periodAlreadyClosed": "Měsíc už je uzavřený.",
+      "periodNotClosed": "Měsíc není uzavřený.",
+      "closeTooEarly": "Měsíc lze uzavřít nejdřív {date, date, dayMonth}.",
+      "closeChecksFailed": "Měsíc zatím nelze uzavřít – projděte kontrolu před uzávěrkou.",
+      "reopenReasonRequired": "Uveďte důvod znovuotevření.",
+      "reopenChooseEmployees": "Vyberte zaměstnance, jejichž výkaz se vrátí k opravě.",
+      "reopenUnknownEmployee": "Vybraný zaměstnanec nemá v tomto měsíci uzavřený výkaz."
     },
     "messages": {
       "absenceRequested": "Žádost odeslána ke schválení.",
@@ -152,7 +174,13 @@
       "standbySaved": "Pohotovost uložena.",
       "standbyDeleted": "Pohotovost smazána.",
       "overtimeSet": "Interval označen jako přesčas.",
-      "overtimeCleared": "Označení přesčasu zrušeno."
+      "overtimeCleared": "Označení přesčasu zrušeno.",
+      "timesheetConfirmed": "Měsíc potvrzen a odeslán ke schválení.",
+      "timesheetApproved": "Výkaz schválen.",
+      "timesheetReturned": "Výkaz vrácen zaměstnanci k opravě.",
+      "bulkApproved": "{approved, plural, one {Schválen # výkaz} few {Schváleny # výkazy} other {Schváleno # výkazů}}{skipped, plural, =0 {} other {, # přeskočeno}}.",
+      "periodClosed": "Měsíc uzavřen, podklad pro mzdy verze {version}.",
+      "periodReopened": "Měsíc znovu otevřen, {count, plural, one {# výkaz vrácen} few {# výkazy vráceny} other {# výkazů vráceno}} k opravě."
     },
     "dayTemplate": {
       "title": "Obvyklý den",
@@ -354,6 +382,23 @@
     "someone": {
       "subtitle": "Den {date}. Každá změna za jiného vyžaduje důvod, který se uloží do historie.",
       "nobody": "Nemáte nikoho, za koho byste mohli zapisovat."
+    },
+    "close": {
+      "checks": {
+        "approvedTitle": "Všechny výkazy schválené",
+        "approvedOk": "{count, plural, one {# výkaz je schválený} few {Všechny # výkazy jsou schválené} other {Všech # výkazů je schválených}}.",
+        "approvedMissing": "Zbývá {remaining}: {confirmed, plural, one {# čeká} few {# čekají} other {# čeká}} na schválení, {open, plural, one {# nepotvrdil zaměstnanec} few {# nepotvrdili zaměstnanci} other {# nepotvrdilo zaměstnanců}}.",
+        "absencesTitle": "Absence a dovolené zapsané",
+        "absencesOk": "Absence v měsíci jsou rozhodnuté.",
+        "absencesNone": "V měsíci nejsou žádné absence.",
+        "absencesPending": "{count, plural, one {# žádost o absenci čeká} few {# žádosti o absenci čekají} other {# žádostí o absenci čeká}} na rozhodnutí.",
+        "missingDaysTitle": "Bez chybějících dnů",
+        "missingDaysOk": "Všechny pracovní dny mají záznam nebo absenci.",
+        "missingDaysFound": "{count, plural, one {# zaměstnanec má} few {# zaměstnanci mají} other {# zaměstnanců má}} pracovní dny bez záznamu.",
+        "warningsTitle": "Upozornění k posouzení",
+        "warningsNone": "Žádný výkaz nemá upozornění.",
+        "warningsFound": "{count, plural, one {# výkaz má} few {# výkazy mají} other {# výkazů má}} upozornění (přestávka, odpočinek, limity dohod)."
+      }
     }
   },
   "errors": {
