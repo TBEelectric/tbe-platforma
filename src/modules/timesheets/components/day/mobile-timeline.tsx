@@ -787,7 +787,8 @@ function EntryPanel({
       data-timeline-panel
       role="group"
       aria-label={t("panelLabel")}
-      className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 flex flex-col gap-2.5 rounded-t-[18px] bg-card px-4 pt-2 pb-3 shadow-[0_-8px_30px_rgba(15,47,69,.18)]"
+      // Covers the bottom navigation while an interval is open (as the day detail in Můj měsíc).
+      className="fixed inset-x-0 bottom-0 z-50 flex flex-col gap-2.5 rounded-t-[18px] bg-card px-4 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(15,47,69,.18)]"
     >
       <div aria-hidden className="mx-auto h-1.5 w-10 rounded-full bg-border" />
       <div className="flex items-center justify-between gap-1">
