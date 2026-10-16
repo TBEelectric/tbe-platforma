@@ -506,6 +506,9 @@
       "detailReasonHint": "Změny za jiného se zapisují s důvodem.",
       "detailKeys": "← → další den · Esc zavřít"
     },
+    "approval": {
+      "overtime": "Přesčas"
+    },
     "monthSomeone": {
       "subtitle": "Vyberte zaměstnance, jehož měsíc chcete vidět.",
       "nobody": "Nemáte přístup k měsíci žádného zaměstnance."

@@ -28,23 +28,14 @@ import { formatMinutes } from "@/lib/duration";
 import { cn } from "@/lib/utils";
 import type { MonthDay } from "../../rules/month-summary";
 import type { AbsenceType } from "../../rules/time-entry";
+import {
+  Chip,
+  EntryRow,
+  NO_JOB_COLOR,
+  useEndText,
+  type DetailEntry,
+} from "./entry-row";
 import { useStandbyEditor, type StandbyItem } from "./standby-panel";
-
-/** One interval of the day for the detail (times in Prague, prepared on the server). */
-export type DetailEntry = {
-  id: string;
-  kind: "work" | "break";
-  from: string;
-  to: string;
-  /** Ends after midnight (the entry belongs to the day it started). */
-  nextDay: boolean;
-  startMs: number;
-  endMs: number;
-  minutes: number;
-  job: { code: string; label: string; color: string } | null;
-  workType: string | null;
-  note: string | null;
-};
 
 /** What the day detail shows besides the calendar day itself (MonthView data of one day). */
 export type DayDetailData = {
@@ -57,7 +48,6 @@ export type DayDetailData = {
 };
 
 const WEEK_MONDAY = "2024-01-01"; // a Monday, for weekday names
-const NO_JOB_COLOR = "#9aa5b1";
 const POPOVER_WIDTH = 390;
 /** Width from which the desktop layout is used (docs/design.md, Responzivita). */
 const DESKTOP_QUERY = "(min-width: 1024px)";
@@ -486,8 +476,7 @@ function DayDetail({
     (latest, e) => (!latest || e.endMs > latest.endMs ? e : latest),
     undefined,
   );
-  const endText = (e: DetailEntry) =>
-    e.nextDay ? t("timeline.nextDayMark", { time: e.to }) : e.to;
+  const endText = useEndText();
 
   const state =
     day.state === "filled" || day.state === "absence"
@@ -641,54 +630,7 @@ function DayDetail({
         {(entries.length > 0 || absences.length > 0) && (
           <ul className="flex flex-col">
             {entries.map((e) => (
-              <li
-                key={e.id}
-                className="grid grid-cols-[88px_minmax(0,1fr)_auto] items-start gap-x-2.5 border-t border-[#eef1f5] py-2 first:border-t-0"
-              >
-                <span className="pt-px text-[13px] text-muted-foreground tabular-nums">
-                  {e.from}–{endText(e)}
-                </span>
-                {e.kind === "break" ? (
-                  <span>
-                    <Chip className="bg-[#f4ecdf] text-[#6b5a3c]">
-                      {t("month.detailBreak")}
-                    </Chip>
-                  </span>
-                ) : (
-                  <span className="min-w-0 text-sm leading-snug">
-                    <span
-                      aria-hidden
-                      className="mr-1.5 inline-block size-2.5 rounded-[3px]"
-                      style={{ background: e.job?.color ?? NO_JOB_COLOR }}
-                    />
-                    {e.job ? (
-                      <>
-                        <b>{e.job.code}</b> {e.job.label}
-                      </>
-                    ) : (
-                      t("month.noJob")
-                    )}
-                    {(e.workType || e.note) && (
-                      <span className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
-                        {e.workType && (
-                          <Chip className="bg-primary-soft text-primary-soft-foreground">
-                            {e.workType}
-                          </Chip>
-                        )}
-                        {e.note && <span>{e.note}</span>}
-                      </span>
-                    )}
-                  </span>
-                )}
-                <span
-                  className={cn(
-                    "text-sm font-bold tabular-nums",
-                    e.kind === "break" && "font-medium text-muted-foreground",
-                  )}
-                >
-                  {formatMinutes(e.minutes)}
-                </span>
-              </li>
+              <EntryRow key={e.id} entry={e} />
             ))}
             {absences.map((a, i) => (
               <li
@@ -791,25 +733,6 @@ function Stat({ label, value }: { label: string; value: string }) {
       <span className="text-xs text-muted-foreground">{label}</span>
       <span className="text-lg font-bold tabular-nums">{value}</span>
     </div>
-  );
-}
-
-function Chip({
-  className,
-  children,
-}: {
-  className: string;
-  children: ReactNode;
-}) {
-  return (
-    <span
-      className={cn(
-        "rounded-full px-2 py-px text-xs font-semibold whitespace-nowrap",
-        className,
-      )}
-    >
-      {children}
-    </span>
   );
 }
 

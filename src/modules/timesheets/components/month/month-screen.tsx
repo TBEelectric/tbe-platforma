@@ -1,20 +1,14 @@
-import { Check, ChevronLeft, ChevronRight, FileDown } from "lucide-react";
+import { Check, FileDown } from "lucide-react";
 import Link from "next/link";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { PageHeader } from "@/components/shell/page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { calendarDate, capitalize } from "@/i18n/format";
 import { translate, type Msg } from "@/i18n/messages";
-import {
-  addDays,
-  isWeekend,
-  monthStart,
-  pragueDate,
-  pragueTime,
-} from "@/lib/dates";
+import { isWeekend } from "@/lib/dates";
 import { formatMinutes } from "@/lib/duration";
 import { cn } from "@/lib/utils";
 import type { MonthLookups, MonthView } from "../../month-data";
@@ -22,11 +16,10 @@ import { monthEnd } from "../../rules/month-summary";
 import { confirmableFrom } from "../../rules/timesheet-transitions";
 import type { TimesheetStatus } from "../../rules/time-entry";
 import { ConfirmMonth } from "./confirm-month";
-import {
-  MonthCalendar,
-  type DayDetailData,
-  type DetailEntry,
-} from "./month-calendar";
+import { BreakdownCard, StatCard } from "./month-cards";
+import { toDetailEntry, type DetailEntry } from "./entry-row";
+import { MonthCalendar, type DayDetailData } from "./month-calendar";
+import { MonthNav } from "./month-nav";
 import {
   StandbyEditorProvider,
   StandbyPanel,
@@ -100,30 +93,7 @@ export function MonthScreen({
       })
     : t("timesheets.month.noFund");
 
-  const nav = (
-    <>
-      <Link
-        href={monthHref(monthStart(addDays(month, -1)))}
-        aria-label={t("timesheets.month.previousMonth")}
-        className={buttonVariants({ variant: "outline", size: "icon" })}
-      >
-        <ChevronLeft />
-      </Link>
-      <Link
-        href={monthHref(monthStart(today))}
-        className={buttonVariants({ variant: "outline" })}
-      >
-        {t("timesheets.month.thisMonth")}
-      </Link>
-      <Link
-        href={monthHref(addDays(monthEnd(month), 1))}
-        aria-label={t("timesheets.month.nextMonth")}
-        className={buttonVariants({ variant: "outline", size: "icon" })}
-      >
-        <ChevronRight />
-      </Link>
-    </>
-  );
+  const nav = <MonthNav month={month} today={today} monthHref={monthHref} />;
 
   // Exports come with step 4.4; until then the button is shown disabled with a hint.
   const pdf = (
@@ -217,7 +187,7 @@ export function MonthScreen({
           {confirm !== null && confirmButton("hidden lg:flex")}
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex gap-2">{nav}</div>
+          {nav}
           {headerActions}
         </div>
       </div>
@@ -444,35 +414,12 @@ function dayDetails(
   standbys: StandbyItem[],
   translateMsg: (message: Msg) => string,
 ): Record<string, DayDetailData> {
-  const jobs = new Map(view.jobs.map((j) => [j.id, j]));
-  const workTypes = new Map(view.workTypes.map((w) => [w.id, w.name]));
   return Object.fromEntries(
     view.summary.days.map((day) => {
       const entries: DetailEntry[] = view.entries
         .filter((e) => e.workDate === day.date)
         .sort((a, b) => a.startAt.getTime() - b.startAt.getTime())
-        .map((e) => {
-          const job = e.jobId ? jobs.get(e.jobId) : undefined;
-          return {
-            id: e.id,
-            kind: e.kind,
-            from: pragueTime(e.startAt),
-            to: pragueTime(e.endAt),
-            nextDay: pragueDate(e.endAt) > day.date,
-            startMs: e.startAt.getTime(),
-            endMs: e.endAt.getTime(),
-            minutes: Math.round(
-              (e.endAt.getTime() - e.startAt.getTime()) / 60_000,
-            ),
-            job: job
-              ? { code: job.code, label: job.label, color: job.color }
-              : null,
-            workType: e.workTypeId
-              ? (workTypes.get(e.workTypeId) ?? null)
-              : null,
-            note: e.note,
-          };
-        });
+        .map((e) => toDetailEntry(e, view));
       const requested = (type: string) =>
         view.absences.some(
           (a) =>
@@ -496,39 +443,6 @@ function dayDetails(
         },
       ];
     }),
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  detail,
-  valueClassName,
-}: {
-  label: string;
-  value: string;
-  detail: string;
-  valueClassName?: string;
-}) {
-  return (
-    <Card size="sm">
-      <CardContent className="flex flex-col gap-1">
-        <span className="text-sm text-muted-foreground sm:text-[15px]">
-          {label}
-        </span>
-        <span
-          className={cn(
-            "text-2xl leading-tight font-bold tabular-nums sm:text-[30px]",
-            valueClassName,
-          )}
-        >
-          {value}
-        </span>
-        <span className="text-[13px] text-muted-foreground sm:text-sm">
-          {detail}
-        </span>
-      </CardContent>
-    </Card>
   );
 }
 
@@ -590,56 +504,3 @@ function ConfirmBar({
   );
 }
 
-function BreakdownCard({
-  title,
-  rows,
-  empty,
-}: {
-  title: string;
-  rows: Array<{
-    key: string;
-    label: string;
-    detail?: string;
-    color?: string;
-    minutes: number;
-  }>;
-  empty: string;
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="flex flex-col text-[15px]">
-        {rows.length === 0 && <p className="text-muted-foreground">{empty}</p>}
-        {rows.map((row) => (
-          <div
-            key={row.key}
-            className="flex items-baseline justify-between gap-3 border-b border-border py-2 first:pt-0 last:border-b-0 last:pb-0"
-          >
-            <span className="flex min-w-0 items-start gap-2">
-              {row.color && (
-                <span
-                  aria-hidden
-                  className="mt-[7px] size-2.5 shrink-0 rounded-full"
-                  style={{ background: row.color }}
-                />
-              )}
-              <span className="flex min-w-0 flex-col">
-                <span className="truncate">{row.label}</span>
-                {row.detail && (
-                  <span className="truncate text-sm text-muted-foreground">
-                    {row.detail}
-                  </span>
-                )}
-              </span>
-            </span>
-            <span className="font-bold tabular-nums">
-              {formatMinutes(row.minutes)}
-            </span>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
-  );
-}
