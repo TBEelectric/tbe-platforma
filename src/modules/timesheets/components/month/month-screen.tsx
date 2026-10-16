@@ -569,7 +569,7 @@ function DayCell({
     );
 
   const className = cn(
-    "flex min-h-14 flex-col rounded-lg border px-1.5 py-1.5 text-left no-underline sm:min-h-[92px] sm:rounded-[10px] sm:px-3 sm:py-2.5",
+    "flex h-14 min-w-0 flex-col overflow-hidden rounded-lg border px-1.5 py-1.5 text-left no-underline sm:h-24 sm:rounded-[10px] sm:px-3 sm:py-2",
     off && "border-transparent bg-[#f1f4f7]",
     day.state === "missing" && "border-[#f0c48a] bg-warning",
     day.state === "absence" && "border-transparent bg-info",
@@ -593,7 +593,7 @@ function DayCell({
       {main && (
         <span
           className={cn(
-            "text-[13px] leading-tight font-bold tabular-nums sm:text-lg",
+            "truncate text-[13px] leading-tight font-bold tabular-nums sm:text-lg",
             day.state === "missing" && "text-warning-foreground",
             main === "–" && "font-normal text-muted-foreground",
           )}
@@ -604,12 +604,12 @@ function DayCell({
       {lines.length > 0 && (
         <span
           className={cn(
-            "mt-0.5 hidden text-xs leading-snug text-muted-foreground sm:block",
+            "mt-0.5 hidden min-w-0 text-xs leading-snug text-muted-foreground sm:block",
             day.state === "missing" && "text-warning-foreground",
           )}
         >
           {lines.map((line, i) => (
-            <span key={i} className="block">
+            <span key={i} className="block truncate">
               {line}
             </span>
           ))}
@@ -618,17 +618,24 @@ function DayCell({
     </>
   );
   const label = t("month.openDay", { date: calendarDate(day.date) });
+  // Cells have one size; long texts (holiday names) are cut and shown whole on hover.
+  const tooltip = [
+    format.dateTime(calendarDate(day.date), "weekday"),
+    ...[main, ...lines].filter((x) => x && x !== "–"),
+  ].join("\n");
   return href ? (
     <Link
       href={href}
       className={className}
       aria-label={`${label}: ${[main, ...lines].filter(Boolean).join(", ")}`}
-      title={format.dateTime(calendarDate(day.date), "weekday")}
+      title={tooltip}
     >
       {content}
     </Link>
   ) : (
-    <div className={className}>{content}</div>
+    <div className={className} title={tooltip}>
+      {content}
+    </div>
   );
 }
 
