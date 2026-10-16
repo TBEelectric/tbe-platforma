@@ -423,7 +423,6 @@
       "thisMonth": "Tento měsíc",
       "otherEmployee": "Měsíc jiného",
       "downloadPdf": "Stáhnout PDF",
-      "pdfHint": "Stažení PDF bude brzy k dispozici.",
       "confirm": "Potvrdit měsíc",
       "confirmFrom": "Potvrdit od {from, date, dayMonth}",
       "confirmDone": "{status, select, confirmed {Potvrzeno} approved {Schváleno} other {Uzavřeno}}",

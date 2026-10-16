@@ -4,7 +4,7 @@ import { useFormatter, useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 import { PageHeader } from "@/components/shell/page-header";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { calendarDate, capitalize } from "@/i18n/format";
 import { translate, type Msg } from "@/i18n/messages";
@@ -44,6 +44,7 @@ export function MonthScreen({
   canWriteStandby,
   headerActions,
   ownMonthHref,
+  pdfHref,
 }: {
   view: MonthView & MonthLookups;
   today: string;
@@ -58,6 +59,8 @@ export function MonthScreen({
   canWriteStandby: boolean;
   headerActions?: ReactNode;
   ownMonthHref?: string;
+  /** Monthly PDF of the shown employee and month (route /timesheets/export/month-pdf). */
+  pdfHref: string;
 }) {
   const t = useTranslations();
   const format = useFormatter();
@@ -95,17 +98,16 @@ export function MonthScreen({
 
   const nav = <MonthNav month={month} today={today} monthHref={monthHref} />;
 
-  // Exports come with step 4.4; until then the button is shown disabled with a hint.
+  // A file download, so a plain link (not next/link): a working version until the month is closed.
   const pdf = (
-    <span title={t("timesheets.month.pdfHint")}>
-      <Button variant="outline" disabled aria-describedby="pdf-hint">
-        <FileDown data-icon="inline-start" className="size-5" />
-        {t("timesheets.month.downloadPdf")}
-      </Button>
-      <span id="pdf-hint" className="sr-only">
-        {t("timesheets.month.pdfHint")}
-      </span>
-    </span>
+    <a
+      href={pdfHref}
+      download
+      className={buttonVariants({ variant: "outline" })}
+    >
+      <FileDown data-icon="inline-start" className="size-5" />
+      {t("timesheets.month.downloadPdf")}
+    </a>
   );
 
   const canConfirm = confirm?.ok === true;

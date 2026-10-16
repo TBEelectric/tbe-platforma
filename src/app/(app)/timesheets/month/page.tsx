@@ -125,6 +125,7 @@ export default async function MonthPage({
           </Link>
         )
       }
+      pdfHref={`/timesheets/export/month-pdf?month=${month}${query}`}
       ownMonthHref={
         forSomeoneElse && canRecordOwnTime(user.actor)
           ? `/timesheets/month?month=${month}`
