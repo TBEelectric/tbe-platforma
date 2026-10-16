@@ -124,6 +124,13 @@ export function MonthScreen({
   );
 
   const canConfirm = confirm?.ok === true;
+  const confirmFrom = confirmableFrom(month);
+  const confirmLabel =
+    today < confirmFrom
+      ? t("timesheets.month.confirmFrom", { from: calendarDate(confirmFrom) })
+      : t("timesheets.month.confirm");
+  const confirmHint =
+    confirm && !confirm.ok ? translate(t, confirm.error) : undefined;
   const showConfirm = confirm !== null && view.status === "open";
 
   return (
@@ -162,7 +169,9 @@ export function MonthScreen({
           {showConfirm && (
             <ConfirmMonth
               month={month}
+              label={confirmLabel}
               disabled={!canConfirm}
+              hint={confirmHint}
               className="hidden lg:flex"
             />
           )}
@@ -385,7 +394,9 @@ export function MonthScreen({
           <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 border-t border-border bg-background/95 px-4 py-2.5 backdrop-blur lg:hidden">
             <ConfirmMonth
               month={month}
+              label={confirmLabel}
               disabled={!canConfirm}
+              hint={confirmHint}
               className="[&_button]:w-full"
             />
           </div>
@@ -644,20 +655,13 @@ function ConfirmBar({
         {t("timesheets.month.barReady")}
       </p>
     );
-  const from = confirmableFrom(month);
-  const tooEarly = today < from;
+  // Too early is said by the button („Potvrdit od 1. 11.“); the bar names what is left to do.
+  const tooEarly = today < confirmableFrom(month);
   const first = missingDays[0];
-  const text =
-    tooEarly && first
-      ? t("timesheets.month.barTooEarlyMissing", {
-          from: calendarDate(from),
-          day: calendarDate(first),
-        })
-      : tooEarly
-        ? t("timesheets.month.barTooEarly", { from: calendarDate(from) })
-        : first
-          ? t("timesheets.month.barMissing", { day: calendarDate(first) })
-          : translate(t, confirm.error);
+  if (tooEarly && !first) return null;
+  const text = first
+    ? t("timesheets.month.barMissing", { day: calendarDate(first) })
+    : translate(t, confirm.error);
   return (
     <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-lg bg-warning px-4 py-3 text-[15px] text-warning-foreground">
       <span>{text}</span>

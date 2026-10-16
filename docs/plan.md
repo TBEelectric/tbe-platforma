@@ -371,8 +371,8 @@ na hotových obrazovkách), nakonec 4.9. Obrazovky do té doby ukazují tato tla
       (výběr zaměstnance; v menu „Měsíc zaměstnance“ pro účet bez vlastní docházky), komponenty
       `components/month/` (`MonthScreen`, `ConfirmMonth`, `StandbyPanel`), texty `timesheets.month.*`, placeholder
       `month` odstraněn. Nové pravidlo nebylo potřeba: „Vidět výkazy jiných“ už je `canViewTimeOf` s testem
-      a kontroluje ho `getMonth` (cizí bez práva → 404). Potvrzení i lišta „Měsíc půjde potvrdit od …“ berou
-      stav z `timesheetTransition("confirm")`; Stáhnout PDF je neaktivní s nápovědou.
+      a kontroluje ho `getMonth` (cizí bez práva → 404). Potvrzení bere stav z `timesheetTransition("confirm")`
+      (před koncem měsíce tlačítko „Potvrdit od 1. 11.“, důvod v nápovědě; lišta jen s chybějícími dny a „Doplnit“); Stáhnout PDF je neaktivní s nápovědou.
       Ověřeno: lint, typecheck, 408 testů, build; skriptem proti lokální DB (říjen 2026) zaměstnanec vidí jen svůj
       měsíc, vedoucí svou partu (5), správce a administrátor všech (13); české texty projdou ICU s reálnými hodnotami.
       NEOVĚŘENO v prohlížeči (přihlášení jen přes Google). Vyzkoušet ručně: desktop proti `03-muj-mesic.png`
