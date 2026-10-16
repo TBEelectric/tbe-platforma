@@ -384,7 +384,7 @@ na hotových obrazovkách), nakonec 4.9. Obrazovky do té doby ukazují tato tla
       „Pohotovost“ v pravém sloupci (panel se seznamem měsíce a tlačítkem Přidat), ne v detailu dne – zadání
       chtělo obojí; karta Upozornění se ukáže jen při upozorněních měsíce.
 
-- [ ] **4.6b – Můj měsíc: detail dne v kalendáři** [zastavit po]
+- [x] **4.6b – Můj měsíc: detail dne v kalendáři** [zastavit po]
       Jediná změna proti hotové 4.6: klik na den v kalendáři už nepřesměruje na Můj den, ale otevře detail dne.
       Vše ostatní na obrazovce (hlavička, karty, kalendář a jeho buňky, lišta, pravý sloupec, potvrzení, měsíc
       jiného zaměstnance, mobilní rozložení) zůstává beze změny. Server, `getMonth` a pravidla se nemění: detail
@@ -412,6 +412,23 @@ na hotových obrazovkách), nakonec 4.9. Obrazovky do té doby ukazují tato tla
       Hotovo, když: klik na den otevře detail se správnými intervaly a součty, které odpovídají buňce
       a Můj den; poloha panelu podle pravidel výše na desktopu i 375 px; nic jiného na obrazovce se nezměnilo;
       lint, typecheck, testy a build projdou.
+      Výsledek: `components/month/month-calendar.tsx` (klientský blok kalendáře: buňky jako tlačítka
+      s `aria-haspopup="dialog"` / `aria-expanded`, detail dne jako dialog; desktop plovoucí panel 390 px se šipkou
+      pod / nad dnem podle pravidel, malé okno → seznam se posouvá uvnitř, aspoň 420 px; mobil spodní panel max.
+      78 % výšky se ztmavením). Data detailu připraví `month-screen.tsx` z `MonthView` (intervaly dne podle
+      `work_date`, absence a pohotovost dne stejně jako buňka, upozornění s datem dne). Panel pohotovosti je nově
+      `StandbyEditorProvider` + `useStandbyEditor`, aby ho šlo otevřít z karty i z detailu (chování karty stejné).
+      Texty `timesheets.month.day*` a `detail*` (jen `cs.json`, jiný jazyk zatím není). Server, `getMonth`
+      a pravidla beze změny. Ověřeno: lint, typecheck, 408 testů, build; skriptem proti lokální DB (září a říjen
+      2026, všichni zaměstnanci) práce a pohotovost v detailu = buňka u všech 854 dnů; texty projdou ICU.
+      NEOVĚŘENO v prohlížeči (přihlášení jen přes Google). Vyzkoušet ručně: klik na den v 1.–5. řádku
+      (panel pod dnem, ve spodních řádcích nad ním), krajní sloupce (panel uvnitř kalendáře), ‹ › a ←/→, Esc
+      a klik mimo vrátí fokus na buňku; 375 px spodní panel a klepnutí mimo; den s víkendovou pohotovostí →
+      Upravit otevře panel pohotovosti; chybějící den → „Doplnit den“; měsíc jiného (jméno v hlavičce, hláška
+      o důvodu).
+      Rozhodl jsem: absence nemají v datech čas, proto nejsou na ose dne, jen jako řádky seznamu (typ, hodiny,
+      „čeká na schválení“); u svátku text bez „počítá se do fondu“ (fond svátky nezahrnuje); Upravit pohotovosti
+      zavře detail a otevře stávající panel.
 
 - [ ] **4.7 – Obrazovka Schvalování**
       Podle `04-schvalovani.png`: měsíc (výchozí minulý), parta (vedoucí vidí své party, správce všechny + výběr),
