@@ -7,6 +7,7 @@ import { loadActions, loadRoutes, sessionCookie } from "./http";
 import { Report } from "./report";
 import { startServer } from "./server";
 import { actionsSuite, reopenAction } from "./suites/actions";
+import { errorsSuite } from "./suites/errors";
 import { exportsSuite } from "./suites/exports";
 import { mailSuite } from "./suites/mail";
 import { pagesSuite } from "./suites/pages";
@@ -35,6 +36,7 @@ export async function runChecks(
     await reopenAction(ctx);
     await mailSuite(ctx, "worker");
     await devLoginSuite(ctx);
+    await errorsSuite(ctx);
     // Last: archives people and removes roles.
     await sessionSuite(ctx);
 
