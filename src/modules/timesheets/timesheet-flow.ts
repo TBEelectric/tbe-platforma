@@ -52,7 +52,7 @@ type Sheet = typeof timesheet.$inferSelect;
 /** Format of the period_export snapshot; raise it when the shape changes (exports read old ones too). */
 export const PERIOD_EXPORT_FORMAT = 1;
 
-async function ownerOf(
+export async function ownerOf(
   tx: DbOrTx,
   employeeId: string,
   month: string,

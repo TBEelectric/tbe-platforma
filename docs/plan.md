@@ -466,6 +466,25 @@ na hotových obrazovkách), nakonec 4.9. Obrazovky do té doby ukazují tato tla
 
 ## Milník 5 – Pilot
 
+- [ ] **5.1 – Modul Zakázky (vyčlenění z Docházky)**
+      Zakázky a zákazníci dostanou vlastní modul s dlaždicí v launcheru, aby piloti od začátku znali konečnou navigaci.
+      Data se nestěhují: `customer`, `job`, `site` a `team_job` zůstávají ve schématu `core` (sdílená kmenová data pro
+      docházku, vozový park, sklad i nářadí), žádná migrace databáze. (1) Nová složka `src/modules/jobs` (`shared.ts`
+      s `ModuleInfo` id `jobs`, `menu.ts`, `index.ts`); `ModuleId` v `src/lib/navigation.ts`, registrace v
+      `src/modules/registry.ts` (stav `active`, `href: "/jobs"`), texty `modules.jobs.*` a `jobs.menu.*` v `messages/cs.json`.
+      (2) Stránky přesunout z `src/app/(app)/timesheets/jobs/…` do `src/app/(app)/jobs/…` (Zakázky, Zákazníci, detail, nové)
+      s vlastním `layout.tsx` a `ModuleShell`; komponenty zůstávají v `src/modules/core/components`, opravit odkazy
+      (`JobTabs`, tlačítka, přesměrování po uložení). (3) Z menu Docházky odebrat položku Zakázky; `/timesheets/jobs/…`
+      trvale přesměrovat na `/jobs/…`. Druhy práce zůstávají v Docházce. (4) Oprávnění beze změny: `canManageJobs`
+      (administrátor, správce docházky) na každé stránce; dlaždice se ostatním zobrazí jako nedostupná, nebo se skryje
+      (podle toho, jak dnes funguje `ModuleTile`). (5) `docs/architektura.md` (tabulka modulů) a `CLAUDE.md`
+      (Repository layout) doplnit o modul `jobs`.
+      Pravidla pro budoucí rozvoj: nové funkce zakázek (hodiny na zakázku, rozpočty, etapy, dokumenty…) patří do modulu
+      `jobs`, vlastní tabulky do schématu `jobs`; hodiny zůstávají v `time_entry` a modul je čte přes veřejné API Docházky
+      (např. hodiny po zakázkách za období – stejný dotaz jako CSV export z 4.4). Závislosti jen jedním směrem:
+      `jobs` → ostatní moduly → `core`; Docházka nesmí importovat modul `jobs`.
+      Hotovo, když: launcher má dlaždici Zakázky, správce v ní spravuje zakázky i zákazníky na desktopu i 375 px, staré
+      adresy přesměrují, v menu Docházky Zakázky nejsou; lint/typecheck/test/build prochází.
 - [ ] **Vývojové přihlášení a přístup z telefonu v domácí síti** (přesunuto z 3b.8; mobil se zatím testuje v náhledu telefonu v Chromu)
       Bez tunelu a bez Google Console. (1) **Vývojové přihlášení:** na přihlašovací stránce navíc „Přihlásit jako…“
       se seznamem aktivních zaměstnanců (jméno, role); vytvoří normální Better Auth session daného uživatele. Funguje jen

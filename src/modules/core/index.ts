@@ -17,6 +17,7 @@ export * from "./jobs";
 export * from "./team-jobs";
 // Core tables for other modules' server code (joins, bulk import). Write through insertAudited/updateAudited.
 export {
+  auditLog,
   customer,
   employee,
   employment,
@@ -26,4 +27,5 @@ export {
   site,
   team,
   teamMember,
+  user,
 } from "./schema";

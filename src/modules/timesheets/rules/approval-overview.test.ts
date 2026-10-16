@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Actor } from "../../core/shared";
 import {
   approvalOverview,
+  approveDeadline,
   inApprovalTab,
   type ApprovalRowInput,
 } from "./approval-overview";
@@ -189,5 +190,13 @@ describe("inApprovalTab", () => {
     expect(ids("toApprove")).toEqual(["petr", "martin", "tomas"]);
     expect(ids("warnings")).toEqual(["petr", "lukas"]);
     expect(ids("approved")).toEqual(["ondrej"]);
+  });
+});
+
+describe("approveDeadline", () => {
+  it("is day N of the following month", () => {
+    expect(approveDeadline("2026-09-01", 5)).toBe("2026-10-05");
+    expect(approveDeadline("2026-12-01", 5)).toBe("2027-01-05");
+    expect(approveDeadline("2028-01-01", 28)).toBe("2028-02-28");
   });
 });

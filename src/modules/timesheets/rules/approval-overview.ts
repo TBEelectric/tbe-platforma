@@ -1,4 +1,6 @@
 import type { Msg } from "@/i18n/messages";
+import { addDays } from "@/lib/dates";
+import { monthEnd } from "./month-summary";
 import type { TimesheetStatus } from "./time-entry";
 import {
   bulkApprovable,
@@ -115,4 +117,9 @@ export function inApprovalTab(
     case "approved":
       return isApproved(row);
   }
+}
+
+/** Day by which the month should be approved: day N (1–28) of the following month. */
+export function approveDeadline(month: string, deadlineDay: number): string {
+  return addDays(monthEnd(month), deadlineDay);
 }

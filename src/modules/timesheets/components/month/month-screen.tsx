@@ -503,4 +503,3 @@ function ConfirmBar({
     </div>
   );
 }
-

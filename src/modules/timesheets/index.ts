@@ -34,3 +34,9 @@ export {
   PERIOD_EXPORT_FORMAT,
   type PeriodState,
 } from "./timesheet-flow";
+export {
+  getApprovalData,
+  getTimesheetHistory,
+  listApprovalTeams,
+  type ApprovalData,
+} from "./approval";

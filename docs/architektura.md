@@ -10,12 +10,19 @@ přepínačem v bočním menu.
 | --- | --- | --- |
 | Jádro (zaměstnanci, týmy, zákazníci, zakázky, místa, svátky, audit) | `core` | 1. verze |
 | Docházka | `timesheets` | 1. verze |
+| Zakázky (správa zakázek a zákazníků, později hodiny a další funkce nad zakázkami) | `jobs` | před pilotem |
 | Vozový park a kniha jízd | `fleet` | další |
 | Nemovitosti | `properties` | plánováno |
 | Sklad | `inventory` | plánováno |
 | Nářadí a technika | `tools` | plánováno |
 
 Zakázkový systém není samostatná aplikace: zakázky a zákazníci jsou v jádru od začátku.
+
+**Rozhodnuto (10/2026):** zakázky dostanou vlastní modul `jobs` s dlaždicí v launcheru. Tabulky `customer`, `job`,
+`site` a `team_job` zůstávají v jádru jako sdílená kmenová data; modul `jobs` vlastní obrazovky a nové funkce
+(vlastní tabulky ve schématu `jobs`). Hodiny zůstávají v docházce a modul `jobs` je čte přes její veřejné API;
+stejně později jízdy z vozového parku a materiál ze skladu. Závislosti jen jedním směrem: `jobs` → ostatní moduly
+→ `core`; žádný modul kromě `jobs` ho neimportuje.
 
 ## Proč jedna aplikace
 
