@@ -11,7 +11,7 @@ import {
   sql,
 } from "drizzle-orm";
 import { addDays, pragueInstant, todayInPrague } from "@/lib/dates";
-import { db } from "@/lib/db";
+import { db, type DbOrTx } from "@/lib/db";
 import {
   customer,
   employee,
@@ -35,7 +35,12 @@ import {
   type MonthSummary,
 } from "./rules/month-summary";
 import { resolveSettings } from "./rules/settings";
-import { isMonthLocked, type TimesheetStatus } from "./rules/time-entry";
+import {
+  isMonthLocked,
+  type AbsenceStatus,
+  type AbsenceType,
+  type TimesheetStatus,
+} from "./rules/time-entry";
 import {
   absence,
   periodClose,
@@ -53,6 +58,17 @@ export type MonthEntryView = MonthEntry & {
   id: string;
   note: string | null;
   source: "self" | "manager";
+};
+
+export type MonthAbsenceView = {
+  id: string;
+  type: AbsenceType;
+  dateFrom: string;
+  dateTo: string;
+  /** null = whole days. */
+  hours: number | null;
+  status: AbsenceStatus;
+  note: string | null;
 };
 
 export type MonthStandbyView = {
@@ -86,6 +102,8 @@ export type MonthView = {
   entries: MonthEntryView[];
   /** Standby starting in the month, by start. */
   standbys: MonthStandbyView[];
+  /** Absences touching the month (any status except archived), by start. */
+  absences: MonthAbsenceView[];
 };
 
 export type MonthLookups = {
@@ -302,6 +320,18 @@ async function loadMonths(
         endAt: s.endAt,
         note: s.note,
       })),
+      absences: absences
+        .filter((a) => a.employeeId === emp.id)
+        .sort((a, b) => a.dateFrom.localeCompare(b.dateFrom))
+        .map((a) => ({
+          id: a.id,
+          type: a.type,
+          dateFrom: a.dateFrom,
+          dateTo: a.dateTo,
+          hours: a.hours,
+          status: a.status,
+          note: a.note,
+        })),
     };
   });
 
@@ -411,9 +441,14 @@ async function lookups(views: MonthView[]): Promise<MonthLookups> {
 }
 
 /** Team of the employee for the permission check: in the month, up to today. */
-async function teamInMonth(employeeId: string, month: string, today: string) {
+export async function teamInMonth(
+  employeeId: string,
+  month: string,
+  today: string,
+  tx: DbOrTx = db,
+): Promise<string | null> {
   const end = [monthEnd(month), today].sort()[0];
-  const rows = await db
+  const rows = await tx
     .select()
     .from(teamMember)
     .where(

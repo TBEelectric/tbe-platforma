@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { calendarDate } from "@/i18n/format";
 import { msg, type Msg } from "@/i18n/messages";
 import { addDays } from "@/lib/dates";
@@ -178,3 +179,11 @@ export function bulkApprovable<
   }
   return { approve, skipped };
 }
+
+/** A month as server actions receive it: its first day. */
+export const monthSchema = z
+  .string()
+  .regex(/^\d{4}-(0[1-9]|1[0-2])-01$/, { error: "validation.enterDate" });
+
+/** Employees chosen for bulk approval or reopening (bound to the action, not a form field). */
+export const employeeIdsSchema = z.array(z.uuid()).max(500);

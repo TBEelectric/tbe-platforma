@@ -1,10 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { msg } from "@/i18n/messages";
 import { requirePermission, type CurrentUser } from "@/lib/current-user";
 import { handleFormAction } from "@/lib/form-action";
-import type { FormState } from "@/lib/form-state";
+import { UserError, type FormState } from "@/lib/form-state";
 import {
   canManageEmployees,
   leaveFormSchema,
@@ -15,6 +16,7 @@ import { setLeaveEntitlement } from "./leave";
 import { deleteDayTemplate, setDefaultDayTemplate } from "./day-template";
 import {
   canApproveTimesheets,
+  canCloseTimesheetPeriod,
   canManageDayTemplates,
   canOpenAbsences,
   canRecordOwnTime,
@@ -29,6 +31,17 @@ import {
 } from "./standbys";
 import { absenceFormSchema, type AbsenceDecision } from "./rules/absence";
 import { dayTemplateFormSchema } from "./rules/day-template";
+import {
+  employeeIdsSchema,
+  monthSchema,
+  type TimesheetAction,
+} from "./rules/timesheet-transitions";
+import {
+  bulkApproveTimesheets,
+  changeTimesheet,
+  closePeriod,
+  reopenPeriod,
+} from "./timesheet-flow";
 
 const DAY = "/timesheets/day";
 
@@ -218,5 +231,145 @@ export async function setOvertimeAction(
         : msg("timesheets.messages.overtimeCleared");
     },
     "/timesheets",
+  );
+}
+
+// ── Monthly timesheet: confirm, approve, return, close, reopen ──
+
+/** Můj měsíc, Schvalování and Uzávěrka all live under /timesheets. */
+const TIMESHEETS = "/timesheets";
+const noFields = z.object({});
+
+/** Bound arguments come from the client: check them like form fields. */
+function bound<T>(schema: z.ZodType<T>, value: unknown): T {
+  const parsed = schema.safeParse(value);
+  if (!parsed.success) throw new UserError(msg("errors.notFound"));
+  return parsed.data;
+}
+
+/** The employee confirms their own month. */
+export async function confirmTimesheetAction(
+  month: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  return handleFormAction(
+    canRecordOwnTime,
+    noFields,
+    formData,
+    async (user) => {
+      await changeTimesheet(
+        writerOf(user),
+        "confirm",
+        user.actor.employeeId,
+        bound(monthSchema, month),
+        null,
+      );
+      return msg("timesheets.messages.timesheetConfirmed");
+    },
+    TIMESHEETS,
+  );
+}
+
+const DECISIONS: Record<
+  Exclude<TimesheetAction, "confirm">,
+  | "timesheets.messages.timesheetApproved"
+  | "timesheets.messages.timesheetReturned"
+> = {
+  approve: "timesheets.messages.timesheetApproved",
+  return: "timesheets.messages.timesheetReturned",
+};
+
+/** A team lead or the timesheets manager approves or returns (with a reason) one timesheet. */
+export async function decideTimesheetAction(
+  employeeId: string,
+  month: string,
+  decision: Exclude<TimesheetAction, "confirm">,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  return handleFormAction(
+    canApproveTimesheets,
+    changeReasonSchema,
+    formData,
+    async (user, data) => {
+      await changeTimesheet(
+        writerOf(user),
+        bound(z.enum(["approve", "return"]), decision),
+        bound(z.uuid(), employeeId),
+        bound(monthSchema, month),
+        data.reason,
+      );
+      return msg(DECISIONS[decision]);
+    },
+    TIMESHEETS,
+  );
+}
+
+/** Approves the chosen (or all visible) confirmed timesheets without warnings. */
+export async function bulkApproveAction(
+  month: string,
+  employeeIds: string[] | "all",
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  return handleFormAction(
+    canApproveTimesheets,
+    noFields,
+    formData,
+    async (user) => {
+      const result = await bulkApproveTimesheets(
+        writerOf(user),
+        bound(monthSchema, month),
+        employeeIds === "all" ? "all" : bound(employeeIdsSchema, employeeIds),
+      );
+      return msg("timesheets.messages.bulkApproved", result);
+    },
+    TIMESHEETS,
+  );
+}
+
+/** The timesheets manager closes the month and stores a new payroll snapshot version. */
+export async function closePeriodAction(
+  month: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  return handleFormAction(
+    canCloseTimesheetPeriod,
+    noFields,
+    formData,
+    async (user) => {
+      const { version } = await closePeriod(
+        writerOf(user),
+        bound(monthSchema, month),
+      );
+      return msg("timesheets.messages.periodClosed", { version });
+    },
+    TIMESHEETS,
+  );
+}
+
+/** The timesheets manager reopens a closed month for the chosen employees, with a reason. */
+export async function reopenPeriodAction(
+  month: string,
+  employeeIds: string[],
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  return handleFormAction(
+    canCloseTimesheetPeriod,
+    changeReasonSchema,
+    formData,
+    async (user, data) => {
+      const { reopened } = await reopenPeriod(
+        writerOf(user),
+        bound(monthSchema, month),
+        bound(employeeIdsSchema, employeeIds),
+        data.reason,
+      );
+      return msg("timesheets.messages.periodReopened", { count: reopened });
+    },
+    TIMESHEETS,
   );
 }
