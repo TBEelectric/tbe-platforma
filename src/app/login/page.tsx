@@ -5,7 +5,9 @@ import { Brand } from "@/components/shell/brand";
 import { SignOutButton } from "@/components/shell/sign-out-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getCurrentUser } from "@/lib/current-user";
+import { devLoginEnabled } from "@/lib/dev-login";
 import { ACCOUNT_NOT_ALLOWED } from "@/modules/core";
+import { DevLogin } from "./dev-login";
 import { GoogleSignInButton } from "./google-sign-in-button";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -58,6 +60,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
                 <SignOutButton className="text-foreground hover:bg-muted hover:text-foreground" />
               </div>
             )}
+            {devLoginEnabled() && <DevLogin />}
           </CardContent>
         </Card>
       </main>

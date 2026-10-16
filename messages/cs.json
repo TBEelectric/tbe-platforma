@@ -79,7 +79,14 @@
     "redirecting": "Přesměrovávám na Google…",
     "accountNotAllowed": "Tento účet nemá do aplikace přístup. Přihlásit se může aktivní zaměstnanec, kterému správce zadal tento e-mail. Obraťte se na administrátora.",
     "failed": "Přihlášení se nepovedlo. Zkuste to prosím znovu.",
-    "otherAccount": "Přihlásit se jiným účtem? Nejdřív se odhlaste."
+    "otherAccount": "Přihlásit se jiným účtem? Nejdřív se odhlaste.",
+    "dev": {
+      "title": "Přihlásit jako…",
+      "intro": "Jen pro vývoj (DEV_LOGIN=true). Přihlásí vás jako vybraného zaměstnance bez Googlu.",
+      "empty": "Žádný aktivní zaměstnanec s e-mailem.",
+      "signInAs": "Přihlásit jako {name}",
+      "signingIn": "Přihlašuji…"
+    }
   },
   "timesheets": {
     "menu": {

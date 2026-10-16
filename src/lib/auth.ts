@@ -3,6 +3,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { devLogin } from "@/lib/dev-login-plugin";
 import { findEmployeeByEmail, signInRejection } from "@/modules/core";
 import * as coreSchema from "@/modules/core/schema";
 
@@ -61,5 +62,6 @@ export const auth = betterAuth({
       if (error) return { error };
     },
   },
-  plugins: [nextCookies()],
+  // devLogin answers 404 unless devLoginEnabled(); nextCookies must stay last.
+  plugins: [devLogin(), nextCookies()],
 });
