@@ -8,6 +8,7 @@ import { Report } from "./report";
 import { startServer } from "./server";
 import { actionsSuite, reopenAction } from "./suites/actions";
 import { pagesSuite } from "./suites/pages";
+import { devLoginSuite, sessionSuite } from "./suites/session";
 
 /** Runs every suite against the started production server; returns the number of failures. */
 export async function runChecks(
@@ -27,6 +28,9 @@ export async function runChecks(
     await pagesSuite(ctx);
     await actionsSuite(ctx);
     await reopenAction(ctx);
+    await devLoginSuite(ctx);
+    // Last: archives people and removes roles.
+    await sessionSuite(ctx);
 
     await report.coverage([...actions.keys()], loadRoutes());
   } finally {

@@ -85,6 +85,7 @@ export type ActionResponse = {
   /** Returned value (JSON) for kind "ok". */
   value: unknown;
   body: string;
+  headers: Headers;
 };
 
 /** Parses the RSC answer of an action: row 0 points to the row with the result ("$@1"). */
@@ -92,8 +93,9 @@ export function parseActionResponse(
   status: number,
   redirectHeader: string | null,
   body: string,
+  headers: Headers = new Headers(),
 ): ActionResponse {
-  const base = { status, location: null, value: undefined, body };
+  const base = { status, location: null, value: undefined, body, headers };
   if (redirectHeader)
     return {
       ...base,
@@ -207,6 +209,7 @@ export class Client {
       res.status,
       res.headers.get("x-action-redirect") ?? res.headers.get("location"),
       await res.text(),
+      res.headers,
     );
   }
 }
