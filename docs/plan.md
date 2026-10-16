@@ -430,7 +430,7 @@ na hotových obrazovkách), nakonec 4.9. Obrazovky do té doby ukazují tato tla
       „čeká na schválení“); u svátku text bez „počítá se do fondu“ (fond svátky nezahrnuje); Upravit pohotovosti
       zavře detail a otevře stávající panel.
 
-- [ ] **4.7 – Obrazovka Schvalování**
+- [x] **4.7 – Obrazovka Schvalování**
       Podle `04-schvalovani.png`: měsíc (výchozí minulý), parta (vedoucí vidí své party, správce všechny + výběr),
       lhůta „schválit do …“, karty počtů, záložky Všechny / Ke schválení / S upozorněním / Schválené, tabulka
       (zaměstnanec, úvazek, odpracováno, rozdíl, noc+víkend, absence, upozornění, stav; nepotvrzený má
@@ -443,6 +443,31 @@ na hotových obrazovkách), nakonec 4.9. Obrazovky do té doby ukazují tato tla
       v Můj měsíc (stejná komponenta a URL `?month=YYYY-MM-01`, zvolená parta zůstane); výchozí je minulý měsíc,
       dopředu nejvýš aktuální měsíc. „Připomenout“ zatím neaktivní s nápovědou (zapojí 4.5).
       Hotovo, když: vedoucí projde schválení i vrácení na desktopu i 375 px; přepnutí měsíce ukáže jeho výkazy.
+      Výsledek: stránka `/timesheets/approval` (`?month=`, `?team=`, `?tab=`, `?employee=` v URL; výchozí je minulý měsíc,
+      dopředu nejvýš aktuální), komponenty `components/approval/` (`ApprovalScreen`, `ApprovalList` s TanStack Table na
+      desktopu a kartami na mobilu, `ApprovalDetail`, `DecisionForm`, `BulkApprove`, `OvertimeToggle`, `TeamSelect`),
+      texty `timesheets.approval.*`, placeholder `approval` odstraněn. Sdílené s Můj měsíc: `MonthNav` (přepínač měsíců
+      s `maxMonth`), `EntryRow` (řádek intervalu; v detailu dne nově i štítek Přesčas), `StatCard`, `BreakdownRows`.
+      Nová čistá pravidla s testy: `rules/approval-overview.ts` (`approvalOverview`: co smí přihlášený u každého výkazu
+      – skládá `timesheetTransition`, takže obrazovka a akce se nemůžou rozejít –, počty karet a záložek, N hromadně
+      schválitelných; `approveDeadline`) a `rules/audit-history.ts` (`historyEvents`: řádky `audit_log` → události).
+      Služby `approval.ts`: `getApprovalData` (nad `getTeamMonth`) a `getTimesheetHistory` (audit výkazu, intervalů
+      a pohotovosti měsíce včetně smazaných; jen kdo smí výkaz vidět). Žádné nové obchodní pravidlo.
+      Ověřeno: lint, typecheck, 428 testů, build; skriptem proti lokální DB (říjen 2026): správce vidí všechny
+      (14), vedoucí jen svou partu (Novák 6, Marek 5), cizí parta i cizí historie → prázdné / `null`, běžný
+      zaměstnanec nic; vedoucí neschválí vlastní výkaz (`cannotApproveOwn`), výkaz správce ani cizí partu (chyba);
+      výkaz s ověřenými stavy jsem vykreslil do HTML z reálných dat a prohlédl na šířce 1192 px (desktop bez menu) a 375 px.
+      NEOVĚŘENO v běžící aplikaci (přihlášení jen přes Google): klikání, formuláře a potvrzovací dialog.
+      Vyzkoušet ručně: jako vedoucí otevřít Schvalování (září je prázdné, říjen má data; potvrzený výkaz vyrobíš
+      potvrzením měsíce zaměstnancem po 1. 11.); řádek → detail vpravo, na 375 px detail přes celou obrazovku se
+      „Zpět na seznam“; Schválit / Vrátit (bez důvodu odmítne), „Schválit N bez upozornění“ (dialog), Přesčas u
+      intervalu (pole s důvodem), Historie změn, odkaz „Otevřít všechny intervaly…“ → měsíc zaměstnance, ‹ › měsíc
+      (dál než aktuální nejde), výběr party u správce, Připomenout je neaktivní s nápovědou.
+      Rozhodl jsem: samoschválení drží pravidlo z 4.3 (jediný správce ano, s poznámkou v detailu a v auditu,
+      ostatní ne); přesčas se označuje vždy s důvodem (pravidlo z 4.2); intervaly v detailu jsou sbalitelný seznam
+      práce po dnech s přepínačem jen u otevřených a potvrzených výkazů; stav je ve sloupci Zaměstnanec pod jménem
+      (jinak se tabulka na 1440 px nevešla); fond v podtitulku je počet pracovních dnů (hodiny závisí na úvazku);
+      správce bez party vybírá „Všechny party“, vedoucí s jednou partou výběr nevidí.
 
 - [ ] **4.8 – Obrazovka Uzávěrka a nastavení lhůt**
       Podle `05-uzaverka.png`: hlavička se stavem a lhůtou, Připomenout chybějícím, Uzavřít měsíc (dialog se
