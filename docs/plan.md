@@ -631,7 +631,7 @@ Obrazovky do té doby ukazují tlačítka, jejichž krok ještě není hotový, 
 
 ## Milník 5 – Pilot
 
-- [ ] **5.1 – Modul Zakázky (vyčlenění z Docházky)**
+- [ ] **5.1 – Zakázky a Zaměstnanci mimo Docházku**
       Zakázky a zákazníci dostanou vlastní modul s dlaždicí v launcheru, aby piloti od začátku znali konečnou navigaci.
       Data se nestěhují: `customer`, `job`, `site` a `team_job` zůstávají ve schématu `core` (sdílená kmenová data pro
       docházku, vozový park, sklad i nářadí), žádná migrace databáze. (1) Nová složka `src/modules/jobs` (`shared.ts`
@@ -645,11 +645,22 @@ Obrazovky do té doby ukazují tlačítka, jejichž krok ještě není hotový, 
       (podle toho, jak dnes funguje `ModuleTile`). (5) `docs/architektura.md` (tabulka modulů) a `CLAUDE.md`
       (Repository layout) doplnit o modul `jobs`.
       Pravidla pro budoucí rozvoj: nové funkce zakázek (hodiny na zakázku, rozpočty, etapy, dokumenty…) patří do modulu
-      `jobs`, vlastní tabulky do schématu `jobs`; hodiny zůstávají v `time_entry` a modul je čte přes veřejné API Docházky
-      (např. hodiny po zakázkách za období – stejný dotaz jako CSV export z 4.4). Závislosti jen jedním směrem:
+      `jobs`, vlastní tabulky do schématu `jobs`; hodiny zůstávají v `time_entry` a modul je čte přes interní rozhraní Docházky (`src/modules/timesheets/index.ts`, volání
+      funkce uvnitř aplikace, ne HTTP API)
+      (hodiny po zakázkách za období: `getJobHours` z kroku 4.4). Závislosti jen jedním směrem:
       `jobs` → ostatní moduly → `core`; Docházka nesmí importovat modul `jobs`.
-      Hotovo, když: launcher má dlaždici Zakázky, správce v ní spravuje zakázky i zákazníky na desktopu i 375 px, staré
-      adresy přesměrují, v menu Docházky Zakázky nejsou; lint/typecheck/test/build prochází.
+      **Zaměstnanci:** dlaždice Zaměstnanci v launcheru (`/employees`, stránky v jádru, ne nový modul v `src/modules`):
+      (6) Stránky přesunout z `src/app/(app)/timesheets/employees/…` do `src/app/(app)/employees/…` (Zaměstnanci, detail,
+      nový, Party a detail party, Import z Excelu včetně šablony) s vlastním `layout.tsx`, `ModuleShell` a menu
+      (Zaměstnanci, Party, Import); `ModuleInfo` jádra dostane `href` a dlaždici. Staré adresy trvale přesměrovat.
+      (7) V menu Docházky položka Zaměstnanci zůstane jako odkaz na `/employees` (jedna obrazovka, dva vstupy).
+      (8) Data a oprávnění beze změny (`canManageEmployees`, import `canManageAccess`). Co patří docházce (nároky na
+      dovolenou, obvyklý den, zakázky party) zůstává v modulu `timesheets`; v detailu zaměstnance nebo party se ukáže jako
+      záložka/sekce, kterou dodá Docházka přes své veřejné API – jádro modul `timesheets` neimportuje, stránka v
+      `src/app` skládá obojí. Stejně později přidá svou záložku vozový park (přidělené auto) nebo nářadí.
+      Hotovo, když: launcher má dlaždice Zakázky a Zaměstnanci, správce v nich spravuje zakázky, zákazníky, zaměstnance,
+      party a import na desktopu i 375 px, staré adresy přesměrují, v menu Docházky Zakázky nejsou a Zaměstnanci vedou
+      na `/employees`; nároky na dovolenou jdou upravit jako dřív; lint/typecheck/test/build prochází.
 - [x] **Vývojové přihlášení a přístup z telefonu v domácí síti** (přesunuto z 3b.8; mobil se zatím testuje v náhledu telefonu v Chromu)
       Bez tunelu a bez Google Console. (1) **Vývojové přihlášení:** na přihlašovací stránce navíc „Přihlásit jako…“
       se seznamem aktivních zaměstnanců (jméno, role); vytvoří normální Better Auth session daného uživatele. Funguje jen

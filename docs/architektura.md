@@ -20,9 +20,12 @@ Zakázkový systém není samostatná aplikace: zakázky a zákazníci jsou v j�
 
 **Rozhodnuto (10/2026):** zakázky dostanou vlastní modul `jobs` s dlaždicí v launcheru. Tabulky `customer`, `job`,
 `site` a `team_job` zůstávají v jádru jako sdílená kmenová data; modul `jobs` vlastní obrazovky a nové funkce
-(vlastní tabulky ve schématu `jobs`). Hodiny zůstávají v docházce a modul `jobs` je čte přes její veřejné API;
+(vlastní tabulky ve schématu `jobs`). Hodiny zůstávají v docházce a modul `jobs` je čte přes její interní rozhraní (`index.ts`, ne HTTP API);
 stejně později jízdy z vozového parku a materiál ze skladu. Závislosti jen jedním směrem: `jobs` → ostatní moduly
 → `core`; žádný modul kromě `jobs` ho neimportuje.
+Zaměstnanci (zaměstnanci, party, import) mají vlastní dlaždici a obrazovky v jádru (`/employees`); Docházka na ně
+jen odkazuje. Údaje jednotlivých modulů o zaměstnanci (nároky na dovolenou, přidělené auto…) zůstávají v modulu
+a v detailu zaměstnance se ukazují jako jeho záložka.
 
 ## Proč jedna aplikace
 
