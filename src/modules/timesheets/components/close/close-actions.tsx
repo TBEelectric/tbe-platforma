@@ -19,7 +19,11 @@ import { Input } from "@/components/ui/input";
 import { calendarDate } from "@/i18n/format";
 import { initialFormState, type FormState } from "@/lib/form-state";
 import { cn } from "@/lib/utils";
-import { closePeriodAction, reopenPeriodAction } from "../../actions";
+import {
+  closePeriodAction,
+  remindMissingAction,
+  reopenPeriodAction,
+} from "../../actions";
 
 /** One item of the checks before closing, already translated. */
 export type CheckItem = {
@@ -310,16 +314,59 @@ export function ReopenMonth({
   );
 }
 
-/** „Připomenout chybějícím“; e-mail reminders come with the worker (step 4.5), until then disabled. */
-export function RemindMissing() {
+/**
+ * „Připomenout chybějícím“: after a confirmation, an e-mail to everyone whose timesheet of the month is
+ * still open (the server picks them and skips who got one today). Disabled when nobody is left.
+ */
+export function RemindMissing({
+  month,
+  notConfirmed,
+}: {
+  month: string;
+  notConfirmed: number;
+}) {
   const t = useTranslations("timesheets.close");
+  const [state, action] = useActionState(
+    remindMissingAction.bind(null, month),
+    initialFormState,
+  );
+  const disabled = notConfirmed === 0;
   return (
-    <span title={t("remindHint")} className="flex flex-col">
-      <Button variant="outline" disabled>
-        {t("remindMissing")}
-      </Button>
-      <span className="sr-only">{t("remindHint")}</span>
-    </span>
+    <>
+      <form
+        action={action}
+        onSubmit={(event) => {
+          if (
+            !window.confirm(t("remindQuestion", { month: calendarDate(month) }))
+          )
+            event.preventDefault();
+        }}
+      >
+        <span title={t("remindHint")} className="flex flex-col">
+          <RemindSubmit disabled={disabled}>{t("remindMissing")}</RemindSubmit>
+        </span>
+        <span className="sr-only">{t("remindHint")}</span>
+      </form>
+      {/* On its own row under the header buttons. */}
+      <div className="order-last basis-full empty:hidden">
+        <FormMessage state={state} />
+      </div>
+    </>
+  );
+}
+
+function RemindSubmit({
+  disabled,
+  children,
+}: {
+  disabled: boolean;
+  children: ReactNode;
+}) {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" variant="outline" disabled={disabled || pending}>
+      {children}
+    </Button>
   );
 }
 

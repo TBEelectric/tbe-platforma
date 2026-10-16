@@ -426,7 +426,7 @@
         "reopened": "Znovu otevřeno"
       },
       "remindMissing": "Připomenout chybějícím",
-      "remindHint": "Odeslání připomínky e-mailem bude brzy k dispozici.",
+      "remindHint": "Pošle e-mail všem, kdo ještě nepotvrdili měsíc; každému nejvýš jednou denně.",
       "closeMonth": "Uzavřít {month, date, monthName}",
       "closeQuestion": "Uzavřít {month, date, month}?",
       "closeDescription": "Výkazy všech zaměstnanců se uzamknou a uloží se podklad pro mzdy verze {version}. Ten se už nezmění; opravy jdou jen přes znovuotevření.",
@@ -486,7 +486,8 @@
       "reopenAll": "Vybrat všechny",
       "reopenNone": "Zrušit výběr",
       "reopenConfirm": "Znovu otevřít",
-      "checkNamesMore": "({names} a {count, plural, one {# další} few {# další} other {# dalších}})"
+      "checkNamesMore": "({names} a {count, plural, one {# další} few {# další} other {# dalších}})",
+      "remindQuestion": "Poslat e-mailovou připomínku všem, kdo ještě nepotvrdili {month, date, month}?"
     },
     "month": {
       "title": "Můj měsíc",
@@ -629,7 +630,8 @@
       "empty": "V této partě za vybraný měsíc nejsou žádné výkazy.",
       "emptyTab": "V této záložce nic není.",
       "remind": "Připomenout",
-      "remindHint": "Odeslání připomínky e-mailem bude brzy k dispozici.",
+      "reminded": "Připomenuto",
+      "remindHint": "Pošle zaměstnanci e-mail s výzvou k doplnění a potvrzení měsíce; nejvýš jednou denně.",
       "ownNote": "Váš vlastní výkaz schvaluje správce docházky.",
       "backToList": "Zpět na seznam",
       "detailConfirmed": "{month, date, month} · potvrzeno {when, date, dayMonth} v {when, time, ::Hmm}",
@@ -886,10 +888,7 @@
     },
     "reminders": {
       "sentOne": "Připomínka odeslána: {name}.",
-      "sentMany": "{count, plural, =0 {Nikomu nebylo potřeba připomínat.} one {Připomínka odeslána # zaměstnanci.} few {Připomínka odeslána # zaměstnancům.} other {Připomínka odeslána # zaměstnancům.}}",
-      "skipped": "{count, plural, one {# zaměstnanec přeskočen} few {# zaměstnanci přeskočeni} other {# zaměstnanců přeskočeno}} (už potvrdil, nemá e-mail nebo už dnes připomínku dostal).",
-      "remindHint": "Pošle e-mail s výzvou k doplnění a potvrzení měsíce; nejvýš jednou denně.",
-      "remindMissingHint": "Pošle e-mail všem, kdo ještě nepotvrdili měsíc; každému nejvýš jednou denně.",
+      "sentMany": "{count, plural, =0 {Nikomu nebyla připomínka odeslána.} one {Připomínka odeslána # zaměstnanci.} other {Připomínka odeslána # zaměstnancům.}}{skipped, plural, =0 {} one { # zaměstnanec přeskočen (nemá e-mail, dnes už ji dostal nebo odeslání selhalo).} few { # zaměstnanci přeskočeni (nemají e-mail, dnes už ji dostali nebo odeslání selhalo).} other { # zaměstnanců přeskočeno (nemají e-mail, dnes už ji dostali nebo odeslání selhalo).}}",
       "errors": {
         "notOpen": "Výkaz už je potvrzený nebo měsíc uzavřený; není co připomínat.",
         "noEmail": "Zaměstnanec nemá e-mail nebo není aktivní.",

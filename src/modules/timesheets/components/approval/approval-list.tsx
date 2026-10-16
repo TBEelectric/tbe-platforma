@@ -34,7 +34,9 @@ export type ApprovalListRow = {
   status: TimesheetStatus;
   statusLabel: string;
   selected: boolean;
-  /** The employee has not confirmed: „Připomenout“ is offered. */
+  /** First day of the month. */
+  month: string;
+  /** The employee has not confirmed and the viewer may remind them: „Připomenout“ is offered. */
   remindable: boolean;
 };
 
@@ -146,7 +148,10 @@ export function ApprovalList({
         cell: ({ row }) =>
           row.original.remindable ? (
             <span className="flex justify-end">
-              <RemindButton />
+              <RemindButton
+                employeeId={row.original.id}
+                month={row.original.month}
+              />
             </span>
           ) : null,
       }),

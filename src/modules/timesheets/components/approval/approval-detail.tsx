@@ -23,6 +23,7 @@ export function ApprovalDetail({
   lookups,
   history,
   canMarkOvertime,
+  canRemind,
   openAllHref,
   backHref,
   className,
@@ -33,6 +34,8 @@ export function ApprovalDetail({
   history: HistoryEvent[] | null;
   /** The viewer may mark overtime on this timesheet's work intervals. */
   canMarkOvertime: boolean;
+  /** The viewer may send „Připomenout“ to this employee. */
+  canRemind: boolean;
   openAllHref: string;
   /** Phone: back to the list. */
   backHref: string;
@@ -253,7 +256,13 @@ export function ApprovalDetail({
             <span className="text-sm text-muted-foreground">
               {t("approval.waitingConfirm")}
             </span>
-            <RemindButton />
+            {canRemind && !view.periodClosed && (
+              <RemindButton
+                key={view.employee.id}
+                employeeId={view.employee.id}
+                month={month}
+              />
+            )}
           </div>
         ) : (
           <DecisionForm

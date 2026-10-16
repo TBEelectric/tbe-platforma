@@ -17,6 +17,7 @@ import {
   type ApprovalTab,
 } from "../../rules/approval-overview";
 import type { HistoryEvent } from "../../rules/audit-history";
+import { canRemind } from "../../rules/reminders";
 import { MonthNav } from "../month/month-nav";
 import { StatCard } from "../month/month-cards";
 import { ApprovalDetail } from "./approval-detail";
@@ -116,6 +117,10 @@ export function ApprovalScreen({
     toListRow(view, {
       href: href({ employee: view.employee.id }),
       selected: view.employee.id === shownId,
+      remind: canRemind(viewer, {
+        employeeId: view.employee.id,
+        teamId: view.teamId,
+      }),
       t: root,
       locale,
     });
@@ -233,6 +238,10 @@ export function ApprovalScreen({
               employeeId: shown.employee.id,
               teamId: shown.teamId,
             })}
+            canRemind={canRemind(viewer, {
+              employeeId: shown.employee.id,
+              teamId: shown.teamId,
+            })}
             openAllHref={`/timesheets/month?employee=${shown.employee.id}&month=${month}`}
             backHref={href({ employee: null })}
             className={explicit ? undefined : "max-lg:hidden"}
@@ -263,11 +272,14 @@ function toListRow(
   {
     href,
     selected,
+    remind,
     t,
     locale,
   }: {
     href: string;
     selected: boolean;
+    /** The viewer may send „Připomenout“ to this employee (canRemind). */
+    remind: boolean;
     /** Translator without a namespace. */
     t: ReturnType<typeof useTranslations<never>>;
     locale: string;
@@ -320,6 +332,7 @@ function toListRow(
     status: view.status,
     statusLabel: capitalize(t(`timesheets.status.${view.status}`), locale),
     selected,
-    remindable: view.status === "open",
+    month: s.month,
+    remindable: remind && view.status === "open" && !view.periodClosed,
   };
 }

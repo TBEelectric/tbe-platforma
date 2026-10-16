@@ -91,7 +91,7 @@ export function CloseScreen({
         subtitle={subtitle}
         actions={
           <>
-            <RemindMissing />
+            <RemindMissing month={month} notConfirmed={counts.notConfirmed} />
             <CloseMonth
               month={month}
               closed={state.closed}

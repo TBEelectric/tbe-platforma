@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import {
   bulkApproveAction,
   decideTimesheetAction,
+  remindEmployeeAction,
   setOvertimeAction,
 } from "../../actions";
 
@@ -171,15 +172,67 @@ function BulkButton({
   );
 }
 
-/** „Připomenout“ for an employee who has not confirmed; wired to the worker in step 4.5. */
-export function RemindButton({ className }: { className?: string }) {
+/**
+ * „Připomenout“ for an employee who has not confirmed: an e-mail asking to fill in and confirm the
+ * month (the server checks who may remind and allows one a day). The result shows under the button.
+ */
+export function RemindButton({
+  employeeId,
+  month,
+  className,
+}: {
+  employeeId: string;
+  month: string;
+  className?: string;
+}) {
   const t = useTranslations("timesheets.approval");
+  const [state, action] = useActionState(
+    remindEmployeeAction.bind(null, employeeId, month),
+    initialFormState,
+  );
+  const error = state.errors?._form;
   return (
-    <span title={t("remindHint")} className={className}>
-      <Button variant="outline" size="sm" disabled>
-        {t("remind")}
-      </Button>
-    </span>
+    <form
+      action={action}
+      className={cn("flex flex-col items-end gap-1", className)}
+    >
+      <span title={t("remindHint")}>
+        <RemindSubmit done={!!state.ok}>
+          {state.ok ? t("reminded") : t("remind")}
+        </RemindSubmit>
+      </span>
+      {(error || state.message) && (
+        <span
+          role={error ? "alert" : "status"}
+          className={cn(
+            "max-w-60 text-right text-[13px]",
+            error ? "text-warning-foreground" : "text-success-foreground",
+          )}
+        >
+          {error ?? state.message}
+        </span>
+      )}
+    </form>
+  );
+}
+
+function RemindSubmit({
+  done,
+  children,
+}: {
+  done: boolean;
+  children: ReactNode;
+}) {
+  const { pending } = useFormStatus();
+  return (
+    <Button
+      type="submit"
+      variant="outline"
+      size="sm"
+      disabled={done || pending}
+    >
+      {children}
+    </Button>
   );
 }
 

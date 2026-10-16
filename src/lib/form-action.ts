@@ -9,14 +9,15 @@ import { fieldErrors, type Actor } from "@/modules/core/shared";
 /**
  * Shared body of form server actions: requirePermission (server-side check) → Zod validation →
  * run (audited service) → revalidate. Business errors (UserError) become field errors. `run` may
- * return the success message (default "Uloženo."); all messages are translated here.
+ * return the success message (default "Uloženo."); all messages are translated here. `revalidate`
+ * null: the action changes nothing the pages show (e.g. sending a reminder), so nothing re-renders.
  */
 export async function handleFormAction<S extends z.ZodType>(
   check: (actor: Actor) => boolean,
   schema: S,
   formData: FormData,
   run: (user: CurrentUser, data: z.infer<S>) => Promise<Msg | void>,
-  revalidate: string,
+  revalidate: string | null,
 ): Promise<FormState> {
   const user = await requirePermission(check);
   const t = await getTranslations();
@@ -30,7 +31,7 @@ export async function handleFormAction<S extends z.ZodType>(
   }
   try {
     const result = await run(user, parsed.data);
-    revalidatePath(revalidate, "layout");
+    if (revalidate) revalidatePath(revalidate, "layout");
     return {
       ok: true,
       message: translate(t, result ?? msg("common.saved")),

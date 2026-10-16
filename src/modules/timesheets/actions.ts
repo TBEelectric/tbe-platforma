@@ -33,6 +33,7 @@ import { absenceFormSchema, type AbsenceDecision } from "./rules/absence";
 import { dayTemplateFormSchema } from "./rules/day-template";
 import { settingsFormSchema } from "./rules/settings-change";
 import { saveSettings } from "./module-settings";
+import { remindEmployee, remindMissing } from "./reminders";
 import {
   employeeIdsSchema,
   monthSchema,
@@ -392,5 +393,53 @@ export async function saveSettingsAction(
       return msg("timesheets.settings.saved", { count: changed });
     },
     TIMESHEETS,
+  );
+}
+
+// ── Připomínky by hand (e-mail) ──
+
+/** Schvalování → „Připomenout“: one employee who has not confirmed the month (lead of the team, manager). */
+export async function remindEmployeeAction(
+  employeeId: string,
+  month: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  return handleFormAction(
+    canApproveTimesheets,
+    noFields,
+    formData,
+    async (user) => {
+      const result = await remindEmployee(
+        writerOf(user),
+        bound(z.uuid(), employeeId),
+        bound(monthSchema, month),
+      );
+      return msg("timesheets.reminders.sentOne", result);
+    },
+    // The reminder changes nothing on the page; re-rendering would also drop the message.
+    null,
+  );
+}
+
+/** Uzávěrka → „Připomenout chybějícím“: everyone whose timesheet of the month is still open. */
+export async function remindMissingAction(
+  month: string,
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  return handleFormAction(
+    canCloseTimesheetPeriod,
+    noFields,
+    formData,
+    async (user) => {
+      const result = await remindMissing(
+        writerOf(user),
+        bound(monthSchema, month),
+      );
+      return msg("timesheets.reminders.sentMany", result);
+    },
+    // The reminder changes nothing on the page; re-rendering would also drop the message.
+    null,
   );
 }
