@@ -1,5 +1,6 @@
 import { createFormatter } from "next-intl";
 import { describe, expect, it } from "vitest";
+import messages from "../../messages/cs.json";
 import { calendarDate, capitalize } from "./format";
 import { formats } from "./formats";
 import { msg } from "./messages";
@@ -54,5 +55,29 @@ describe("messages", () => {
       ),
     ).toBe("Tento den je zapsaná absence (nemoc).");
     expect(cs(msg("timesheets.absences.hours", { hours: 7.25 }))).toBe("7,3 h");
+  });
+
+  it("shows a time as hours and minutes, not the named short date", () => {
+    // 08:00 UTC on 3 Nov is 9:00 in Prague (CET, UTC+1)
+    const when = new Date("2026-11-03T08:00:00Z");
+    expect(
+      cs(msg("timesheets.approval.historyBy", { actor: "Jan Novák", when })),
+    ).toBe("Jan Novák · 3. 11. 9:00");
+    expect(cs(msg("timesheets.approval.historySystem", { when }))).toBe(
+      "systém · 3. 11. 9:00",
+    );
+    expect(
+      cs(
+        msg("timesheets.approval.detailApproved", {
+          month: calendarDate("2026-10-01"),
+          when,
+        }),
+      ),
+    ).toBe("říjen 2026 · schváleno 3. 11. v 9:00");
+  });
+
+  it("never formats a time with the named date format short", () => {
+    // "{x, time, short}" picks formats.dateTime.short (day.month.year) and repeats the date
+    expect(JSON.stringify(messages)).not.toMatch(/time,\s*short/);
   });
 });
