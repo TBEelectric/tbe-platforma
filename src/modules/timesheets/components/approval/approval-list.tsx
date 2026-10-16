@@ -95,7 +95,6 @@ export function ApprovalList({
             </Link>
             <span className="flex flex-wrap items-center gap-1.5">
               <StatusBadge row={row.original} />
-              {row.original.remindable && <RemindButton />}
             </span>
           </span>
         ),
@@ -140,6 +139,16 @@ export function ApprovalList({
         id: "warningCount",
         header: t("colWarnings"),
         cell: ({ row }) => <Warnings row={row.original} />,
+      }),
+      column.display({
+        id: "remind",
+        header: () => <span className="sr-only">{t("remind")}</span>,
+        cell: ({ row }) =>
+          row.original.remindable ? (
+            <span className="flex justify-end">
+              <RemindButton />
+            </span>
+          ) : null,
       }),
     ],
     [t],
