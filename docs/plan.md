@@ -510,7 +510,7 @@ na hotových obrazovkách), nakonec 4.9. Obrazovky do té doby ukazují tato tla
       `jobs` → ostatní moduly → `core`; Docházka nesmí importovat modul `jobs`.
       Hotovo, když: launcher má dlaždici Zakázky, správce v ní spravuje zakázky i zákazníky na desktopu i 375 px, staré
       adresy přesměrují, v menu Docházky Zakázky nejsou; lint/typecheck/test/build prochází.
-- [ ] **Vývojové přihlášení a přístup z telefonu v domácí síti** (přesunuto z 3b.8; mobil se zatím testuje v náhledu telefonu v Chromu)
+- [x] **Vývojové přihlášení a přístup z telefonu v domácí síti** (přesunuto z 3b.8; mobil se zatím testuje v náhledu telefonu v Chromu)
       Bez tunelu a bez Google Console. (1) **Vývojové přihlášení:** na přihlašovací stránce navíc „Přihlásit jako…“
       se seznamem aktivních zaměstnanců (jméno, role); vytvoří normální Better Auth session daného uživatele. Funguje jen
       při `NODE_ENV=development` **a** `DEV_LOGIN=true` v `.env` (do `.env.example` zakomentovaně); jinak route i tlačítko
@@ -521,6 +521,20 @@ na hotových obrazovkách), nakonec 4.9. Obrazovky do té doby ukazují tato tla
       Hotovo, když: na telefonu ve stejné Wi-Fi jde otevřít aplikaci a přihlásit se „jako“ ukázkový zaměstnanec;
       v produkčním buildu vývojové přihlášení neexistuje. Po kroku člověk vyzkouší mobilní
       zápis (kroky 3b.6–3b.7) na skutečném telefonu.
+      Výsledek: Na `/login` je při `DEV_LOGIN=true` a `pnpm dev` sekce „Přihlásit jako…“ (aktivní zaměstnanci s e-mailem,
+      jméno, nejvyšší role a parta). Vytvoří normální Better Auth session přes plugin s endpointem jen pro server
+      (`createAuthEndpoint.serverOnly`, `createSession` + `setSessionCookie`, `src/lib/dev-login-plugin.ts`), uživatele
+      založí, když ještě neexistuje, a zapíše `audit_log` (entita `session`, `method: "dev-login"`). Podmínka je čistá
+      funkce `isDevLoginEnabled` s testem; `devLoginEnabled()` čte `process.env.NODE_ENV` doslova, takže ji produkční build
+      natvrdo vypne – ověřeno: `next start` s `DEV_LOGIN=true` i `NODE_ENV=development` nemá sekci a akce vrací 404.
+      `pnpm dev:lan` spustí `next dev` na `0.0.0.0` a vypíše `http://<IP Macu>:3000`; IP adresy Macu (`lanAddresses`, test)
+      jdou do `allowedDevOrigins` a do `trustedOrigins` Better Auth jen ve vývoji. Postup v `CLAUDE.md`. Ověřeno
+      v náhledu přes `http://192.168.0.189:3000` (375 px): přihlášení „jako“, odhlášení, klientská navigace, HMR není
+      blokované, cizí origin dál dostane 403. Rozhodl jsem sám: přihlášení se audituje (běžné přes Google ne); Google
+      z IP adresy nefunguje (callback je `localhost`), na telefonu jen „Přihlásit jako…“; po změně IP Macu je nutné
+      restartovat dev server. Vyzkoušet na telefonu: zastavit běžící `pnpm dev`, spustit `pnpm dev:lan`, otevřít adresu
+      v iPhone Safari / Android Chrome ve stejné Wi-Fi (případně povolit node ve firewallu macOS), přihlásit se „jako“
+      a projít mobilní zápis dne (3b.6–3b.7: tažení na ose, posun, vibrace, rozbalení noci).
 - [ ] Nasazení na VPS (Docker Compose, Caddy, zálohy, ověřená obnova)
 - [ ] PWA (instalace na plochu firemních telefonů)
 - [ ] Playwright testy hlavních scénářů (zápis dne, potvrzení, schválení, uzávěrka)

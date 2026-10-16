@@ -104,6 +104,7 @@ First run: `cp .env.example .env`, fill it in, then `pnpm install`, `docker comp
 ```
 docker compose up -d db   # start local PostgreSQL 16 (port 5432, db/user/password: tbe)
 pnpm dev                  # run web app on http://localhost:3000
+pnpm dev:lan              # same, reachable from a phone on the same Wi-Fi (prints http://<Mac IP>:3000)
 pnpm worker               # run scheduled jobs locally
 pnpm test                 # vitest (run once); pnpm test:watch for watch mode
 pnpm lint                 # eslint
@@ -124,6 +125,16 @@ Notes:
   after `await io()`, or on a route with `export const instant = false`.
 - Auth: every protected page, server action and export calls `requireUser()` from `src/lib/current-user.ts`.
   Layouts do not protect pages (they render in parallel); `src/proxy.ts` is only an optimistic cookie check.
+- Development sign-in: with `DEV_LOGIN=true` in `.env` and `pnpm dev`, the login page shows "Přihlásit jako…"
+  (active employees with an e-mail); it creates a normal Better Auth session and writes `audit_log`.
+  The check is `devLoginEnabled()` in `src/lib/dev-login.ts` (NODE_ENV=development and DEV_LOGIN=true);
+  a production build inlines NODE_ENV, so the section, the action and the endpoint answer 404 there.
+- Phone in the home network (no tunnel, no Google Console): set `DEV_LOGIN=true`, stop any running
+  `pnpm dev` (only one dev server per folder), run `pnpm dev:lan`, open the printed `http://<Mac IP>:3000`
+  on the phone in the same Wi-Fi and use "Přihlásit jako…". Google sign-in works only on localhost.
+  The Mac's addresses go to `allowedDevOrigins` (next.config.ts) and Better Auth `trustedOrigins`
+  (development only); after the Mac gets a new IP, restart the dev server. If the phone cannot connect,
+  allow incoming connections for node in the macOS firewall. No HTTPS, so no PWA install here.
 - Drizzle uses `casing: "snake_case"`: write camelCase keys in `schema.ts`, columns become snake_case.
 - shadcn/ui: `pnpm dlx shadcn@latest add <component>`; then adjust sizes to the TBE style (44 px controls).
 - Import (Zaměstnanci → Import z Excelu, admin only) follows `docs/import/sablona-importu.xlsx`, which is
