@@ -1,6 +1,6 @@
 "use client";
 
-import { Coffee, Lock, Minus, Plus, Trash2 } from "lucide-react";
+import { Coffee, Minus, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
   useCallback,
@@ -49,6 +49,7 @@ import {
   readableTextColor,
 } from "../../shared";
 import { JobPickerScreen } from "./job-picker-screen";
+import { DayNotice } from "./day-notice";
 import { NightToggle } from "./night-toggle";
 import { TemplateSave } from "./template-save";
 import { useNight } from "./use-night";
@@ -110,7 +111,8 @@ export function MobileTimeline({
     reason: needsReason ? reason.trim() || null : null,
   });
   const { day, entries, selectedId } = tl;
-  const readOnly = !dayEditability(day).editable;
+  const editability = dayEditability(day);
+  const readOnly = !editability.editable;
   const colRef = useRef<HTMLDivElement>(null);
   const gesture = useRef<Active | null>(null);
   const { message, setMessage, select } = tl;
@@ -436,14 +438,7 @@ export function MobileTimeline({
           />
         </label>
       )}
-      {readOnly && (
-        <p className="flex items-center gap-2 rounded-lg bg-neutral px-4 py-3 text-[15px] text-neutral-foreground">
-          <Lock className="size-4 shrink-0" aria-hidden />
-          {day.locked
-            ? t("timesheets.timeline.monthClosedBanner")
-            : t("timesheets.errors.absenceBlocksDay")}
-        </p>
-      )}
+      <DayNotice editability={editability} />
 
       {canFill && (
         <div

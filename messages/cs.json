@@ -335,7 +335,13 @@
       "noJob": "Bez zakázky"
     },
     "timeline": {
-      "monthClosedBanner": "Měsíc je uzavřený",
+      "lockedBanner": {
+        "confirmed": "Měsíc je potvrzený, intervaly už nelze měnit. Pro opravu požádejte o vrácení výkazu.",
+        "approved": "Měsíc je schválený, intervaly už nelze měnit.",
+        "closed": "Měsíc je uzavřený, intervaly už nelze měnit.",
+        "absence": "V tento den je celodenní absence, intervaly nelze zapsat."
+      },
+      "returnedBanner": "Výkaz byl vrácen k opravě: {reason}",
       "axisLabel": "Časová osa dne",
       "nextDayMark": "{time} +1",
       "entryLabel": "{from}–{to}, {title}, {duration}",

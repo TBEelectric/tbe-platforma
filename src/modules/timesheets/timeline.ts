@@ -88,6 +88,9 @@ export type TimelineDay = {
   today: string;
   status: TimesheetStatus;
   locked: boolean;
+  periodClosed: boolean;
+  /** Reason the timesheet was returned with (shown above the timeline while it is open). */
+  returnReason: string | null;
   /** Latest minute an entry may end: 6:00 +1 for a past day, now for today, 0 for a future day. */
   maxEnd: number;
   absenceOnDay: boolean;
@@ -163,7 +166,7 @@ async function loadState(
     )
     .orderBy(timeEntry.startAt);
   const [sheet] = await tx
-    .select({ status: timesheet.status })
+    .select({ status: timesheet.status, returnReason: timesheet.returnReason })
     .from(timesheet)
     .where(
       and(eq(timesheet.employeeId, employeeId), eq(timesheet.month, month)),
@@ -208,9 +211,12 @@ async function loadState(
         blocked.push({ start, end: AXIS_END });
     }
   }
+  const periodClosed = isPeriodClosed(close ?? null);
   return {
     status,
-    locked: isMonthLocked(status, isPeriodClosed(close ?? null)),
+    locked: isMonthLocked(status, periodClosed),
+    periodClosed,
+    returnReason: sheet?.returnReason ?? null,
     maxEnd: maxEndOf(date, now),
     absenceOnDay: !!blockingAbsence(date, absences),
     entries,
@@ -307,6 +313,8 @@ export async function getTimelineDay(
     today: todayInPrague(now),
     status: state.status,
     locked: state.locked,
+    periodClosed: state.periodClosed,
+    returnReason: state.returnReason,
     maxEnd: state.maxEnd,
     absenceOnDay: state.absenceOnDay,
     entries: state.entries,

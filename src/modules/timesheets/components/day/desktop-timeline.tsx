@@ -1,6 +1,6 @@
 "use client";
 
-import { Coffee, Lock, Minus, Plus } from "lucide-react";
+import { Coffee, Minus, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
   useCallback,
@@ -39,6 +39,7 @@ import {
   readableTextColor,
 } from "../../shared";
 import { JobCombobox } from "./job-combobox";
+import { DayNotice } from "./day-notice";
 import { NightToggle } from "./night-toggle";
 import { TemplateSave } from "./template-save";
 import { useNight } from "./use-night";
@@ -94,7 +95,8 @@ export function DesktopTimeline({
     reason: needsReason ? reason.trim() || null : null,
   });
   const { day, entries, selectedId, message, setMessage, select } = tl;
-  const readOnly = !dayEditability(day).editable;
+  const editability = dayEditability(day);
+  const readOnly = !editability.editable;
   const { night, range, toggleTop, toggleBottom } = useNight(entries);
   const trackRef = useRef<HTMLDivElement>(null);
   const gesture = useRef<Active | null>(null);
@@ -358,14 +360,7 @@ export function DesktopTimeline({
           />
         </label>
       )}
-      {readOnly && (
-        <p className="flex items-center gap-2 rounded-lg bg-neutral px-4 py-3 text-[15px] text-neutral-foreground">
-          <Lock className="size-4 shrink-0" aria-hidden />
-          {day.locked
-            ? root("timesheets.timeline.monthClosedBanner")
-            : root("timesheets.errors.absenceBlocksDay")}
-        </p>
-      )}
+      <DayNotice editability={editability} />
 
       {/* Axis: night arrows in the margins, outside the drawing area */}
       <div className="flex items-start gap-1 pt-8">
