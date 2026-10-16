@@ -499,7 +499,7 @@ Obrazovky do té doby ukazují tlačítka, jejichž krok ještě není hotový, 
       (jinak se tabulka na 1440 px nevešla); fond v podtitulku je počet pracovních dnů (hodiny závisí na úvazku);
       správce bez party vybírá „Všechny party“, vedoucí s jednou partou výběr nevidí.
 
-- [ ] **4.8 – Obrazovka Uzávěrka a nastavení lhůt**
+- [x] **4.8 – Obrazovka Uzávěrka a nastavení lhůt**
       Podle `05-uzaverka.png`: hlavička se stavem a lhůtou, Připomenout chybějícím, Uzavřít měsíc (dialog se
       souhrnem kontrol, aktivní jen když kontroly projdou), karty počtů, Kontrola před uzávěrkou, Stav podle
       part (průběh, „čeká na vás“), Podklad pro mzdy (XLSX, PDF; před uzávěrkou neaktivní s vysvětlením),
@@ -509,6 +509,38 @@ Obrazovky do té doby ukazují tlačítka, jejichž krok ještě není hotový, 
       a čas připomínek z 4.1 (zápis nové hodnoty s `valid_from`, audit). Mobil: jednosloupcové.
       Odstranit placeholdery `close` a `settings`.
       Hotovo, když: správce uzavře, stáhne, znovu otevře a uzavře znovu jako verzi 2.
+      Výsledek: stránka `/timesheets/close` (`?month=`, výchozí minulý měsíc, dopředu nejvýš aktuální; `MonthNav`)
+      s komponentami `components/close/` (`CloseScreen`, `CloseMonth` – dialog s kontrolami a číslem verze, aktivní jen
+      bez `periodCloseError`; `ReopenMonth` – dialog s důvodem a výběrem zaměstnanců; `JobHoursExport` – CSV s výběrem
+      od–do; `RemindMissing` neaktivní s nápovědou do 4.5) nad službou `close.ts` (`getCloseData`: `getPeriodState`,
+      `getApprovalData`, `listPeriodExports`, party a uzavřené výkazy pro znovuotevření). Podklad pro mzdy stahuje
+      poslední verzi, Uzavřené měsíce každou verzi přes route handlery ze 4.4. Stránka `/timesheets/settings`
+      (`components/settings/`, služba `module-settings.ts`, akce `saveSettingsAction`): všechny prahy, lhůty a čas
+      připomínek po oddílech + „Platí od“ a historie změn podle `valid_from`. Nový `components/ui/dialog.tsx`
+      (shadcn, styl TBE), `PageHeader` má štítek u nadpisu, formát data `monthName`. Placeholdery `close`
+      a `settings` odstraněny. Nová čistá pravidla s testy: `rules/settings-change.ts` (`settingsFormSchema`,
+      `planSettingsChange`, `settingsHistory`) a `rules/close-overview.ts` (`closeDeadline`, `periodStatus`,
+      `teamCloseProgress`); `ApprovalRow.managerOnly` v `approval-overview.ts`.
+      Ověřeno: lint, typecheck, 484 testů, build. V prohlížeči přes vývojové přihlášení na lokální DB (září 2026
+      doplněné skriptem: intervaly všem s HPP/DPČ, výkazy potvrzené kromě P. Svobody): správce viděl chyby kontrol
+      a vypnuté Uzavřít → Svoboda potvrdil → vedoucí J. Novák schválil 4 → správce hromadně 8 → druhý správce
+      (Marketing TBE) schválil výkaz L. Černé → kontroly zelené → Uzavřít září = verze 1 → XLSX, PDF a CSV 200 →
+      Znovu otevřít bez důvodu i bez zaměstnanců odmítnuto, pak pro P. Svobodu s důvodem (ostatní zůstali schválení,
+      Svoboda viděl důvod v Můj měsíc) → znovu potvrdil, Novák schválil → uzavřeno jako verze 2 → verze 1 i 2 (XLSX
+      i PDF) ke stažení. Nastavení: lhůty mimo pořadí a zpětné „Platí od“ server odmítl, změna od 1. 11. uložená jako
+      plánovaná, druhé uložení stejného dne řádek přepsalo (audit create + update). Zaměstnanec, vedoucí
+      i administrátor nemají Uzávěrku ani Nastavení v menu a přes URL dostanou 404 (administrátor i mzdový export).
+      Desktop 1440 px a 375 px (jeden sloupec, bez vodorovného posunu, dialogy na mobilu).
+      Vyzkoušet: Uzávěrka → září 2026 (na lokální DB uzavřené ve verzi 2) → stáhnout verze, Znovu otevřít; Nastavení →
+      změnit lhůtu od zítřka a zkontrolovat Historii změn.
+      Rozhodl jsem: nastavitelné jsou všechny prahy (tvé rozhodnutí), „Platí od“ dnes nebo později, uložení ve stejný
+      den přepíše řádek toho dne; formulář se porovnává s hodnotami platnými k „Platí od“; lhůty musí jít po sobě
+      (potvrzení ≤ schválení ≤ uzávěrka), část přestávky ≤ přestávka, noc nesmí začínat a končit stejně; trvání se
+      zadávají jako H:MM. „Čeká na vás“ ve Stavu part = potvrzené výkazy, které má přihlášený schválit (vedoucí
+      party; správce u výkazů vedoucích, správců a part bez vedoucího), ostatní potvrzené „čekají“ na vedoucího.
+      Výchozí šablona „Obvyklý den“ v nastavení zatím není (akce existuje, obrazovka později). Nález: neaktivní
+      zaměstnanec bez konce úvazku (R. Kučera v lokální DB) se počítá do uzávěrky a blokuje ji; při deaktivaci je
+      potřeba ukončit úvazek.
 
 - [ ] **4.9 – Dokončení milníku** [zastavit po]
       (1) Launcher „Čeká na vás“ podle `01-launcher.png` (doplnit chybějící den, potvrdit měsíc, schválit N výkazů,
