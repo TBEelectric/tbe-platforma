@@ -18,7 +18,8 @@
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx --env-file=.env src/db/seed.ts",
     "worker": "tsx --env-file=.env src/worker.ts",
-    "admin:add": "tsx --env-file=.env src/scripts/add-admin.ts"
+    "admin:add": "tsx --env-file=.env src/scripts/add-admin.ts",
+    "security:check": "tsx --env-file=.env src/scripts/security-check/index.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
