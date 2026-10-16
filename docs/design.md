@@ -35,7 +35,7 @@ z shadcn/ui komponent a Tailwindu, s tokeny výše. Data v nich jsou ukázková.
 | --- | --- | --- | --- |
 | Launcher | `01-launcher` | všichni | Dlaždice modulů, „Čeká na vás“ |
 | Můj den | `02-muj-den` → **aktuální je prototyp `prototypes/Den.dc.html`** | zaměstnanec | Časová osa, tabulka intervalů, řádek „Přidat interval“, kontroly, součty po zakázkách |
-| Můj měsíc | `03-muj-mesic` | zaměstnanec | Kalendář s hodinami, chybějící dny, součty, průběh schválení, Potvrdit měsíc |
+| Můj měsíc | `03-muj-mesic`, detail dne `03b-muj-mesic-detail-dne` (jen HTML) | zaměstnanec | Kalendář s hodinami, chybějící dny, součty, průběh schválení, Potvrdit měsíc; klik na den otevře detail dne |
 | Schvalování | `04-schvalovani` | vedoucí | Tabulka party, upozornění, detail, Schválit / Vrátit s důvodem |
 | Uzávěrka | `05-uzaverka` | správce | Kontrola před uzávěrkou, stav part, export, uzavřené měsíce s verzemi |
 | Mobil – den | `06-mobil-den` | zaměstnanec | **Nahrazeno** svislou osou, viz „Mobil – zápis dne na ose“; platí jen hlavička a spodní navigace |

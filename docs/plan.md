@@ -195,7 +195,7 @@ Kroky jdou po sobě; každý se pouští v nové session (`scripts/milestone.sh 
 a server (žádné obrazovky), kroky 4.6–4.9 jen obrazovky** nad hotovou logikou. Obrazovkový krok nesmí přidávat
 obchodní pravidla: když nějaké chybí, doplní ho jako čistou funkci v `rules/` s testem a uvede to ve „Výsledek:“.
 Značky jako v 3b: `[opus]`, `[zastavit po]`, `[ručně]`.
-**Pořadí:** po 4.3 se dělají obrazovky 4.6, 4.7, 4.8, pak 4.4 a 4.5 (zapojí tlačítka exportů a připomínek
+**Pořadí:** po 4.3 se dělají obrazovky 4.6, 4.6b (detail dne v Můj měsíc), 4.7, 4.8, pak 4.4 a 4.5 (zapojí tlačítka exportů a připomínek
 na hotových obrazovkách), nakonec 4.9. Obrazovky do té doby ukazují tato tlačítka neaktivní s nápovědou.
 
 **Právní rámec (zákoník práce; platí pro všechny kroky):**
@@ -383,6 +383,35 @@ na hotových obrazovkách), nakonec 4.9. Obrazovky do té doby ukazují tato tla
       Rozhodl jsem: buňka kalendáře je odkaz na Můj den (podle náhledu), pohotovost se spravuje v kartě
       „Pohotovost“ v pravém sloupci (panel se seznamem měsíce a tlačítkem Přidat), ne v detailu dne – zadání
       chtělo obojí; karta Upozornění se ukáže jen při upozorněních měsíce.
+
+- [ ] **4.6b – Můj měsíc: detail dne v kalendáři** [zastavit po]
+      Jediná změna proti hotové 4.6: klik na den v kalendáři už nepřesměruje na Můj den, ale otevře detail dne.
+      Vše ostatní na obrazovce (hlavička, karty, kalendář a jeho buňky, lišta, pravý sloupec, potvrzení, měsíc
+      jiného zaměstnance, mobilní rozložení) zůstává beze změny. Server, `getMonth` a pravidla se nemění: detail
+      bere data, která už `MonthView` vrací (`entries`, `absences`, `standbys`, `summary.days`, upozornění
+      s datem). Vzor: `docs/design/screens/03b-muj-mesic-detail-dne.html` (přepínače Situace a Šířka nahoře).
+      Obsah detailu: datum a stav dne (Vyplněno / Chybí záznam / Svátek / Víkend / Bez záznamu, Dnes), rozsah
+      od–do; součty Práce, Přestávky, Absence (jen nenulové); malá osa dne v barvách zakázek (přestávky
+      béžové, absence šrafovaně); seznam intervalů jen pro čtení jako pod osou v Můj den (od–do, zakázka
+      s číslem a „Firma, místo“, druh práce, poznámka, doba; přestávky a absence jako řádky); pohotovost dne
+      s „Upravit“, které otevře stávající panel pohotovosti (jen když smí upravovat pohotovost jako dnes);
+      upozornění dne. Dole jedno tlačítko „Otevřít celý den“ (u chybějícího dne „Doplnit den“) = dosavadní
+      odkaz na Můj den včetně `?employee=`. Hlavička detailu má ‹ › (předchozí / další den v měsíci) a zavřít.
+      Desktop (≥ 1024 px): plovoucí panel ~390 px se šipkou na den, vždy **pod vybraným dnem**, vodorovně
+      vycentrovaný na den a držený uvnitř bloku kalendáře; když se pod den nevejde, otevře se **nad ním**;
+      když se nevejde ani tam, jde na stranu s víc místa a seznam intervalů se posouvá uvnitř (tlačítko
+      zůstane vidět, panel ukáže aspoň ~4 intervaly, smí kousek přečnívat pod kalendář). Vybraný den má
+      zvýraznění. ←/→ přepíná dny, Esc a klik mimo zavře a vrátí fokus na buňku.
+      Mobil (< 1024 px): stejný obsah ve spodním panelu (max. ~¾ výšky, ztmavené pozadí), tlačítko přes celou
+      šířku dole, klepnutí mimo zavře – stejný vzor jako spodní panel na ose dne.
+      Zamčený měsíc: hláška se zámkem, tlačítko „Otevřít den (jen pro čtení)“, bez „Upravit“ u pohotovosti.
+      Měsíc jiného zaměstnance: jméno v hlavičce detailu; s `canWriteTimeFor` tlačítko jako u vlastního, bez
+      něj detail jen pro čtení bez tlačítka s nápovědou, kdo den může otevřít (dnes takový den nejde otevřít
+      vůbec). Buňka se stává tlačítkem (`aria-haspopup="dialog"`, `aria-expanded`), panel je dialog.
+      Nové texty v `timesheets.month.*` (cs i ostatní jazyky jako dosud).
+      Hotovo, když: klik na den otevře detail se správnými intervaly a součty, které odpovídají buňce
+      a Můj den; poloha panelu podle pravidel výše na desktopu i 375 px; nic jiného na obrazovce se nezměnilo;
+      lint, typecheck, testy a build projdou.
 
 - [ ] **4.7 – Obrazovka Schvalování**
       Podle `04-schvalovani.png`: měsíc (výchozí minulý), parta (vedoucí vidí své party, správce všechny + výběr),
