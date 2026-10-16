@@ -33,12 +33,23 @@ z shadcn/ui komponent a Tailwindu, s tokeny výše. Data v nich jsou ukázková.
 
 | Obrazovka | Soubor | Kdo | Obsah |
 | --- | --- | --- | --- |
-| Launcher | `01-launcher` | všichni | Dlaždice modulů, „Čeká na vás“ |
-| Můj den | `02-muj-den` → **aktuální je prototyp `prototypes/Den.dc.html`** | zaměstnanec | Časová osa, tabulka intervalů, řádek „Přidat interval“, kontroly, součty po zakázkách |
-| Můj měsíc | `03-muj-mesic`, detail dne `03b-muj-mesic-detail-dne` (jen HTML) | zaměstnanec | Kalendář s hodinami, chybějící dny, součty, průběh schválení, Potvrdit měsíc; klik na den otevře detail dne |
-| Schvalování | `04-schvalovani` | vedoucí | Tabulka party, upozornění, detail, Schválit / Vrátit s důvodem |
-| Uzávěrka | `05-uzaverka` | správce | Kontrola před uzávěrkou, stav part, export, uzavřené měsíce s verzemi |
+| Launcher | `01-launcher` | všichni | Dlaždice modulů, karta „Čeká na vás“ (viz níže) |
+| Můj den | `02-muj-den` → **aktuální je prototyp `prototypes/Den.dc.html`** | zaměstnanec; vedoucí a správce i za jiného | Časová osa, kartičky intervalů, kontroly, součty po zakázkách, stav měsíce |
+| Můj měsíc | `03-muj-mesic`, detail dne `03b-muj-mesic-detail-dne` (jen HTML) | zaměstnanec; vedoucí (parta), správce a administrátor i „Měsíc zaměstnance“ | Kalendář s hodinami, chybějící dny, součty, pohotovost, průběh schválení, upozornění, Potvrdit měsíc, Stáhnout PDF; klik na den otevře detail dne |
+| Schvalování | `04-schvalovani` | vedoucí (své party), správce (všechny) | Přepínání měsíců, karty počtů, záložky, tabulka party, detail s upozorněními a přesčasem u intervalů, Schválit / Vrátit s důvodem, hromadné schválení, Připomenout |
+| Uzávěrka | `05-uzaverka` | správce | Kontrola před uzávěrkou, stav part, Připomenout chybějícím, Uzavřít měsíc, podklad pro mzdy (XLSX, PDF), CSV hodin po zakázkách, uzavřené měsíce s verzemi, Znovu otevřít |
+| Nastavení | bez náhledu | správce | Prahy, lhůty a čas připomínek po oddílech, „Platí od“, historie změn |
 | Mobil – den | `06-mobil-den` | zaměstnanec | **Nahrazeno** svislou osou, viz „Mobil – zápis dne na ose“; platí jen hlavička a spodní navigace |
+
+**Launcher – „Čeká na vás“** (vpravo od pozdravu, na mobilu pod ním; bez úkolů se karta nezobrazí). Řádek = štítek
+modulu, text úkolu, lhůta vpravo („dnes“ nebo „do 5. 10.“, po lhůtě tučně v barvě upozornění); celý řádek je odkaz přímo
+na obrazovku. Úkoly v tomto pořadí (pravidlo `launcherTasks`):
+- zaměstnanec: **Opravit vrácený výkaz** (s důvodem) → Můj měsíc; **Doplnit** nejstarší chybějící den otevřeného měsíce
+  („a N dalších dnů“) → Můj den; **Potvrdit výkaz** za skončený měsíc, jakmile ho jde potvrdit → Můj měsíc,
+- vedoucí: **Schválit N výkazů** za minulý měsíc (potvrzené výkazy jeho party) → Schvalování, záložka Ke schválení,
+- správce: **Schválit N výkazů vedoucích** (výkazy vedoucích, správců a part bez vedoucího) a **Uzavřít měsíc**
+  (skončený a neuzavřený, „Zbývá schválit N výkazů“) → Uzávěrka.
+Vrácený výkaz a chybějící den mají štítek v barvě upozornění, ostatní tyrkysový.
 
 Chybí dokreslit: absence a dovolená, správa zaměstnanců a part, zakázky, import z Excelu.
 
@@ -58,6 +69,16 @@ Jedna aplikace a jedna adresa; rozložení se přepíná **automaticky podle š�
   vybírá se podle šířky, obě se chovají stejně.
 - Mobil se instaluje jako PWA na plochu (bez lišty prohlížeče).
 - Vývoj stavět **mobile-first**: nejdřív mobilní rozložení, desktop jako rozšíření.
+
+### Mobilní rozložení obrazovek měsíce
+
+- **Můj měsíc:** karty 2×2, kompaktní kalendář (číslo dne a hodiny, barva stavu), pod ním lišta chybějících dnů
+  a seznamy (podle zakázek, podle druhu práce, pohotovost, průběh schválení, upozornění); Potvrdit měsíc jako tlačítko
+  dole nad spodní navigací. Detail dne je spodní panel (max. ~¾ výšky, ztmavené pozadí, klepnutí mimo zavře, Tab
+  zůstává v panelu); na desktopu plovoucí panel pod / nad dnem.
+- **Schvalování:** místo tabulky seznam karet; detail výkazu přes celou obrazovku s „Zpět na seznam“.
+- **Uzávěrka a Nastavení:** jeden sloupec; tabulka part se mění na karty, dialogy (Uzavřít, Znovu otevřít) přes
+  celou šířku.
 
 ## Zobrazení zakázky
 
@@ -126,7 +147,9 @@ viz níže „Mobil – zápis dne na ose“. Desktopová vodorovná osa je pro 
 - Každá změna se ukládá hned (server action, optimistická aktualizace, při chybě návrat a hláška) a zapisuje se do auditu.
 - Zamčený měsíc (potvrzený, schválený, uzavřený) a den s celodenní absencí: osa **jen pro čtení** na mobilu i desktopu
   (nejde kreslit, táhnout, vyplnit mezeru ani otevřít panel, klávesy nic nemění, nejsou šablony ani „Uložit jako můj
-  obvyklý den“); nahoře hláška „Měsíc je uzavřený“ (nebo o absenci). Pravidlo je čistá funkce `dayEditability`.
+  obvyklý den“); nahoře hláška se zámkem podle stavu: „Měsíc je potvrzený / schválený / uzavřený, intervaly už nelze
+  měnit“ (nebo o absenci). Vrácený výkaz zůstává upravitelný a nad osou je hláška „Výkaz byl vrácen k opravě: <důvod>“.
+  Pravidlo je čistá funkce `dayEditability`.
 - **Přístupnost a klávesnice:** bloky jsou `option` (`aria-selected`) v `listbox` osy, Tab přechází po blocích, Enter /
   mezerník = výběr; vybraný interval: ←/→ = konec ±5 min, Shift+←/→ = začátek, Backspace/Delete = smazat, Esc = zrušit
   výběr. Úchyty, šipka noci, špendlík a −/+ mají `aria-label`; fokus je viditelný (3px obrys v barvě `ring`).
@@ -177,5 +200,16 @@ Prototyp: `MobilOsa.dc.html`. Nahrazuje dosavadní mobilní obrazovku 06-mobil-d
 
 ## Menu modulu Docházka
 
-Můj den · Můj měsíc · Absence · Schvalování (vedoucí) · Uzávěrka (správce) · Zakázky · Zaměstnanci · Nastavení.
-Položky bez oprávnění se nezobrazují.
+Můj den · Můj měsíc · Absence · Schvalování · Uzávěrka · Zakázky · Zaměstnanci · Nastavení (dole u profilu).
+Položky bez oprávnění se nezobrazují:
+
+| Položka | Kdo ji vidí |
+| --- | --- |
+| Můj den, Můj měsíc | kdo eviduje vlastní docházku |
+| Zápis za jiné, Měsíc zaměstnance | účet bez vlastní docházky, který smí zapisovat za jiné (administrátor); ostatní volí zaměstnance přímo na Můj den / Můj měsíc |
+| Absence | kdo eviduje docházku, vedoucí, správce docházky |
+| Schvalování | vedoucí party, správce docházky |
+| Uzávěrka, Nastavení | správce docházky |
+| Zakázky, Zaměstnanci | správce docházky, administrátor |
+
+Spodní navigace na mobilu: Den · Měsíc · Absence · Více (celé menu modulu ve spodním panelu).

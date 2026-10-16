@@ -44,10 +44,21 @@ a zaměstnance a export CSV (středník, UTF-8 s BOM). Vzhled se nepřebírá (v
 
 ## Otevřené body
 
-- [ ] Vyrovnávací období a pravidla přesčasů (mzdová účetní)
-- [ ] Rozvrh nerovnoměrné doby: vede se jinde, nebo plán směn v aplikaci?
-- [ ] Vzor podkladu pro mzdy a současný Excel s docházkou
-- [ ] Roční limit DPP a dovolená dohodářů ověřit s účetní
-- [ ] Zaokrouhlování času (na minuty, nebo např. na 15 min)? Návrh: na minuty, bez zaokrouhlení
+Stav k dokončení milníku 4 (měsíc, schválení, uzávěrka). Co je v aplikaci rozhodnuté, je uvedeno u bodu;
+podrobnosti v `technicky-navrh.md` (Právní rámec, Výpočty měsíce).
+
+- [ ] **Vyrovnávací období a pravidla přesčasů** (mzdová účetní). Do rozhodnutí: přesčas se **eviduje označením
+  intervalu** („Přesčas“ u intervalu, nastavuje vedoucí nebo správce při schválení, s důvodem v auditu), takže je
+  vidět jeho začátek a konec (§ 96); v podkladu pro mzdy je součet označených intervalů. „Rozdíl proti fondu“ je jen
+  informace a nikdy se nenazývá přesčas; fond je orientační (denní úvazek × pracovní dny). Vyrovnávací období
+  aplikace nepočítá.
+- [ ] **Rozvrh nerovnoměrné doby:** vede se jinde, nebo plán směn v aplikaci? Zatím aplikace rozvrh nevede, u úvazku
+  je jen typ (pružná / nerovnoměrná); bez rozvrhu se přesčas nedá odvodit automaticky (viz bod výše).
+- [ ] Vzor podkladu pro mzdy a současný Excel s docházkou. Podklad je hotový podle návrhu (XLSX: Souhrn, Intervaly,
+  Absence, Pohotovost; PDF výkaz na zaměstnance); ověřit s účetní, že jí sloupce stačí.
+- [ ] **DPP a DPČ ověřit s účetní.** Aplikace hlídá roční limit DPP (300 h, jen odpracovaná doba) a průměr DPČ
+  (20 h/týden za dobu dohody) jako upozornění, které nic neblokuje; prahy jsou v Nastavení docházky. Dovolenou
+  dohodářů aplikace nepočítá: nárok a zůstatek zadává správce ručně stejně jako u HPP.
+- [ ] Zaokrouhlování času (na minuty, nebo např. na 15 min)? Zatím na minuty, bez zaokrouhlení.
 - [ ] Seznam zaměstnanců, part a vedoucích pro import
 - [ ] Doména, VPS, Google Workspace (OAuth), SMTP
