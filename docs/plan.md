@@ -195,8 +195,9 @@ Kroky jdou po sobě; každý se pouští v nové session (`scripts/milestone.sh 
 a server (žádné obrazovky), kroky 4.6–4.9 jen obrazovky** nad hotovou logikou. Obrazovkový krok nesmí přidávat
 obchodní pravidla: když nějaké chybí, doplní ho jako čistou funkci v `rules/` s testem a uvede to ve „Výsledek:“.
 Značky jako v 3b: `[opus]`, `[zastavit po]`, `[ručně]`.
-**Pořadí:** po 4.3 se dělají obrazovky 4.6, 4.6b (detail dne v Můj měsíc), 4.7, 4.8, pak 4.4 a 4.5 (zapojí tlačítka exportů a připomínek
-na hotových obrazovkách), nakonec 4.9. Obrazovky do té doby ukazují tato tlačítka neaktivní s nápovědou.
+**Pořadí:** po 4.3 se dělají obrazovky 4.6, 4.6b (detail dne v Můj měsíc), 4.7, pak 4.4 (exporty), 4.8 (Uzávěrka
+rovnou s funkčními exporty z 4.4), 4.5 (zapojí tlačítka připomínek na hotových obrazovkách), nakonec 4.9.
+Obrazovky do té doby ukazují tlačítka, jejichž krok ještě není hotový, neaktivní s nápovědou.
 
 **Právní rámec (zákoník práce; platí pro všechny kroky):**
 - § 96 – evidence musí u každého zaměstnance (i DPP/DPČ) ukázat **začátek a konec** odpracované směny, práce
@@ -327,12 +328,13 @@ na hotových obrazovkách), nakonec 4.9. Obrazovky do té doby ukazují tato tla
       jeden soubor za všechny. Vlastní PDF zaměstnance z živých dat pro Můj měsíc s označením „Pracovní verze –
       neuzavřeno“, dokud měsíc není uzavřený. CSV hodin po zakázkách za libovolné období (středník, UTF-8 s BOM,
       podle prototypu). Hlavičky a texty přes `next-intl`, čeština s diakritikou v PDF (vložené písmo Figtree).
-      Route handlery s `requireUser()` a oprávněním (mzdový export jen správce; vlastní PDF jen zaměstnanec,
-      jeho vedoucí a správce). Knihovny vyber aktuální a udržované (např. exceljs, pdfkit / @react-pdf/renderer).
+      Route handlery s `requireUser()` a oprávněním (mzdový export a CSV jen správce; PDF měsíce zaměstnance
+      každý, kdo smí měsíc vidět – `canViewTimeOf`, tj. on sám, jeho vedoucí, správce, administrátor). Knihovny vyber aktuální a udržované (např. exceljs, pdfkit / @react-pdf/renderer).
       Hotovo, když: data řádků exportu jsou čisté funkce s testy; soubory se vygenerují a otevřou (ověřit
       jednorázovým skriptem); stejná verze dá stejná data i po změně živých dat.
-      Zapojit tlačítka na hotových obrazovkách: Stáhnout PDF v Můj měsíc (4.6), Stáhnout XLSX / PDF, verze
-      uzavřených měsíců a Export hodin podle zakázek (CSV) v Uzávěrce (4.8).
+      Zapojit tlačítko Stáhnout PDF v Můj měsíc (4.6, i u měsíce jiného zaměstnance). Uzávěrka (4.8) ještě
+      neexistuje: 4.4 pro ni připraví jen route handlery a funkci se seznamem verzí uzavřených měsíců, tlačítka
+      zapojí až 4.8.
 
 - [ ] **4.5 – Připomínky a e-maily (worker)**
       `src/worker.ts`: plánovač v jednom procesu (každý den v `reminder_time`, Europe/Prague, jen pracovní dny):
@@ -473,7 +475,8 @@ na hotových obrazovkách), nakonec 4.9. Obrazovky do té doby ukazují tato tla
       Podle `05-uzaverka.png`: hlavička se stavem a lhůtou, Připomenout chybějícím, Uzavřít měsíc (dialog se
       souhrnem kontrol, aktivní jen když kontroly projdou), karty počtů, Kontrola před uzávěrkou, Stav podle
       part (průběh, „čeká na vás“), Podklad pro mzdy (XLSX, PDF; před uzávěrkou neaktivní s vysvětlením),
-      Export hodin podle zakázek (CSV, výběr období), Uzavřené měsíce s verzemi, stažením každé verze a
+      Export hodin podle zakázek (CSV, výběr období), Uzavřené měsíce s verzemi, stažením každé verze (přes
+      hotové route handlery a seznam verzí z 4.4, funkční hned) a
       Znovu otevřít (dialog: důvod, výběr zaměstnanců). Nastavení modulu (`/timesheets/settings`, správce): lhůty
       a čas připomínek z 4.1 (zápis nové hodnoty s `valid_from`, audit). Mobil: jednosloupcové.
       Odstranit placeholdery `close` a `settings`.
