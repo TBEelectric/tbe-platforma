@@ -13,7 +13,6 @@ export const instant = false;
 const plannedMilestone: Record<string, number> = {
   day: 3,
   absences: 3,
-  approval: 4,
   close: 4,
   jobs: 2,
   employees: 2,
@@ -25,9 +24,11 @@ function findItem(section: string) {
 }
 
 export function generateStaticParams() {
-  return timesheetsMenu.map((item) => ({
-    section: item.href.split("/").at(-1)!,
-  }));
+  return timesheetsMenu
+    .filter((item) => item.href.split("/").at(-1)! in plannedMilestone)
+    .map((item) => ({
+      section: item.href.split("/").at(-1)!,
+    }));
 }
 
 export default async function PlaceholderPage({
