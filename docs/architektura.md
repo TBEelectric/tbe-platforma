@@ -8,9 +8,9 @@ přepínačem v bočním menu.
 
 | Modul | Složka v `src/modules/` | Stav |
 | --- | --- | --- |
-| Jádro (zaměstnanci, týmy, zákazníci, zakázky, místa, svátky, audit) | `core` | 1. verze |
+| Jádro (zaměstnanci, týmy, zákazníci, zakázky, místa, svátky, audit); vlastní obrazovky Zaměstnanci (`/employees`) | `core` | 1. verze |
 | Docházka | `timesheets` | 1. verze |
-| Zakázky (správa zakázek a zákazníků, později hodiny a další funkce nad zakázkami) | `jobs` | před pilotem |
+| Zakázky (`/jobs`: správa zakázek a zákazníků, později hodiny a další funkce nad zakázkami) | `jobs` | 1. verze |
 | Vozový park a kniha jízd | `fleet` | další |
 | Nemovitosti | `properties` | plánováno |
 | Sklad | `inventory` | plánováno |
@@ -25,7 +25,9 @@ stejně později jízdy z vozového parku a materiál ze skladu. Závislosti jen
 → `core`; žádný modul kromě `jobs` ho neimportuje.
 Zaměstnanci (zaměstnanci, party, import) mají vlastní dlaždici a obrazovky v jádru (`/employees`); Docházka na ně
 jen odkazuje. Údaje jednotlivých modulů o zaměstnanci (nároky na dovolenou, přidělené auto…) zůstávají v modulu
-a v detailu zaměstnance se ukazují jako jeho záložka.
+a v detailu zaměstnance se ukazují jako jeho karta: modul ji dodá jako komponentu (Docházka:
+`EmployeeTimesheetsSections`) a stránka v `src/app` ji skládá s kartami jádra; jádro ostatní moduly neimportuje.
+Zakázky party (`team_job`) patří jádru a jsou v detailu party.
 
 ## Proč jedna aplikace
 

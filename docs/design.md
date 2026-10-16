@@ -200,8 +200,9 @@ Prototyp: `MobilOsa.dc.html`. Nahrazuje dosavadní mobilní obrazovku 06-mobil-d
 
 ## Menu modulu Docházka
 
-Můj den · Můj měsíc · Absence · Schvalování · Uzávěrka · Zakázky · Zaměstnanci · Nastavení (dole u profilu).
-Položky bez oprávnění se nezobrazují:
+Můj den · Můj měsíc · Absence · Schvalování · Uzávěrka · Zaměstnanci · Nastavení (dole u profilu).
+Položky bez oprávnění se nezobrazují. Zaměstnanci jsou jen odkaz do modulu Zaměstnanci (`/employees`);
+Zakázky mají vlastní modul (`/jobs`) a v menu Docházky nejsou:
 
 | Položka | Kdo ji vidí |
 | --- | --- |
@@ -210,6 +211,17 @@ Položky bez oprávnění se nezobrazují:
 | Absence | kdo eviduje docházku, vedoucí, správce docházky |
 | Schvalování | vedoucí party, správce docházky |
 | Uzávěrka, Nastavení | správce docházky |
-| Zakázky, Zaměstnanci | správce docházky, administrátor |
+| Zaměstnanci (odkaz na `/employees`) | správce docházky, administrátor |
 
 Spodní navigace na mobilu: Den · Měsíc · Absence · Více (celé menu modulu ve spodním panelu).
+
+## Moduly Zakázky a Zaměstnanci
+
+Vlastní dlaždice v launcheru; kdo k modulu nemá oprávnění, dlaždici nevidí (stránky to kontrolují i na serveru).
+
+| Modul | Menu | Kdo ho vidí |
+| --- | --- | --- |
+| Zakázky (`/jobs`) | Zakázky · Zákazníci | správce docházky, administrátor |
+| Zaměstnanci (`/employees`) | Zaměstnanci · Party · Import z Excelu (jen administrátor) | správce docházky, administrátor |
+
+Detail zaměstnance skládá karty jádra (údaje, role, úvazky, parta) a karty Docházky (dovolená, obvyklý den).

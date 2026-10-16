@@ -52,7 +52,7 @@ One Next.js app. Modules are folders, not packages.
 src/
   app/                 Next.js routes (App Router); thin pages that call module code
   modules/
-    core/              employees, teams, customers, jobs, sites, holidays
+    core/              employees, teams, customers, jobs, sites, holidays; own screens = Zaměstnanci (/employees)
       index.ts         server-side public API
       shared.ts        client-safe public API (types, Zod schemas, pure rules)
       schema.ts        Drizzle tables (Postgres schema `core`)
@@ -62,6 +62,9 @@ src/
       permissions.ts   who can do what
       menu.ts          sidebar items
     timesheets/        same structure; Postgres schema `timesheets`
+    jobs/              screens for jobs and customers (/jobs); the data stays in core. Future job features
+                       (hours per job, budgets…) go here, own tables in schema `jobs`; hours are read via
+                       timesheets/index.ts. Dependencies one way: jobs → other modules → core; nobody imports jobs
     fleet/             later
   components/ui/       shadcn/ui components in the TBE style
   lib/                 db client, auth, audit log, date/time helpers
@@ -75,6 +78,8 @@ internal files. This keeps an easy path to split modules into packages later.
 - `index.ts` – server-side API (may use the database); re-exports `shared.ts`.
 - `shared.ts` – client-safe API: types, constants, Zod schemas, pure rules (no database access).
   Client components import `@/modules/<module>/shared`.
+- Pages in `src/app` compose modules: e.g. the employee detail (`/employees/[id]`) renders core cards plus
+  `EmployeeTimesheetsSections` from `timesheets/components`; a module's data about an employee stays in that module.
 - **Exception – foreign keys:** a module's `schema.ts` may import tables from another module's
   `schema.ts` directly (e.g. `timesheets/schema.ts` imports `employee`, `job` from `../core/schema`),
   only to declare foreign keys. drizzle-kit loads schema files without the app's server code, so they
@@ -137,7 +142,7 @@ Notes:
   allow incoming connections for node in the macOS firewall. No HTTPS, so no PWA install here.
 - Drizzle uses `casing: "snake_case"`: write camelCase keys in `schema.ts`, columns become snake_case.
 - shadcn/ui: `pnpm dlx shadcn@latest add <component>`; then adjust sizes to the TBE style (44 px controls).
-- Import (Zaměstnanci → Import z Excelu, admin only) follows `docs/import/sablona-importu.xlsx`, which is
+- Import (Zaměstnanci → Import z Excelu, `/employees/import`, admin only) follows `docs/import/sablona-importu.xlsx`, which is
   also served as the download; keep `docs/import/` in the production image.
 - Exports (`src/modules/timesheets/export/`, routes under `/timesheets/export/…`): payroll XLSX/PDF read only the
   `period_export` snapshot (`parsePeriodSnapshot`), never live data. The PDF embeds Figtree from

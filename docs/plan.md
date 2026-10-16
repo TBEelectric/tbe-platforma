@@ -631,7 +631,7 @@ Obrazovky do té doby ukazují tlačítka, jejichž krok ještě není hotový, 
 
 ## Milník 5 – Pilot
 
-- [ ] **5.1 – Zakázky a Zaměstnanci mimo Docházku**
+- [x] **5.1 – Zakázky a Zaměstnanci mimo Docházku**
       Zakázky a zákazníci dostanou vlastní modul s dlaždicí v launcheru, aby piloti od začátku znali konečnou navigaci.
       Data se nestěhují: `customer`, `job`, `site` a `team_job` zůstávají ve schématu `core` (sdílená kmenová data pro
       docházku, vozový park, sklad i nářadí), žádná migrace databáze. (1) Nová složka `src/modules/jobs` (`shared.ts`
@@ -661,6 +661,18 @@ Obrazovky do té doby ukazují tlačítka, jejichž krok ještě není hotový, 
       Hotovo, když: launcher má dlaždice Zakázky a Zaměstnanci, správce v nich spravuje zakázky, zákazníky, zaměstnance,
       party a import na desktopu i 375 px, staré adresy přesměrují, v menu Docházky Zakázky nejsou a Zaměstnanci vedou
       na `/employees`; nároky na dovolenou jdou upravit jako dřív; lint/typecheck/test/build prochází.
+      Výsledek: launcher má dlaždice Zakázky (`/jobs`: Zakázky, Zákazníci) a Zaměstnanci (`/employees`: Zaměstnanci,
+      Party, Import z Excelu jen pro administrátora), každá s vlastním menu a `ModuleShell`; Zakázky jsou nový modul
+      `src/modules/jobs`, Zaměstnanci jsou obrazovky jádra (`coreModule` je aktivní, nové `core/menu.ts`). Staré adresy
+      `/timesheets/jobs/…` a `/timesheets/employees/…` trvale přesměrují (308, `redirects()` v `next.config.ts`).
+      Karty Dovolená a Obvyklý den dodává Docházka (`EmployeeTimesheetsSections`, `LeaveForm` přesunut z jádra);
+      stránka detailu je skládá s kartami jádra. Bez migrace, oprávnění beze změny, druhy práce zůstaly v Docházce.
+      Rozhodl jsem (po domluvě): zakázky party zůstávají v jádru (detail party jako dřív); dlaždice bez oprávnění se
+      skryjí (`ModuleInfo.visible`). Sám jsem rozhodl: menu zvýrazní jen nejpřesnější položku (`activeHref`, jinak by
+      na Party svítili i Zaměstnanci); na stránkách zůstaly i záložky (Zakázky/Zákazníci, Zaměstnanci/Party/Import);
+      popisky dlaždic „Zakázky a zákazníci pro docházku i vozidla“ a „Zaměstnanci, party a import z Excelu“.
+      Vyzkoušet: dlaždice jako zaměstnanec (jen Docházka + plánované), správce docházky (Zakázky, Zaměstnanci bez
+      Importu), administrátor (vše); obě sekce na desktopu i 375 px; staré adresy; uložení nároku na dovolenou.
 - [x] **Vývojové přihlášení a přístup z telefonu v domácí síti** (přesunuto z 3b.8; mobil se zatím testuje v náhledu telefonu v Chromu)
       Bez tunelu a bez Google Console. (1) **Vývojové přihlášení:** na přihlašovací stránce navíc „Přihlásit jako…“
       se seznamem aktivních zaměstnanců (jméno, role); vytvoří normální Better Auth session daného uživatele. Funguje jen
