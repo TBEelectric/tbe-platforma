@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, FileDown } from "lucide-react";
+import { Check, ChevronLeft, ChevronRight, FileDown } from "lucide-react";
 import Link from "next/link";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
@@ -132,6 +132,22 @@ export function MonthScreen({
   const confirmHint =
     confirm && !confirm.ok ? translate(t, confirm.error) : undefined;
   const showConfirm = confirm !== null && view.status === "open";
+  // The own month after confirming: the same button, disabled, with a tick and the state.
+  const confirmButton = (className: string) =>
+    showConfirm ? (
+      <ConfirmMonth
+        month={month}
+        label={confirmLabel}
+        disabled={!canConfirm}
+        hint={confirmHint}
+        className={className}
+      />
+    ) : (
+      <Button disabled className={className}>
+        <Check data-icon="inline-start" className="size-5" />
+        {t("timesheets.month.confirmDone", { status: view.status })}
+      </Button>
+    );
 
   return (
     <>
@@ -166,15 +182,7 @@ export function MonthScreen({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
           {pdf}
-          {showConfirm && (
-            <ConfirmMonth
-              month={month}
-              label={confirmLabel}
-              disabled={!canConfirm}
-              hint={confirmHint}
-              className="hidden lg:flex"
-            />
-          )}
+          {confirm !== null && confirmButton("hidden lg:flex")}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="flex gap-2">{nav}</div>
@@ -387,18 +395,12 @@ export function MonthScreen({
         </aside>
       </div>
 
-      {showConfirm && (
+      {confirm !== null && (
         <>
           {/* Phone: the confirm button sits above the bottom navigation. */}
           <div aria-hidden className="h-16 lg:hidden" />
           <div className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 border-t border-border bg-background/95 px-4 py-2.5 backdrop-blur lg:hidden">
-            <ConfirmMonth
-              month={month}
-              label={confirmLabel}
-              disabled={!canConfirm}
-              hint={confirmHint}
-              className="[&_button]:w-full"
-            />
+            {confirmButton("w-full [&_button]:w-full")}
           </div>
         </>
       )}

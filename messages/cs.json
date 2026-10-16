@@ -416,6 +416,7 @@
       "pdfHint": "Stažení PDF bude brzy k dispozici.",
       "confirm": "Potvrdit měsíc",
       "confirmFrom": "Potvrdit od {from, date, dayMonth}",
+      "confirmDone": "{status, select, confirmed {Potvrzeno} approved {Schváleno} other {Uzavřeno}}",
       "viewingOther": "Prohlížíte měsíc zaměstnance <strong>{name}</strong>.",
       "backToOwn": "Zpět na můj měsíc",
       "returned": "Výkaz vám vedoucí vrátil: {reason}",
