@@ -57,7 +57,7 @@ export async function listApprovalTeams(
 }
 
 /** Ids of the active timesheets managers (a sole manager may approve their own timesheet). */
-async function managerIds(): Promise<string[]> {
+export async function managerIds(): Promise<string[]> {
   const rows = await db
     .select({ id: employee.id })
     .from(roleAssignment)
