@@ -31,6 +31,8 @@ import {
 } from "./standbys";
 import { absenceFormSchema, type AbsenceDecision } from "./rules/absence";
 import { dayTemplateFormSchema } from "./rules/day-template";
+import { settingsFormSchema } from "./rules/settings-change";
+import { saveSettings } from "./module-settings";
 import {
   employeeIdsSchema,
   monthSchema,
@@ -369,6 +371,25 @@ export async function reopenPeriodAction(
         data.reason,
       );
       return msg("timesheets.messages.periodReopened", { count: reopened });
+    },
+    TIMESHEETS,
+  );
+}
+
+// ── Module settings ──
+
+/** The timesheets manager saves thresholds and deadlines from a date on (new timesheet_settings rows). */
+export async function saveSettingsAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  return handleFormAction(
+    canCloseTimesheetPeriod,
+    settingsFormSchema,
+    formData,
+    async (user, data) => {
+      const { changed } = await saveSettings({ userId: user.userId }, data);
+      return msg("timesheets.settings.saved", { count: changed });
     },
     TIMESHEETS,
   );

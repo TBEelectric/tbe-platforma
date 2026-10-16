@@ -26,7 +26,12 @@
     "choose": "Vyberte",
     "numberRange": "Číslo {minimum}–{maximum}",
     "ico": "IČO má 8 číslic",
-    "invalid": "Neplatná hodnota"
+    "invalid": "Neplatná hodnota",
+    "enterDuration": "Zadejte dobu jako H:MM",
+    "durationRange": "Doba {minimum}–{maximum}",
+    "nightSame": "Začátek a konec noci nesmí být stejné",
+    "breakPartTooLong": "Část přestávky nesmí být delší než celá přestávka",
+    "deadlineOrder": "Lhůty jdou po sobě: potvrzení, schválení, uzávěrka"
   },
   "roles": {
     "admin": "Administrátor",
@@ -398,7 +403,7 @@
       "checks": {
         "approvedTitle": "Všechny výkazy schválené",
         "approvedOk": "{count, plural, one {# výkaz je schválený} few {Všechny # výkazy jsou schválené} other {Všech # výkazů je schválených}}.",
-        "approvedMissing": "Zbývá {remaining}: {confirmed, plural, one {# čeká} few {# čekají} other {# čeká}} na schválení, {open, plural, one {# nepotvrdil zaměstnanec} few {# nepotvrdili zaměstnanci} other {# nepotvrdilo zaměstnanců}}.",
+        "approvedMissing": "Zbývá {remaining}: {confirmed, plural, =0 {} one {# čeká na schválení} few {# čekají na schválení} other {# čeká na schválení}}{confirmed, plural, =0 {} other {{open, plural, =0 {} other {, }}}}{open, plural, =0 {} one {# nepotvrdil zaměstnanec} few {# nepotvrdili zaměstnanci} other {# nepotvrdilo zaměstnanců}}.",
         "absencesTitle": "Absence a dovolené zapsané",
         "absencesOk": "Absence v měsíci jsou rozhodnuté.",
         "absencesNone": "V měsíci nejsou žádné absence.",
@@ -409,7 +414,79 @@
         "warningsTitle": "Upozornění k posouzení",
         "warningsNone": "Žádný výkaz nemá upozornění.",
         "warningsFound": "{count, plural, one {# výkaz má} few {# výkazy mají} other {# výkazů má}} upozornění (přestávka, odpočinek, limity dohod)."
-      }
+      },
+      "title": "Uzávěrka",
+      "subtitle": "{count, plural, one {# zaměstnanec} few {# zaměstnanci} other {# zaměstnanců}} · uzavřít a předat mzdové účetní do {deadline, date, dayMonth}",
+      "subtitleClosed": "{count, plural, one {# zaměstnanec} few {# zaměstnanci} other {# zaměstnanců}} · uzavřeno {date, date, dayMonth}, podklad pro mzdy verze {version}",
+      "periodStatus": {
+        "running": "Probíhá",
+        "waiting": "Čeká na schválení",
+        "ready": "Připraveno k uzávěrce",
+        "closed": "Uzavřeno",
+        "reopened": "Znovu otevřeno"
+      },
+      "remindMissing": "Připomenout chybějícím",
+      "remindHint": "Odeslání připomínky e-mailem bude brzy k dispozici.",
+      "closeMonth": "Uzavřít {month, date, monthName}",
+      "closeQuestion": "Uzavřít {month, date, month}?",
+      "closeDescription": "Výkazy všech zaměstnanců se uzamknou a uloží se podklad pro mzdy verze {version}. Ten se už nezmění; opravy jdou jen přes znovuotevření.",
+      "closeConfirm": "Uzavřít měsíc",
+      "cancel": "Zrušit",
+      "cardEmployees": "Zaměstnanců",
+      "cardApproved": "Schváleno",
+      "cardToApprove": "Čeká na schválení",
+      "cardNotConfirmed": "Nepotvrzeno",
+      "checksTitle": "Kontrola před uzávěrkou",
+      "checkLevel": {
+        "ok": "V pořádku",
+        "error": "Brání uzávěrce",
+        "info": "K posouzení"
+      },
+      "checkNames": "({names})",
+      "teamsTitle": "Stav podle part",
+      "teamColumn": "Parta",
+      "leadColumn": "Vedoucí",
+      "approvedColumn": "Schváleno",
+      "remainingColumn": "Zbývá",
+      "approvedOf": "{approved} z {total}",
+      "noTeam": "Bez party",
+      "noLead": "–",
+      "teamDone": "Hotovo",
+      "teamWaiting": "{count, plural, one {# čeká} few {# čekají} other {# čeká}}",
+      "teamNotConfirmed": "{count} nepotvrzeno",
+      "teamWaitingForYou": "{count, plural, one {# čeká na vás} few {# čekají na vás} other {# čeká na vás}}",
+      "teamsEmpty": "V měsíci nikdo nemá docházku s úvazkem.",
+      "payrollTitle": "Podklad pro mzdy · {month, date, monthName}",
+      "payrollPending": "Vznikne po uzávěrce: souhrn za zaměstnance a všechny intervaly v XLSX, měsíční výkazy v PDF.",
+      "payrollReady": "Uzavřeno {date, date, dayMonth}, verze {version}. Soubory jsou uložený snímek a stahují se vždy stejné.",
+      "payrollReopened": "Měsíc je znovu otevřený. Po novém uzavření vznikne verze {version}; předchozí verze najdete v Uzavřených měsících.",
+      "downloadXlsx": "Stáhnout XLSX",
+      "downloadPdf": "Stáhnout PDF",
+      "downloadDisabled": "Podklad pro mzdy vznikne až po uzavření měsíce.",
+      "jobHoursTitle": "Export hodin podle zakázek (CSV)",
+      "jobHoursFrom": "Od",
+      "jobHoursTo": "Do",
+      "jobHoursHint": "Libovolné období, nejvýš 400 dní; ze živých dat.",
+      "jobHoursDownload": "Stáhnout CSV",
+      "closedTitle": "Uzavřené měsíce",
+      "closedEmpty": "Zatím žádný uzavřený měsíc.",
+      "version": "verze {version}",
+      "versionLine": "Verze {version} · {date, date, dayMonth}{name, select, none {} other { · {name}}}",
+      "closedOn": "uzavřeno {date, date, dayMonth}",
+      "reopenedOn": "znovu otevřeno {date, date, dayMonth}: {reason}",
+      "xlsx": "XLSX",
+      "pdf": "PDF",
+      "versionFile": "{format} – {month, date, month}, verze {version}",
+      "reopen": "Znovu otevřít",
+      "reopenTitle": "Znovu otevřít {month, date, month}",
+      "reopenDescription": "Vybraným zaměstnancům se výkaz vrátí k opravě s důvodem, ostatní zůstanou schválené. Nové uzavření vytvoří verzi {version}; dosavadní verze zůstanou ke stažení.",
+      "reopenReason": "Důvod",
+      "reopenReasonPlaceholder": "Např. oprava dovolené",
+      "reopenEmployees": "Vrátit k opravě",
+      "reopenAll": "Vybrat všechny",
+      "reopenNone": "Zrušit výběr",
+      "reopenConfirm": "Znovu otevřít",
+      "checkNamesMore": "({names} a {count, plural, one {# další} few {# další} other {# dalších}})"
     },
     "month": {
       "title": "Můj měsíc",
@@ -698,6 +775,108 @@
         "monthPdf": "vykaz-{month}-{name}",
         "allPdf": "vykazy-{month}-v{version}",
         "jobHours": "hodiny-zakazky-{from}-{to}"
+      }
+    },
+    "settings": {
+      "title": "Nastavení docházky",
+      "subtitle": "Prahy a lhůty modulu. Změna platí od zvoleného dne; dřívější měsíce počítají s hodnotami, které tehdy platily.",
+      "groups": {
+        "deadlines": {
+          "title": "Lhůty a připomínky",
+          "description": "Den dalšího měsíce, do kterého má být krok hotový; podle něj se ukazují lhůty a posílají připomínky."
+        },
+        "night": {
+          "title": "Noční práce",
+          "description": "Počítá se podle kalendářního času (§ 78)."
+        },
+        "breaks": {
+          "title": "Přestávky a délka dne",
+          "description": "Upozornění, nikdy neblokují uložení skutečného času (§ 88, § 83)."
+        },
+        "rest": {
+          "title": "Odpočinek",
+          "description": "Upozornění na krátký odpočinek mezi směnami a v týdnu (§ 90, § 92)."
+        },
+        "agreements": {
+          "title": "Dohody",
+          "description": "Upozornění na limity DPP a DPČ."
+        }
+      },
+      "fields": {
+        "confirmDeadlineDay": {
+          "label": "Potvrzení měsíce zaměstnancem do",
+          "hint": "den dalšího měsíce (1–28)"
+        },
+        "approveDeadlineDay": {
+          "label": "Schválení vedoucím do",
+          "hint": "den dalšího měsíce (1–28)"
+        },
+        "closeDeadlineDay": {
+          "label": "Uzávěrka a předání mzdové účetní do",
+          "hint": "den dalšího měsíce (1–28)"
+        },
+        "reminderTime": {
+          "label": "Čas odeslání připomínek",
+          "hint": "v pracovní dny, český čas"
+        },
+        "nightStart": {
+          "label": "Noc od",
+          "hint": "čas"
+        },
+        "nightEnd": {
+          "label": "Noc do",
+          "hint": "čas dalšího dne"
+        },
+        "breakAfterWorkMinutes": {
+          "label": "Přestávka nejpozději po",
+          "hint": "nepřetržité práci, H:MM"
+        },
+        "breakMinMinutes": {
+          "label": "Délka přestávky aspoň",
+          "hint": "minut"
+        },
+        "breakPartMinMinutes": {
+          "label": "Nejkratší část přestávky",
+          "hint": "minut"
+        },
+        "dailyWorkWarningMinutes": {
+          "label": "Upozornit na práci za den delší než",
+          "hint": "H:MM"
+        },
+        "dailyRestMinutes": {
+          "label": "Odpočinek mezi dny aspoň",
+          "hint": "H:MM"
+        },
+        "weeklyRestMinutes": {
+          "label": "Týdenní odpočinek aspoň",
+          "hint": "H:MM"
+        },
+        "dppYearlyLimitHours": {
+          "label": "Roční limit DPP",
+          "hint": "hodin za kalendářní rok"
+        },
+        "dpcWeeklyAverageLimitHours": {
+          "label": "Průměr DPČ nejvýš",
+          "hint": "hodin týdně"
+        }
+      },
+      "value": {
+        "day": "{value}. den",
+        "time": "{value}",
+        "duration": "{value} h",
+        "minutes": "{value} min",
+        "hours": "{value} h"
+      },
+      "validFrom": "Platí od",
+      "validFromHint": "dnes nebo později; zpětně měnit nejde",
+      "save": "Uložit změny",
+      "saved": "{count, plural, one {Uložena # změna} few {Uloženy # změny} other {Uloženo # změn}}.",
+      "historyTitle": "Historie změn",
+      "historyFrom": "Od {date, date, short}",
+      "planned": "Plánováno",
+      "errors": {
+        "validFromPast": "Změna nemůže platit zpětně; zvolte dnešek nebo pozdější den.",
+        "noChanges": "Žádná hodnota se nezměnila."
       }
     }
   },

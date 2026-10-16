@@ -26,7 +26,8 @@ const settingsSchema = z.object({
 
 export type TimesheetSettings = z.infer<typeof settingsSchema>;
 
-const keys: Record<keyof TimesheetSettings, string> = {
+/** Column `key` of timesheet_settings for each setting. */
+export const SETTING_KEYS: Record<keyof TimesheetSettings, string> = {
   nightStart: "night_start",
   nightEnd: "night_end",
   breakAfterWorkMinutes: "break_after_work_minutes",
@@ -51,7 +52,7 @@ export function resolveSettings(
   date: string,
 ): TimesheetSettings {
   const raw: Record<string, unknown> = {};
-  for (const [field, key] of Object.entries(keys)) {
+  for (const [field, key] of Object.entries(SETTING_KEYS)) {
     const row = rows
       .filter((r) => r.key === key && r.validFrom <= date)
       .sort((a, b) => b.validFrom.localeCompare(a.validFrom))[0];

@@ -15,6 +15,8 @@ export const formats = {
     dayMonth: { day: "numeric", month: "numeric" },
     /** říjen 2026 */
     month: { month: "long", year: "numeric" },
+    /** říjen */
+    monthName: { month: "long" },
   },
   number: {
     /** 7,5 (hours: at most one decimal) */

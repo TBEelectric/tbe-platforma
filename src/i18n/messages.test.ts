@@ -80,4 +80,38 @@ describe("messages", () => {
     // "{x, time, short}" picks formats.dateTime.short (day.month.year) and repeats the date
     expect(JSON.stringify(messages)).not.toMatch(/time,\s*short/);
   });
+
+  it("lists what remains before closing without zero counts", () => {
+    const remaining = (confirmed: number, open: number) =>
+      cs(
+        msg("timesheets.close.checks.approvedMissing", {
+          remaining: confirmed + open,
+          confirmed,
+          open,
+        }),
+      );
+    expect(remaining(4, 1)).toBe(
+      "Zbývá 5: 4 čekají na schválení, 1 nepotvrdil zaměstnanec.",
+    );
+    expect(remaining(0, 1)).toBe("Zbývá 1: 1 nepotvrdil zaměstnanec.");
+    expect(remaining(5, 0)).toBe("Zbývá 5: 5 čeká na schválení.");
+  });
+
+  it("names the month and the deadline on the Uzávěrka screen", () => {
+    const month = calendarDate("2026-09-01");
+    expect(cs(msg("timesheets.close.closeMonth", { month }))).toBe(
+      "Uzavřít září",
+    );
+    expect(
+      cs(
+        msg("timesheets.close.subtitle", {
+          count: 14,
+          deadline: calendarDate("2026-10-07"),
+        }),
+      ),
+    ).toBe("14 zaměstnanců · uzavřít a předat mzdové účetní do 7. 10.");
+    expect(cs(msg("timesheets.settings.saved", { count: 2 }))).toBe(
+      "Uloženy 2 změny.",
+    );
+  });
 });

@@ -45,6 +45,8 @@ export type ApprovalRow = {
   selfApproval: boolean;
   /** Included in „Schválit N bez upozornění“. */
   bulk: boolean;
+  /** Only the timesheets manager approves it: the owner is a manager or leads a team (approverCheck). */
+  managerOnly: boolean;
 };
 
 export type ApprovalCounts = {
@@ -84,6 +86,7 @@ export function approvalOverview(rows: ApprovalRowInput[]): {
       returnError: back.ok ? null : back.error,
       selfApproval: approve.ok && approve.selfApproval,
       bulk: bulk.has(r.employeeId),
+      managerOnly: r.ctx.owner.isTimesheetsManager || r.ctx.owner.isTeamLead,
     };
   });
   return {

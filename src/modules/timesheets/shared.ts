@@ -31,6 +31,8 @@ export * from "./rules/audit-history";
 export * from "./rules/export-rows";
 export * from "./rules/export-snapshot";
 export * from "./rules/job-hours";
+export * from "./rules/settings-change";
+export * from "./rules/close-overview";
 
 export const timesheetsModule: ModuleInfo = {
   id: "timesheets",

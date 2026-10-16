@@ -135,7 +135,11 @@ describe("approvalOverview rows", () => {
     expect(rows[0].approveError?.key).toBe(
       "timesheets.errors.cannotApproveOwn",
     );
-    expect(rows[1]).toMatchObject({ own: false, canApprove: false });
+    expect(rows[1]).toMatchObject({
+      own: false,
+      canApprove: false,
+      managerOnly: true,
+    });
     expect(rows[1].approveError?.key).toBe(
       "timesheets.errors.approvedByManagerOnly",
     );
@@ -146,7 +150,11 @@ describe("approvalOverview rows", () => {
     const [r] = approvalOverview([
       row("lead", "confirmed", 0, manager, {}, { isTeamLead: true }),
     ]).rows;
-    expect(r).toMatchObject({ canApprove: true, bulk: true });
+    expect(r).toMatchObject({
+      canApprove: true,
+      bulk: true,
+      managerOnly: true,
+    });
   });
 
   it("lets only a sole manager approve their own timesheet (marked as self approval)", () => {
