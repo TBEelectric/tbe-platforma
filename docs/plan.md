@@ -576,7 +576,7 @@ Obrazovky do té doby ukazují tlačítka, jejichž krok ještě není hotový, 
       zaměstnanec bez konce úvazku (R. Kučera v lokální DB) se počítá do uzávěrky a blokuje ji; při deaktivaci je
       potřeba ukončit úvazek.
 
-- [ ] **4.9 – Dokončení milníku** [zastavit po]
+- [x] **4.9 – Dokončení milníku** [zastavit po]
       (1) Launcher „Čeká na vás“ podle `01-launcher.png` (doplnit chybějící den, potvrdit měsíc, schválit N výkazů,
       uzavřít měsíc) z dat 4.2–4.3. (2) Můj den: vrácený výkaz ukáže důvod; potvrzený měsíc hlášku „Měsíc je
       potvrzený“ (rozšířit `dayEditability`). (3) Přístupnost nových obrazovek (aria-label u ikon, fokus, tabulka
@@ -585,6 +585,49 @@ Obrazovky do té doby ukazují tlačítka, jejichž krok ještě není hotový, 
       souladu s hotovým stavem. (5) Úklid: `[section]` placeholder, pokud už nic nepokrývá.
       Hotovo, když: lint/typecheck/test/build prochází; člověk vyzkouší celý cyklus otevřený → potvrzený →
       vrácený → potvrzený → schválený → uzavřený → export → znovu otevřený → verze 2 v Chromu na desktopu i 375 px.
+      Výsledek: (1) pravidlo `rules/launcher-tasks.ts` (`launcherTasks`, testy): zaměstnanec – vrácený výkaz s důvodem,
+      nejstarší chybějící den otevřeného měsíce („a N dalších dnů“), potvrzení skončeného měsíce (podle
+      `timesheetTransition("confirm")`); vedoucí – „Schválit N výkazů“ za minulý měsíc; správce – „Schválit N výkazů
+      vedoucích“ a „Uzavřít měsíc“ („Zbývá schválit N“). Schvalování počítá `waitsForViewer` (nově sdílené
+      s „Čeká na vás“ v Uzávěrce). Služba `launcher.ts` (`getLauncherTasks`) jen skládá `getMonth`, `getApprovalData`
+      a `period_close`; karta `components/launcher-tasks.tsx` vpravo od pozdravu (mobil pod ním), řádek = odkaz přímo
+      na obrazovku, lhůta „dnes“ / „do …“, po lhůtě zvýrazněná. (2) `dayEditability` bere stav výkazu, uzávěrku
+      a důvod vrácení: hláška „Měsíc je potvrzený / schválený / uzavřený…“, u vráceného výkazu osa upravitelná
+      s „Výkaz byl vrácen k opravě: …“ (`DayNotice`, mobil i desktop); `TimelineDay` nese `periodClosed`
+      a `returnReason`. (3) Přístupnost: `CardTitle` je `h2`, tabulky Schvalování a Stav part mají popisek,
+      víkendová buňka kalendáře úplný název, tlačítka detailu dne 44 px, spodní panel detailu drží Tab uvnitř,
+      odkaz „Doplnit“ v liště 44 px; ostatní (aria-label u ikon, hlavičky `th scope`, dialogy base-ui s fokusem a Esc,
+      Esc a návrat fokusu v detailu dne) už bylo v pořádku – ověřeno skriptem v prohlížeči na všech čtyřech
+      obrazovkách. (4) `design.md`: seznam obrazovek (i Nastavení), „Čeká na vás“, mobilní rozložení měsíce,
+      schvalování a uzávěrky, hlášky Můj den, skutečné menu s tím, kdo co vidí (Zápis za jiné, Měsíc zaměstnance);
+      `zadani-dochazky.md`: otevřené body se stavem (přesčas označením intervalu, rozvrh, vyrovnávací období,
+      DPP/DPČ limity a dovolená, podklad pro mzdy). (5) Placeholder `[section]` a texty `timesheets.placeholder`
+      odstraněny (každá položka menu má vlastní stránku).
+      Ověřeno: lint, typecheck, 527 testů, build. V prohlížeči přes vývojové přihlášení (desktop 1440 px a 375 px):
+      zaměstnanec M. Dvořák – „Opravit vrácený výkaz za září“ s důvodem, Můj den v září s hláškou o vrácení;
+      vedoucí J. Novák a správce L. Černá s dočasně potvrzenými zářijovými výkazy Dvořáka a Nováka (pak vráceno
+      zpět na otevřený s původním důvodem): vedoucí „Schválit 1 výkaz za září“ → Schvalování na záložce Ke schválení
+      se stejným počtem, Můj den Nováka „Měsíc je potvrzený…“; správce „Doplnit … a 9 dalších dnů“, „Schválit 1 výkaz
+      vedoucího“, „Uzavřít září – Zbývá schválit 13 výkazů“; bez vodorovného posunu na 375 px.
+      Vyzkoušet celý cyklus (Chrome, desktop i 375 px, vývojové přihlášení):
+      1. Zaměstnanec: launcher „Doplnit …“ → Můj den; doplnit chybějící dny minulého měsíce; launcher „Potvrdit
+         výkaz za …“ → Můj měsíc → Potvrdit měsíc (dialog); Můj den v tom měsíci „Měsíc je potvrzený“, osa jen pro čtení.
+      2. Vedoucí: launcher „Schválit N výkazů“ → Schvalování; detail, přesčas u intervalu (s důvodem), Vrátit k opravě
+         s důvodem (bez důvodu odmítne).
+      3. Zaměstnanec: launcher „Opravit vrácený výkaz“ s důvodem; Můj den ukáže důvod a jde upravit; opravit
+         a znovu potvrdit.
+      4. Vedoucí: Schválit (jednotlivě i „Schválit N bez upozornění“); vlastní výkaz vedoucího schvaluje správce –
+         správce vidí „Schválit N výkazů vedoucích“.
+      5. Správce: Uzávěrka – kontroly zelené, launcher „Uzavřít …“, Uzavřít měsíc (dialog) = verze 1; Můj den
+         „Měsíc je uzavřený“; stáhnout XLSX, PDF, PDF zaměstnance a CSV hodin po zakázkách.
+      6. Správce: Znovu otevřít s důvodem pro vybraného zaměstnance → ten vidí důvod na launcheru, v Můj měsíc
+         i Můj den; opravit, potvrdit, vedoucí schválí, správce uzavře jako verze 2; verze 1 i 2 ke stažení.
+      7. Připomenout ve Schvalování a „Připomenout chybějícím“ v Uzávěrce (e-mail v konzoli `pnpm dev`).
+      8. Klávesnice: Tab po stránkách, Esc zavře detail dne a dialogy, fokus se vrátí na tlačítko.
+      Rozhodl jsem: úkoly launcheru se týkají minulého měsíce (chybějící dny i aktuálního); vrácený výkaz nahrazuje
+      úkol „Potvrdit“; „Uzavřít měsíc“ se ukáže, dokud skončený měsíc není uzavřený, i když kontroly ještě neprojdou;
+      štítek na dlaždici Docházka z náhledu („Dnes 8:15 h · říjen otevřený“) není součástí 4.9. Potvrzovací
+      dialogy Potvrdit měsíc a hromadné schválení zůstaly nativní `confirm` (přístupné, Esc).
 
 ## Milník 5 – Pilot
 
