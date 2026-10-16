@@ -36,6 +36,21 @@ export function periodStatus(ctx: {
   return ctx.canClose ? "ready" : "waiting";
 }
 
+/**
+ * A confirmed timesheet waits for the viewer when they may approve it and are its expected approver:
+ * the lead of the team, or the timesheets manager when only the manager approves it (the owner is a
+ * manager or a lead, or the team has no lead).
+ */
+export function waitsForViewer(
+  row: { status: TimesheetStatus; canApprove: boolean; managerOnly: boolean },
+  leadEmployeeId: string | null,
+  viewerEmployeeId: string,
+): boolean {
+  if (row.status !== "confirmed" || !row.canApprove) return false;
+  const byManager = row.managerOnly || leadEmployeeId === null;
+  return byManager || leadEmployeeId === viewerEmployeeId;
+}
+
 export type TeamProgress = {
   /** null = employees without a team in the month. */
   teamId: string | null;
@@ -54,9 +69,7 @@ export type TeamProgress = {
 
 /**
  * „Stav podle part“: timesheets of the month per team, by team name, employees without a team last.
- * A confirmed timesheet waits for the viewer when they may approve it and are its expected approver:
- * the lead of the team, or the timesheets manager when only the manager approves it (the owner is a
- * manager or a lead, or the team has no lead).
+ * „Čeká na vás“ counts the confirmed timesheets that waitsForViewer.
  */
 export function teamCloseProgress(
   rows: Array<{
@@ -98,9 +111,7 @@ export function teamCloseProgress(
     if (row.status === "approved" || row.status === "closed") group.approved++;
     else if (row.status === "confirmed") {
       group.toApprove++;
-      const lead = team?.leadEmployeeId ?? null;
-      const byManager = row.managerOnly || lead === null;
-      if (row.canApprove && (byManager || lead === viewerEmployeeId))
+      if (waitsForViewer(row, team?.leadEmployeeId ?? null, viewerEmployeeId))
         group.waitingForViewer++;
     } else group.notConfirmed++;
   }

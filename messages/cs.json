@@ -74,7 +74,22 @@
   "launcher": {
     "greeting": "Dobrý den",
     "today": "Dnes",
-    "chooseModule": "vyberte, s čím chcete pracovat"
+    "chooseModule": "vyberte, s čím chcete pracovat",
+    "tasks": {
+      "title": "Čeká na vás",
+      "module": "Docházka",
+      "today": "dnes",
+      "dueBy": "do {date, date, dayMonth}",
+      "missingDay": "Doplnit {date, date, weekday}",
+      "missingDayMore": "Doplnit {date, date, weekday} a {more, plural, one {# další den} few {# další dny} other {# dalších dnů}}",
+      "returned": "Opravit vrácený výkaz za {month, date, monthName}",
+      "returnedReason": "Důvod: {reason}",
+      "confirm": "Potvrdit výkaz za {month, date, monthName}",
+      "approve": "Schválit {count, plural, one {# výkaz} few {# výkazy} other {# výkazů}} za {month, date, monthName}",
+      "approveLeads": "Schválit {count, plural, one {# výkaz vedoucího} few {# výkazy vedoucích} other {# výkazů vedoucích}} za {month, date, monthName}",
+      "close": "Uzavřít {month, date, monthName}",
+      "closeRemaining": "{remaining, plural, one {Zbývá schválit # výkaz} few {Zbývá schválit # výkazy} other {Zbývá schválit # výkazů}}"
+    }
   },
   "login": {
     "pageTitle": "Přihlášení · TBE platforma",

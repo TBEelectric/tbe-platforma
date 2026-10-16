@@ -57,3 +57,4 @@ export {
 } from "./export/files";
 export { getCloseData, type CloseData, type ReopenCandidate } from "./close";
 export { getSettingsPage, type SettingsPageData } from "./module-settings";
+export { getLauncherTasks } from "./launcher";

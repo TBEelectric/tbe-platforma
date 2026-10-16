@@ -33,6 +33,7 @@ export * from "./rules/export-snapshot";
 export * from "./rules/job-hours";
 export * from "./rules/settings-change";
 export * from "./rules/close-overview";
+export * from "./rules/launcher-tasks";
 
 export const timesheetsModule: ModuleInfo = {
   id: "timesheets",
