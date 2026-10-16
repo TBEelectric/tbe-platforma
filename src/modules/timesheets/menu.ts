@@ -2,6 +2,7 @@ import {
   Briefcase,
   UserPen,
   CalendarDays,
+  CalendarSearch,
   Clock,
   Lock,
   Settings,
@@ -43,6 +44,14 @@ export const timesheetsMenu: MenuItem[] = [
     href: "/timesheets/month",
     icon: CalendarDays,
     visible: canRecordOwnTime,
+  },
+  {
+    // Accounts without own attendance (e.g. the administrator) start by choosing an employee.
+    label: "timesheets.menu.monthSomeone",
+    href: "/timesheets/month/someone",
+    icon: CalendarSearch,
+    visible: (actor) =>
+      !canRecordOwnTime(actor) && canWriteForSomeoneElse(actor),
   },
   {
     label: "timesheets.menu.absences",

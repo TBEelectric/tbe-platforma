@@ -93,14 +93,16 @@ export function CheckboxField({
 export function SubmitButton({
   children,
   className,
+  disabled,
 }: {
   children: ReactNode;
   className?: string;
+  disabled?: boolean;
 }) {
   const t = useTranslations("common");
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" disabled={pending} className={className}>
+    <Button type="submit" disabled={pending || disabled} className={className}>
       {pending ? t("saving") : children}
     </Button>
   );

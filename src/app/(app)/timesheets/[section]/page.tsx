@@ -12,7 +12,6 @@ export const instant = false;
 
 const plannedMilestone: Record<string, number> = {
   day: 3,
-  month: 4,
   absences: 3,
   approval: 4,
   close: 4,
