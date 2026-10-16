@@ -318,7 +318,7 @@ Obrazovky do té doby ukazují tlačítka, jejichž krok ještě není hotový, 
       důvod vrácení; e-mailová oznámení se zapisují jen při vrácení a znovuotevření (při potvrzení a uzávěrce
       zatím ne, připomínky lhůt řeší 4.5).
 
-- [ ] **4.4 – Exporty (server)**
+- [x] **4.4 – Exporty (server)**
       Ze snímku `period_export` (jen uzavřený měsíc, vybraná verze): XLSX pro mzdy – list Souhrn (řádek na
       zaměstnance: osobní číslo, jméno, úvazek, fond, odpracováno, přesčas, noc, sobota, neděle, svátek odpracovaný,
       svátek neodpracovaný, pohotovost, práce v pohotovosti, absence po typech, zůstatek dovolené, upozornění),
@@ -335,6 +335,34 @@ Obrazovky do té doby ukazují tlačítka, jejichž krok ještě není hotový, 
       Zapojit tlačítko Stáhnout PDF v Můj měsíc (4.6, i u měsíce jiného zaměstnance). Uzávěrka (4.8) ještě
       neexistuje: 4.4 pro ni připraví jen route handlery a funkci se seznamem verzí uzavřených měsíců, tlačítka
       zapojí až 4.8.
+      Výsledek: řádky exportů jsou čisté funkce s testy v `rules/export-rows.ts` (`summaryTable`, `entriesTable`,
+      `absencesTable`, `standbysTable`, `payrollTables`; pro PDF `pdfDayRows` a `pdfTotals`) a `rules/job-hours.ts`
+      (`jobHoursRows`, `jobHoursCells`, `toCsv`, `jobHoursPeriodSchema`); snímek čte `parsePeriodSnapshot`
+      (`rules/export-snapshot.ts`, Zod, datumy z JSON). Služby `exports.ts`: `listPeriodExports(viewer)` (seznam
+      uzavřených měsíců se všemi verzemi, kdo a kdy uzavřel, znovuotevření s důvodem – pro 4.8), `getPeriodSnapshot`,
+      `getMonthPdfData`, `getJobHours`. Generátory `export/payroll-xlsx.ts` (write-excel-file 4.1.1) a
+      `export/month-pdf.tsx` (@react-pdf/renderer 4.9.0, vložené Figtree v `export/fonts/`, OFL), HTTP vrstva
+      `export/files.ts`. Route handlery: `GET /timesheets/export/payroll/[month]/[version]/xlsx` a `…/pdf` (správce,
+      jen snímek dané verze), `GET /timesheets/export/month-pdf?employee=&month=` (`canViewTimeOf`) a
+      `GET /timesheets/export/job-hours?from=&to=` (správce, CSV). Bez oprávnění 404, špatné období CSV 400.
+      Tlačítko Stáhnout PDF v Můj měsíc vede na `month-pdf` (vlastní i cizí měsíc).
+      Ověřeno: lint, typecheck, 459 testů, build. Jednorázovým skriptem na kopii lokální DB (říjen 2026, „dnes“ 3. 11.,
+      doplněné dny a schválené výkazy, uzavřeno přes `closePeriod` jako verze 1): XLSX (Souhrn 14, Intervaly 571,
+      Absence 2, Pohotovost 2 řádků), PDF všech, PDF jednoho, pracovní verze a CSV jsem otevřel, diakritika v pořádku;
+      po změně živých dat (posunutý a smazaný interval, přejmenovaná zakázka) dala verze 1 stejné řádky a bajtově
+      stejné PDF, XLSX se liší jen časem souborů uvnitř ZIP (obsah shodný). V prohlížeči přes vývojové přihlášení:
+      Stáhnout PDF u vlastního i cizího měsíce (200, „Pracovní verze – neuzavřeno“); zaměstnanec cizí PDF a CSV 404,
+      vedoucí PDF člena party 200 a cizí party 404, administrátor mzdový export a CSV 404, správce CSV 200 (BOM,
+      středník, desetinná čárka); mzdové XLSX a PDF přes route s dočasně vloženým snímkem 200 a dvakrát stejný soubor
+      (snímek pak smazán, lokální DB beze změny).
+      Vyzkoušet: Můj měsíc → Stáhnout PDF (i u měsíce jiného zaměstnance); mzdové exporty až s uzavřeným měsícem v 4.8.
+      Rozhodl jsem: uzavřený měsíc stáhne v Můj měsíc PDF z poslední verze snímku (shodné s podkladem pro účetní);
+      hodiny v XLSX jako čísla v hodinách (formát 0.00), datumy jako datumy Excelu v pražském čase; list Intervaly
+      obsahuje i přestávky (druh záznamu), Absence jen schválené s celým rozsahem a hodinami v měsíci; pohotovost
+      v Souhrnu = mimo práci, zvlášť práce v pohotovosti; zůstatek dovolené v hodinách; „Rozdíl proti fondu“ v podkladu
+      není (jen informace); CSV: číslo zakázky; zakázka; zákazník; místo; osobní číslo; zaměstnanec; hodiny, práce bez
+      zakázky jako „Režie (bez zakázky)“, období nejvýš 400 dní; PDF má podpisové řádky zaměstnance a vedoucího.
+      Řádky exportu čtou `ExportMonth` (MonthView i snímek), takže tvar snímku zůstal `format: 1`.
 
 - [ ] **4.5 – Připomínky a e-maily (worker)**
       `src/worker.ts`: plánovač v jednom procesu (každý den v `reminder_time`, Europe/Prague, jen pracovní dny):

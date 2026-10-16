@@ -198,6 +198,9 @@ Vedoucí není samostatná role; práva plynou z `team.lead_employee_id`. Tabulk
 
 ## Export a audit
 
-Podklad pro mzdy jen z uzavřeného měsíce: XLSX (list Souhrn po zaměstnancích, list Intervaly) a PDF
-výkaz na zaměstnance; každý export má číslo verze. Samostatně CSV hodin po zakázkách za libovolné období.
+Podklad pro mzdy jen z uzavřeného měsíce a jen z uloženého snímku `period_export` vybrané verze: XLSX (listy
+Souhrn po zaměstnancích, Intervaly, Absence, Pohotovost) a PDF výkaz na zaměstnance (i jeden soubor za všechny);
+každý export má číslo verze. PDF měsíce zaměstnance smí stáhnout každý, kdo smí měsíc vidět; dokud měsíc není
+uzavřený, je z živých dat s označením „Pracovní verze – neuzavřeno“. Samostatně CSV hodin po zakázkách za libovolné
+období (středník, UTF-8 s BOM).
 Každá změna se zapisuje do `audit_log`; zápis za jiného a znovuotevření vyžadují důvod.
