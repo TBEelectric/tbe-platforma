@@ -417,6 +417,7 @@
       "confirm": "Potvrdit měsíc",
       "confirmFrom": "Potvrdit od {from, date, dayMonth}",
       "confirmDone": "{status, select, confirmed {Potvrzeno} approved {Schváleno} other {Uzavřeno}}",
+      "confirmQuestion": "Potvrdit {month, date, month}? Pak už nezměníte intervaly, absence ani pohotovost. Vrátit měsíc může jen vedoucí party nebo správce docházky.",
       "viewingOther": "Prohlížíte měsíc zaměstnance <strong>{name}</strong>.",
       "backToOwn": "Zpět na můj měsíc",
       "returned": "Výkaz vám vedoucí vrátil: {reason}",
