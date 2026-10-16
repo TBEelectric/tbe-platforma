@@ -110,6 +110,76 @@ Vstupy od klienta jsou vždy podvrhnutelné: pole formuláře, bound argumenty a
 | `/timesheets/export/month-pdf?employee=&month=` | `requireUser` | `getMonth` → `canViewTimeOf`, jinak 404 |
 | `/timesheets/export/job-hours?from=&to=` | `requireUser` | `getJobHours` → `canCloseTimesheetPeriod`, jinak 404 |
 
+## Co kontrola ověřuje
+
+- **Oprávnění na serveru** (`suites/pages.ts`, `suites/actions.ts`): každá stránka pro zaměstnance, vedoucího
+  vlastní a cizí party, správce docházky, administrátora, bez session a s podvrženou cookie; podvržené
+  `?employee=`, `?team=`, `?month=`, `?date=` a ID v cestě. Všech 43 server akcí bez přihlášení a pro každou roli
+  s cizím ID, zaměstnancem, partou nebo měsícem, zápis do potvrzeného, schváleného a uzavřeného měsíce, cizí ID
+  intervalu pod vlastním zaměstnancem, podvržené bound argumenty (`change`, `decision`).
+- **Vývojové přihlášení** (`suites/session.ts`): produkční build s `DEV_LOGIN=true` nemá sekci na `/login`,
+  `devSignInAction` vrací 404 a nevytvoří session, endpoint nemá HTTP adresu; `.env.example` a
+  `docker-compose.yml` `DEV_LOGIN` nezapínají. Funkci `isDevLoginEnabled` hlídá `src/lib/dev-login.test.ts`.
+- **Session:** odhlášení smaže řádek v `session` a stará cookie nic neotevře; archivovaný a deaktivovaný
+  zaměstnanec, změněný e-mail a účet bez zaměstnance přijdou o přístup hned při dalším požadavku; odebraná role
+  správce a odebraný vedoucí party také; prošlá session a cookie podepsaná jiným tajemstvím neplatí; cookies
+  `HttpOnly`, `SameSite=Lax`, s `https` adresou `__Secure-` a `Secure`; cache session v cookie je vypnutá;
+  server akce i Better Auth odmítnou cizí origin i adresu z LAN (rozšířené origins jen ve vývoji).
+- **Exporty a e-maily** (`suites/exports.ts`, `suites/mail.ts`): kdo stáhne mzdový XLSX/PDF, CSV hodin, PDF
+  měsíce a šablonu importu; hlavičky `Content-Disposition: attachment`, `Cache-Control: private, no-store`;
+  podvržená verze, měsíc nebo ID → 404. E-maily z ručních připomínek, fronty `notification` a připomínek celého
+  měsíce: adresát je jen dotčený člověk, text neobsahuje údaje nikoho, koho by adresát nesměl vidět, odkazy jen na
+  `BETTER_AUTH_URL`.
+- **Chyby a tajemství** (`suites/errors.ts`): chybové stránky, chybné akce a chyby Better Auth bez SQL, stack
+  trace, cest a URL databáze; hodnoty `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_SECRET`, `SMTP_PASSWORD` nejsou
+  v odpovědích, logu serveru ani v `.next/static`.
+
+Ručně (mimo `security:check`) se v kroku 5.2 prošlo: `pnpm audit`, historie gitu (147 commitů: žádný soubor
+`.env*` kromě `.env.example`, žádné klíče Google, privátní klíče ani tokeny; hodnoty z lokálního `.env` se
+v historii, sledovaných souborech, buildu ani v `logs/` nevyskytují; v historii jsou jen lokální výchozí přístupy
+`tbe:tbe@localhost` z `docker-compose.yml` a smyšlené adresy v testech). Opakovat před nasazením (příkazy níže).
+
+```
+pnpm audit
+git log --all --diff-filter=A --name-only --format= | grep -iE '(^|/)\.env|\.pem$|\.key$'
+git log --all -p -G'GOCSPX-|BEGIN [A-Z ]*PRIVATE KEY|apps\.googleusercontent\.com' --format=%h
+```
+
 ## Nálezy
 
-Doplní se v průběhu kroku 5.2.
+Závažnost: **vysoká** – cizí data nebo práva bez oprávnění; **střední** – obejití pravidla tabulky Oprávnění
+s nutností jiné role; **nízká** – bez úniku dat (chybový kód, odolnost, závislost bez dosahu); **info** – na vědomí.
+
+### Opravené v kroku 5.2
+
+| # | Závažnost | Nález | Oprava |
+| --- | --- | --- | --- |
+| 1 | střední | Správce docházky mohl aktivovat deaktivovaného nebo obnovit archivovaného administrátora (`setEmployeeStateAction(id, "activate" \| "restore")`); tím vrátil přihlášení účtu s rolí administrátora, ačkoli role a povolené účty smí měnit jen administrátor. Kód hlídal jen deaktivaci a archivaci. | Pravidlo `canChangeEmployeeState` (`core/permissions.ts`, test) pro všechny čtyři změny; používá ho akce i stránka detailu. Případ v `security:check`. |
+| 2 | nízká | `setEmployeeStateAction`: argument `change` z `.bind` se neověřoval; neznámá hodnota skončila chybou 500 (nic se nezměnilo). | `change` a `id` ověřuje Zod, jinak 404. |
+| 3 | nízká | `updateEmploymentAction` četla formulář před kontrolou oprávnění; požadavek s nevalidními argumenty skončil 500 místo přesměrování na přihlášení. | Čte se až po `requirePermission` (uvnitř `handleFormAction`). |
+
+### Otevřené
+
+| # | Závažnost | Nález | Návrh |
+| --- | --- | --- | --- |
+| 4 | nízká | `pnpm audit`: **high** `braces` ≤ 3.0.3 (GHSA-vfj7-8cjw-p6xm, DoS hluboce vnořeným vzorem) přes `shadcn` → `fast-glob`/`micromatch` a `eslint-config-next`. Nejde aktualizovat: opravená verze 3.0.4 v registru npm zatím není (nejnovější je 3.0.3). Dosah: jen nástroje (CLI shadcn, ESLint, build) se vzory z repozitáře, aplikace ho se vstupem uživatele nevolá. | Po vydání 3.0.4 `pnpm update braces` (případně `pnpm.overrides`); `shadcn` se za běhu používá jen kvůli `shadcn/tailwind.css`. |
+| 5 | nízká | `pnpm audit`: moderate `esbuild` ≤ 0.24.2 (dev server esbuild) přes `drizzle-kit` → `@esbuild-kit`. Dev server esbuild se nikde nespouští, `drizzle-kit` jen pro migrace. | Aktualizovat s novější verzí `drizzle-kit`. |
+| 6 | nízká | Neplatné UUID v cestě nebo v argumentu akce (např. `/employees/abc` jako správce, `setLeaveAction("x")`) skončí chybou databáze a 500 místo 404. Odpověď nic neprozradí (jen digest), ale log serveru dostane chybu se SQL a parametry. | Ověřovat UUID v `params` a bound argumentech (malý helper), nebo převádět chybu `22P02` na `notFound()`. |
+| 7 | info | Zamítnutá stránka se streamuje se stavem 200; `notFound()`/`redirect()` přijde v payloadu (Cache Components). Obsah stránky se nevykreslí, data neuniknou; jen stavový kód není 404/307. | Ponechat. Kontrola proto hledá značku `NEXT_HTTP_ERROR_FALLBACK;404` a `NEXT_REDIRECT`. |
+| 8 | info | `NextIntlClientProvider` posílá do prohlížeče celý katalog překladů (i texty administrace a vývojového přihlášení). Texty nejsou tajné. | Při růstu katalogu předávat jen potřebné jmenné prostory (výkon). |
+| 9 | info | Log serveru při chybě obsahuje SQL i s parametry (ID, jména). | Při nasazení na VPS: přístup k logům jen pro správce, rotace logů. |
+| 10 | info | Nasazení (krok VPS): cookies jsou `Secure` jen s `https` `BETTER_AUTH_URL`; kontrola originu server akcí porovnává `Origin` s `Host`/`X-Forwarded-Host`, Caddy musí předat správný `Host`; `DEV_LOGIN` nesmí být v produkční konfiguraci. | Do kroku nasazení: `BETTER_AUTH_URL=https://…`, ověřit hlavičky za Caddy, `security:check` spustit nad stejným buildem. |
+
+## Rozhodnutí
+
+- Kontrola běží proti samostatné databázi `tbe_security` (seed + testovací data), ne proti vývojové `tbe`,
+  aby nepřepsala ručně zadaná data; po běhu se smaže.
+- Server akce se volají přes HTTP jako z prohlížeče, ne přímým voláním funkcí: ověřuje se tím i session,
+  cookies, origin a to, že klient může poslat jakékoli bound argumenty.
+- Stav administrátora (aktivace, deaktivace, archivace, obnovení) mění jen administrátor (potvrzeno zadavatelem).
+- Šablona importu odpovídá bez oprávnění i bez session 404 (používá `getCurrentUser`); to je v pořádku,
+  soubor neobsahuje data.
+- Přihlášení přes Google se v kontrole nevolá (kontaktovalo by Google); povolené e-maily hlídají testy
+  `signInRejection`/`canEmployeeSignIn` a `requireUser` při každém požadavku (účet bez zaměstnance → odmítnut).
+- Uzavřený měsíc kontroly je leden 2016 (před úvazky ze seedu); nastavení docházky dostanou v kontrolní
+  databázi kopii platnou od 2015.

@@ -120,6 +120,9 @@ pnpm db:generate          # drizzle-kit generate (new migration from schema chan
 pnpm db:migrate           # apply migrations
 pnpm db:seed              # sample data
 pnpm db:studio            # Drizzle Studio (browse the database)
+pnpm security:check       # security check (docs/bezpecnost.md): build + production server on :3100 against a
+                          # throwaway local DB tbe_security; --no-build reuses .next. Run before every deployment
+                          # and after changing permissions, server actions, routes, sessions, exports or e-mails
 ```
 
 Before each commit: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`.
@@ -148,6 +151,9 @@ Notes:
   `period_export` snapshot (`parsePeriodSnapshot`), never live data. The PDF embeds Figtree from
   `src/modules/timesheets/export/fonts/` read at runtime; keep that folder in the production image.
   `@react-pdf/renderer` is ESM-only: a `tsx` script cannot import it (use the route or a Vitest file).
+- Security check: `src/scripts/security-check/` calls every page, route handler and server action over HTTP as each
+  role. A new action, page or route without a case there fails the check (coverage); add a denied and an allowed
+  case to `suites/`. Needs port 3100 free and `docker compose up -d db`; never runs against production or SMTP.
 - Server actions: use `handleFormAction` (`src/lib/form-action.ts`); services write through
   `insertAudited`/`updateAudited` so every change lands in `audit_log` in the same transaction.
 

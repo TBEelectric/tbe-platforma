@@ -701,7 +701,7 @@ Obrazovky do té doby ukazují tlačítka, jejichž krok ještě není hotový, 
 - [ ] Nasazení na VPS (Docker Compose, Caddy, zálohy, ověřená obnova)
 - [ ] PWA (instalace na plochu firemních telefonů)
 - [ ] Playwright testy hlavních scénářů (zápis dne, potvrzení, schválení, uzávěrka)
-- [ ] **5.2 – Bezpečnostní kontrola před pilotem**
+- [x] **5.2 – Bezpečnostní kontrola před pilotem**
       Než aplikaci začnou používat piloti, ověřit, že pravidla ze sekcí Oprávnění a Export a audit
       v `docs/technicky-navrh.md` platí na serveru, ne jen v UI. Ověřuje se skripty a testy proti lokální databázi
       se seed daty (příkaz `pnpm security:check`, jde zopakovat před každým nasazením), ne ručním klikáním. Nálezy
@@ -725,6 +725,20 @@ Obrazovky do té doby ukazují tlačítka, jejichž krok ještě není hotový, 
       Hotovo, když: `pnpm security:check` projde všechny role, server akce a exporty a skončí bez chyby; nálezy jsou
       opravené nebo zapsané v `docs/bezpecnost.md` (spolu s tím, jak kontrolu zopakovat); lint/typecheck/test/build
       prochází.
+      Výsledek: `pnpm security:check` (`src/scripts/security-check/`) vytvoří lokální databázi `tbe_security` (migrace,
+      seed, testovací data), postaví aplikaci, spustí produkční server na portu 3100 a volá přes HTTP jako prohlížeč
+      všech 23 stránek, 6 route handlerů a 43 server akcí za zaměstnance, vedoucího vlastní i cizí party, správce,
+      administrátora, bez session i s podvrženou cookie; pak session, vývojové přihlášení, exporty, e-maily, chybové
+      stránky a tajemství; 371/371 kontrol prochází, akce či route bez případu kontrolu shodí. Soupis, nálezy a
+      postup jsou v `docs/bezpecnost.md`. Opraveno: správce docházky mohl aktivovat nebo obnovit administrátora
+      (nově `canChangeEmployeeState` pro akci i stránku), neověřený argument `change` (500), čtení formuláře před
+      kontrolou oprávnění v `updateEmploymentAction`. Otevřené (nízké/info): `braces` high v `pnpm audit` bez
+      vydané opravy (jen nástroje), `esbuild` moderate přes `drizzle-kit`, neplatné UUID → 500 místo 404, poznámky
+      k nasazení (https, Caddy, logy). Tajemství v historii gitu nejsou. Rozhodl jsem sám: samostatná databáze
+      kontroly, uzavřený měsíc kontroly leden 2016 s kopií nastavení od 2015, Google přihlášení se nevolá, šablona
+      importu smí bez session vracet 404. Vyzkoušet: jako zaměstnanec podvržené `?employee=` na Měsíci a Dni
+      (404), stažení mzdového exportu bez role správce (404), správkyně u administrátora bez tlačítek stavu,
+      odhlášení a zpět v prohlížeči (přihlášení), archivace zaměstnance při jeho otevřené session.
 - [ ] Pilot na 3–5 lidech jeden měsíc, souběžně s Excelem
 
 ## Souběžně – příprava vozového parku
