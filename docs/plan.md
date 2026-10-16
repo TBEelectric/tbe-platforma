@@ -348,7 +348,7 @@ na hotových obrazovkách), nakonec 4.9. Obrazovky do té doby ukazují tato tla
       Zapojit tlačítka na hotových obrazovkách: Připomenout ve Schvalování (4.7) a Připomenout chybějícím
       v Uzávěrce (4.8).
 
-- [ ] **4.6 – Obrazovka Můj měsíc** [zastavit po]
+- [x] **4.6 – Obrazovka Můj měsíc** [zastavit po]
       Podle `docs/design/screens/03-muj-mesic.png` (desktop) nad `getMonth` a akcemi z 4.2–4.3: hlavička (měsíc,
       stav, úvazek, fond podle úvazku), přepínání měsíců, karty Odpracováno / Absence / Rozdíl proti fondu /
       Pohotovost, kalendář (hodiny a druhy práce, chybí, dnes, víkend, svátek s názvem, absence, pohotovost;
@@ -367,6 +367,22 @@ na hotových obrazovkách), nakonec 4.9. Obrazovky do té doby ukazují tato tla
       zaměstnance“ a začne výběrem.
       Hotovo, když: obrazovka odpovídá náhledu na desktopu a funguje na 375 px; potvrzení zamkne Můj den;
       vedoucí vidí měsíce své party, správce a administrátor všech, zaměstnanec jen svůj (i přes URL).
+      Výsledek: stránky `/timesheets/month` (vlastní i `?employee=`, `?month=YYYY-MM-01`) a `/timesheets/month/someone`
+      (výběr zaměstnance; v menu „Měsíc zaměstnance“ pro účet bez vlastní docházky), komponenty
+      `components/month/` (`MonthScreen`, `ConfirmMonth`, `StandbyPanel`), texty `timesheets.month.*`, placeholder
+      `month` odstraněn. Nové pravidlo nebylo potřeba: „Vidět výkazy jiných“ už je `canViewTimeOf` s testem
+      a kontroluje ho `getMonth` (cizí bez práva → 404). Potvrzení i lišta „Měsíc půjde potvrdit od …“ berou
+      stav z `timesheetTransition("confirm")`; Stáhnout PDF je neaktivní s nápovědou.
+      Ověřeno: lint, typecheck, 408 testů, build; skriptem proti lokální DB (říjen 2026) zaměstnanec vidí jen svůj
+      měsíc, vedoucí svou partu (5), správce a administrátor všech (13); české texty projdou ICU s reálnými hodnotami.
+      NEOVĚŘENO v prohlížeči (přihlášení jen přes Google). Vyzkoušet ručně: desktop proti `03-muj-mesic.png`
+      a 375 px (karty 2×2, kompaktní kalendář, Potvrdit měsíc nad spodní navigací); klik na den otevře Můj den;
+      pohotovost přidat / upravit / smazat (u cizího s důvodem); vedoucí → „Měsíc jiného“ → člen party (jen
+      pro čtení u cizí party nejde otevřít); zaměstnanec s cizím `?employee=` dostane 404; po potvrzení
+      (od 1. 11.) je Můj den zamčený.
+      Rozhodl jsem: buňka kalendáře je odkaz na Můj den (podle náhledu), pohotovost se spravuje v kartě
+      „Pohotovost“ v pravém sloupci (panel se seznamem měsíce a tlačítkem Přidat), ne v detailu dne – zadání
+      chtělo obojí; karta Upozornění se ukáže jen při upozorněních měsíce.
 
 - [ ] **4.7 – Obrazovka Schvalování**
       Podle `04-schvalovani.png`: měsíc (výchozí minulý), parta (vedoucí vidí své party, správce všechny + výběr),
