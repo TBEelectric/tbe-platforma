@@ -106,10 +106,7 @@ const jobColumns = (t: T) =>
     jobCol.accessor("code", {
       header: t("code"),
       cell: ({ row }) => (
-        <Link
-          href={`/timesheets/jobs/${row.original.id}`}
-          className="font-semibold"
-        >
+        <Link href={`/jobs/${row.original.id}`} className="font-semibold">
           {row.original.code}
         </Link>
       ),
@@ -165,7 +162,7 @@ const customerColumns = (t: T) =>
       header: t("customer"),
       cell: ({ row }) => (
         <Link
-          href={`/timesheets/jobs/customers/${row.original.id}`}
+          href={`/jobs/customers/${row.original.id}`}
           className="font-semibold"
         >
           {row.original.name}

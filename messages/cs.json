@@ -50,9 +50,13 @@
       "name": "Docházka",
       "description": "Pracovní doba, hodiny na zakázky, absence"
     },
+    "jobs": {
+      "name": "Zakázky",
+      "description": "Zakázky a zákazníci pro docházku i vozidla"
+    },
     "core": {
-      "name": "Zakázky a zákazníci",
-      "description": "Číselník zakázek pro docházku i vozidla"
+      "name": "Jádro",
+      "description": "Kmenová data sdílená moduly"
     },
     "fleet": {
       "name": "Vozový park",
@@ -119,7 +123,6 @@
       "absencesShort": "Absence",
       "approval": "Schvalování",
       "close": "Uzávěrka",
-      "jobs": "Zakázky",
       "employees": "Zaměstnanci",
       "settings": "Nastavení",
       "monthSomeone": "Měsíc zaměstnance"
@@ -914,6 +917,14 @@
         "cannotRemind": "Tomuto zaměstnanci nemůžete připomínat.",
         "sendFailed": "E-mail se nepodařilo odeslat. Zkuste to znovu později."
       }
+    }
+  },
+  "jobs": {
+    "menu": {
+      "jobs": "Zakázky",
+      "jobsShort": "Zakázky",
+      "customers": "Zákazníci",
+      "customersShort": "Zákazníci"
     }
   },
   "errors": {

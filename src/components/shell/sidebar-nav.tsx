@@ -3,17 +3,20 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+import { activeHref } from "@/lib/active-href";
 import { cn } from "@/lib/utils";
 
 export type SidebarNavItem = { label: string; href: string; icon: ReactNode };
 
 export function SidebarNav({ items }: { items: SidebarNavItem[] }) {
-  const pathname = usePathname();
+  const current = activeHref(
+    usePathname(),
+    items.map((item) => item.href),
+  );
   return (
     <ul className="flex flex-col gap-1">
       {items.map((item) => {
-        const active =
-          pathname === item.href || pathname.startsWith(`${item.href}/`);
+        const active = item.href === current;
         return (
           <li key={item.href}>
             <Link

@@ -20,15 +20,12 @@ export default async function CustomersPage() {
         title={t("core.tabs.jobs")}
         subtitle={t("core.pages.customersSubtitle")}
         actions={
-          <Link
-            href="/timesheets/jobs/customers/new"
-            className={buttonVariants()}
-          >
+          <Link href="/jobs/customers/new" className={buttonVariants()}>
             <Plus /> {t("core.pages.newCustomer")}
           </Link>
         }
       />
-      <JobTabs active="/timesheets/jobs/customers" />
+      <JobTabs active="/jobs/customers" />
       <CustomersTable rows={customers} />
     </>
   );

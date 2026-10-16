@@ -18,7 +18,7 @@ export const instant = false;
 
 export default async function JobDetailPage({
   params,
-}: PageProps<"/timesheets/jobs/[id]">) {
+}: PageProps<"/jobs/[id]">) {
   await requirePermission(canManageJobs);
   const t = await getTranslations();
   const { id } = await params;
@@ -31,7 +31,7 @@ export default async function JobDetailPage({
   const archived = !!job.archivedAt;
   return (
     <>
-      <BackLink href="/timesheets/jobs">{t("core.tabs.jobs")}</BackLink>
+      <BackLink href="/jobs">{t("core.tabs.jobs")}</BackLink>
       <PageHeader
         title={`${job.code} ${job.name}`}
         subtitle={

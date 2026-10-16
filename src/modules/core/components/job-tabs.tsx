@@ -6,8 +6,8 @@ export function JobTabs({ active }: { active: string }) {
   return (
     <LinkTabs
       tabs={[
-        { href: "/timesheets/jobs", label: t("jobs") },
-        { href: "/timesheets/jobs/customers", label: t("customers") },
+        { href: "/jobs", label: t("jobs") },
+        { href: "/jobs/customers", label: t("customers") },
       ]}
       active={active}
     />

@@ -65,11 +65,14 @@ export default async function LauncherPage() {
           </Suspense>
         </div>
         <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {platformModules.map((module) => (
-            <li key={module.id} className="grid">
-              <ModuleTile module={module} />
-            </li>
-          ))}
+          {platformModules
+            // Modules the user may not open are hidden, not shown as unavailable.
+            .filter((module) => module.visible?.(user.actor) ?? true)
+            .map((module) => (
+              <li key={module.id} className="grid">
+                <ModuleTile module={module} />
+              </li>
+            ))}
         </ul>
       </main>
     </div>

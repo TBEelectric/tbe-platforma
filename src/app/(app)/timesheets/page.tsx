@@ -4,7 +4,7 @@ import { visibleMenu } from "@/modules/timesheets";
 
 export const instant = false;
 
-/** Opens the first screen the user may see (employees: Můj den; an admin without attendance: Zakázky). */
+/** Opens the first screen the user may see (employees: Můj den; an admin without attendance: Zápis za jiné). */
 export default async function TimesheetsIndex() {
   const user = await requireUser();
   const first = visibleMenu(user.actor)[0];

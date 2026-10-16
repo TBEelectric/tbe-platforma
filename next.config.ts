@@ -10,6 +10,16 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: lanAddresses(networkInterfaces()),
   cacheComponents: true,
   partialPrefetching: true,
+  // Screens that moved out of Docházka (step 5.1); old bookmarks keep working.
+  async redirects() {
+    return [
+      {
+        source: "/timesheets/jobs/:path*",
+        destination: "/jobs/:path*",
+        permanent: true,
+      },
+    ];
+  },
   turbopack: {
     rules: {
       "*.css": {

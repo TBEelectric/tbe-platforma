@@ -11,6 +11,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { activeHref } from "@/lib/active-href";
 import { cn } from "@/lib/utils";
 
 export type TabItem = { label: string; href: string; icon: ReactNode };
@@ -31,15 +32,17 @@ export function MobileNav({
 }) {
   const t = useTranslations("common");
   const [open, setOpen] = useState(false);
-  const pathname = usePathname();
+  const current = activeHref(
+    usePathname(),
+    tabs.map((tab) => tab.href),
+  );
   return (
     <nav
       aria-label={t("mainNavigation")}
       className="fixed inset-x-0 bottom-0 z-40 flex border-t border-border bg-card pb-[env(safe-area-inset-bottom)] lg:hidden"
     >
       {tabs.map((tab) => {
-        const active =
-          pathname === tab.href || pathname.startsWith(`${tab.href}/`);
+        const active = tab.href === current;
         return (
           <Link
             key={tab.href}

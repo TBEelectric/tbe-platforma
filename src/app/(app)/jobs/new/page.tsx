@@ -22,7 +22,7 @@ export default async function NewJobPage() {
   ]);
   return (
     <>
-      <BackLink href="/timesheets/jobs">{t("core.tabs.jobs")}</BackLink>
+      <BackLink href="/jobs">{t("core.tabs.jobs")}</BackLink>
       <PageHeader
         title={t("core.pages.newJob")}
         subtitle={t("core.pages.newJobSubtitle")}

@@ -47,7 +47,7 @@ import { createTeam, setTeamArchived, updateTeam } from "./teams";
 // Every action: requirePermission (server-side check) → Zod validation → service (audited) → revalidate.
 
 const EMPLOYEES = "/timesheets/employees";
-const JOBS = "/timesheets/jobs";
+const JOBS = "/jobs";
 
 const handle = handleFormAction;
 

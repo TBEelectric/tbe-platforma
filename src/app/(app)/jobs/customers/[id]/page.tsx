@@ -16,7 +16,7 @@ export const instant = false;
 
 export default async function CustomerDetailPage({
   params,
-}: PageProps<"/timesheets/jobs/customers/[id]">) {
+}: PageProps<"/jobs/customers/[id]">) {
   await requirePermission(canManageJobs);
   const t = await getTranslations();
   const { id } = await params;
@@ -25,9 +25,7 @@ export default async function CustomerDetailPage({
   const archived = !!customer.archivedAt;
   return (
     <>
-      <BackLink href="/timesheets/jobs/customers">
-        {t("core.tabs.customers")}
-      </BackLink>
+      <BackLink href="/jobs/customers">{t("core.tabs.customers")}</BackLink>
       <PageHeader
         title={customer.name}
         subtitle={archived ? t("core.pages.archivedCustomer") : undefined}

@@ -1,5 +1,4 @@
 import {
-  Briefcase,
   UserPen,
   CalendarDays,
   CalendarSearch,
@@ -16,7 +15,6 @@ import {
   canApproveTimesheets,
   canCloseTimesheetPeriod,
   canManageEmployees,
-  canManageJobs,
   canOpenAbsences,
   canRecordOwnTime,
   canWriteForSomeoneElse,
@@ -71,12 +69,6 @@ export const timesheetsMenu: MenuItem[] = [
     href: "/timesheets/close",
     icon: Lock,
     visible: canCloseTimesheetPeriod,
-  },
-  {
-    label: "timesheets.menu.jobs",
-    href: "/timesheets/jobs",
-    icon: Briefcase,
-    visible: canManageJobs,
   },
   {
     label: "timesheets.menu.employees",

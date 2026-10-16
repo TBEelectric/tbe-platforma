@@ -14,9 +14,7 @@ export default async function NewCustomerPage() {
   const t = await getTranslations();
   return (
     <>
-      <BackLink href="/timesheets/jobs/customers">
-        {t("core.tabs.customers")}
-      </BackLink>
+      <BackLink href="/jobs/customers">{t("core.tabs.customers")}</BackLink>
       <PageHeader title={t("core.pages.newCustomer")} />
       <Card className="max-w-3xl">
         <CardContent>

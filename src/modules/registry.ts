@@ -2,10 +2,12 @@
 import { Car, House, Warehouse, Wrench } from "lucide-react";
 import type { ModuleInfo } from "@/lib/navigation";
 import { coreModule } from "@/modules/core/shared";
+import { jobsModule } from "@/modules/jobs/shared";
 import { timesheetsModule } from "@/modules/timesheets/shared";
 
 export const platformModules: ModuleInfo[] = [
   timesheetsModule,
+  jobsModule,
   coreModule,
   {
     id: "fleet",

@@ -20,12 +20,12 @@ export default async function JobsPage() {
         title={t("core.tabs.jobs")}
         subtitle={t("core.pages.jobsSubtitle")}
         actions={
-          <Link href="/timesheets/jobs/new" className={buttonVariants()}>
+          <Link href="/jobs/new" className={buttonVariants()}>
             <Plus /> {t("core.pages.newJob")}
           </Link>
         }
       />
-      <JobTabs active="/timesheets/jobs" />
+      <JobTabs active="/jobs" />
       <JobsTable rows={jobs} />
     </>
   );
