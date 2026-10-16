@@ -195,6 +195,8 @@ Kroky jdou po sobě; každý se pouští v nové session (`scripts/milestone.sh 
 a server (žádné obrazovky), kroky 4.6–4.9 jen obrazovky** nad hotovou logikou. Obrazovkový krok nesmí přidávat
 obchodní pravidla: když nějaké chybí, doplní ho jako čistou funkci v `rules/` s testem a uvede to ve „Výsledek:“.
 Značky jako v 3b: `[opus]`, `[zastavit po]`, `[ručně]`.
+**Pořadí:** po 4.3 se dělají obrazovky 4.6, 4.7, 4.8, pak 4.4 a 4.5 (zapojí tlačítka exportů a připomínek
+na hotových obrazovkách), nakonec 4.9. Obrazovky do té doby ukazují tato tlačítka neaktivní s nápovědou.
 
 **Právní rámec (zákoník práce; platí pro všechny kroky):**
 - § 96 – evidence musí u každého zaměstnance (i DPP/DPČ) ukázat **začátek a konec** odpracované směny, práce
@@ -329,6 +331,8 @@ Značky jako v 3b: `[opus]`, `[zastavit po]`, `[ručně]`.
       jeho vedoucí a správce). Knihovny vyber aktuální a udržované (např. exceljs, pdfkit / @react-pdf/renderer).
       Hotovo, když: data řádků exportu jsou čisté funkce s testy; soubory se vygenerují a otevřou (ověřit
       jednorázovým skriptem); stejná verze dá stejná data i po změně živých dat.
+      Zapojit tlačítka na hotových obrazovkách: Stáhnout PDF v Můj měsíc (4.6), Stáhnout XLSX / PDF, verze
+      uzavřených měsíců a Export hodin podle zakázek (CSV) v Uzávěrce (4.8).
 
 - [ ] **4.5 – Připomínky a e-maily (worker)**
       `src/worker.ts`: plánovač v jednom procesu (každý den v `reminder_time`, Europe/Prague, jen pracovní dny):
@@ -341,9 +345,11 @@ Značky jako v 3b: `[opus]`, `[zastavit po]`, `[ručně]`.
       `user.locale`, odkaz rovnou na den / měsíc.
       Hotovo, když: výběr příjemců je čistá funkce s testy (víkend, svátek, absence, DPP, už odesláno);
       `pnpm worker` běží a bez SMTP vypíše e-maily do logu.
+      Zapojit tlačítka na hotových obrazovkách: Připomenout ve Schvalování (4.7) a Připomenout chybějícím
+      v Uzávěrce (4.8).
 
 - [ ] **4.6 – Obrazovka Můj měsíc** [zastavit po]
-      Podle `docs/design/screens/03-muj-mesic.png` (desktop) nad `getMonth` a akcemi z 4.2–4.4: hlavička (měsíc,
+      Podle `docs/design/screens/03-muj-mesic.png` (desktop) nad `getMonth` a akcemi z 4.2–4.3: hlavička (měsíc,
       stav, úvazek, fond podle úvazku), přepínání měsíců, karty Odpracováno / Absence / Rozdíl proti fondu /
       Pohotovost, kalendář (hodiny a druhy práce, chybí, dnes, víkend, svátek s názvem, absence, pohotovost;
       klik na den = Můj den daného dne), lišta „Měsíc půjde potvrdit od … / Doplnit …“, pravý sloupec Podle
@@ -352,7 +358,15 @@ Značky jako v 3b: `[opus]`, `[zastavit po]`, `[ručně]`.
       Pohotovost: přidat / upravit / smazat z detailu dne v kalendáři (panel jako na Můj den). Mobil (< 1024 px):
       karty 2×2, kompaktní kalendář (číslo dne a hodiny, barva stavu), seznamy pod ním, Potvrdit měsíc jako
       tlačítko dole nad spodní navigací; položka „Měsíc“ ve spodní navigaci. Odstranit placeholder `month`.
-      Hotovo, když: obrazovka odpovídá náhledu na desktopu a funguje na 375 px; potvrzení zamkne Můj den.
+      Stáhnout PDF zatím neaktivní s nápovědou (zapojí 4.4).
+      **Měsíc jiného zaměstnance:** výběr zaměstnance nahoře (stejný vzor jako „Zapsat za jiného“ na Můj den,
+      URL `/timesheets/month?employee=<id>`). Kdo smí: vedoucí za svou partu, správce docházky a administrátor
+      za všechny (oprávnění „Vidět výkazy jiných“ z `technicky-navrh.md` jako čistá funkce s testem, kontrola na
+      serveru). U cizího měsíce není „Potvrdit měsíc“; úpravy pohotovosti a odkaz na den jen podle
+      `canWriteTimeFor`, jinak jen pro čtení. Účet bez vlastní docházky (administrátor) vidí v menu „Měsíc
+      zaměstnance“ a začne výběrem.
+      Hotovo, když: obrazovka odpovídá náhledu na desktopu a funguje na 375 px; potvrzení zamkne Můj den;
+      vedoucí vidí měsíce své party, správce a administrátor všech, zaměstnanec jen svůj (i přes URL).
 
 - [ ] **4.7 – Obrazovka Schvalování**
       Podle `04-schvalovani.png`: měsíc (výchozí minulý), parta (vedoucí vidí své party, správce všechny + výběr),
