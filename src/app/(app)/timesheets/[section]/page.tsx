@@ -13,10 +13,8 @@ export const instant = false;
 const plannedMilestone: Record<string, number> = {
   day: 3,
   absences: 3,
-  close: 4,
   jobs: 2,
   employees: 2,
-  settings: 3,
 };
 
 function findItem(section: string) {
