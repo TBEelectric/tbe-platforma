@@ -139,6 +139,10 @@ Notes:
 - shadcn/ui: `pnpm dlx shadcn@latest add <component>`; then adjust sizes to the TBE style (44 px controls).
 - Import (Zaměstnanci → Import z Excelu, admin only) follows `docs/import/sablona-importu.xlsx`, which is
   also served as the download; keep `docs/import/` in the production image.
+- Exports (`src/modules/timesheets/export/`, routes under `/timesheets/export/…`): payroll XLSX/PDF read only the
+  `period_export` snapshot (`parsePeriodSnapshot`), never live data. The PDF embeds Figtree from
+  `src/modules/timesheets/export/fonts/` read at runtime; keep that folder in the production image.
+  `@react-pdf/renderer` is ESM-only: a `tsx` script cannot import it (use the route or a Vitest file).
 - Server actions: use `handleFormAction` (`src/lib/form-action.ts`); services write through
   `insertAudited`/`updateAudited` so every change lands in `audit_log` in the same transaction.
 

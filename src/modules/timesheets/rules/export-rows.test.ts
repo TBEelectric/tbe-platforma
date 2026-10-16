@@ -214,9 +214,9 @@ describe("summaryTable", () => {
       { entries: [work("2026-10-05", "06:00", "19:30")] },
     );
     const warnings = text(summaryTable([long]).rows[0].at(-1)!) as string[];
-    expect(warnings[0]).toMatch(/^5\. 10\.: Přes 6:00 práce bez přestávky/);
+    expect(warnings[0]).toMatch(/^5\. 10\. – Přes 6:00 práce bez přestávky/);
     expect(warnings).toContainEqual(
-      expect.stringMatching(/^5\. 10\.: Přes 12:00 práce za den/),
+      expect.stringMatching(/^5\. 10\. – Přes 12:00 práce za den/),
     );
   });
 });
@@ -373,6 +373,11 @@ describe("pdfDayRows", () => {
     expect(rows[9]).toMatchObject({ off: true, standbyMinutes: 720 });
     expect(rows[13].absences).toEqual([
       { type: "doctor", minutes: 150, requested: false },
+    ]);
+    // The sick note runs over the weekend 3.–4. 10.: no absence line there.
+    expect(rows[2].absences).toEqual([]);
+    expect(rows[4].absences).toEqual([
+      { type: "sick", minutes: 480, requested: false },
     ]);
     expect(rows[27]).toMatchObject({
       off: true,

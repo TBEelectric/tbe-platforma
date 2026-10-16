@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { pragueInstant } from "@/lib/dates";
 import {
   decimalHours,
+  jobHoursPeriodSchema,
   jobHoursCells,
   jobHoursRows,
   toCsv,
@@ -108,7 +109,20 @@ describe("toCsv", () => {
         ["Z-12", "dva\nřádky"],
       ]),
     ).toBe(
-      '﻿Číslo;Zakázka\r\nZ-10;"Rozvody; hala"\r\nZ-11;"Elektro ""Brno"""\r\nZ-12;"dva\nřádky"\r\n',
+      '\uFEFFČíslo;Zakázka\r\nZ-10;"Rozvody; hala"\r\nZ-11;"Elektro ""Brno"""\r\nZ-12;"dva\nřádky"\r\n',
     );
+  });
+});
+
+describe("jobHoursPeriodSchema", () => {
+  it("accepts a period of dates and rejects a reversed, too long or broken one", () => {
+    const ok = (from: unknown, to: unknown) =>
+      jobHoursPeriodSchema.safeParse({ from, to }).success;
+    expect(ok("2026-10-01", "2026-10-31")).toBe(true);
+    expect(ok("2026-10-05", "2026-10-05")).toBe(true);
+    expect(ok("2026-10-31", "2026-10-01")).toBe(false);
+    expect(ok("2025-01-01", "2026-10-31")).toBe(false);
+    expect(ok("2026-13-01", "2026-12-31")).toBe(false);
+    expect(ok(undefined, "2026-10-31")).toBe(false);
   });
 });

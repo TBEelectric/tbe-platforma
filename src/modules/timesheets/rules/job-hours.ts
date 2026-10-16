@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { entryDurationMinutes } from "./time-entry";
 
 // Hours per job and employee for any period (Uzávěrka → Export hodin podle zakázek, CSV). An interval
@@ -89,5 +90,13 @@ export function jobHoursCells(rows: JobHoursRow[], noJob: string): string[][] {
 export function toCsv(rows: string[][]): string {
   const cell = (value: string) =>
     /[";\r\n]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value;
-  return `﻿${rows.map((r) => r.map(cell).join(";")).join("\r\n")}\r\n`;
+  return `\uFEFF${rows.map((r) => r.map(cell).join(";")).join("\r\n")}\r\n`;
 }
+
+/** Period of the CSV from the query string: two dates, from ≤ to, at most a year and a bit. */
+export const jobHoursPeriodSchema = z
+  .object({ from: z.iso.date(), to: z.iso.date() })
+  .refine(
+    ({ from, to }) =>
+      from <= to && Date.parse(to) - Date.parse(from) <= 400 * 86_400_000,
+  );

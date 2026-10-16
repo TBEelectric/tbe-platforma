@@ -411,10 +411,10 @@ export function pdfDayRows(m: ExportMonth): PdfDayRow[] {
       breakMinutes: minutes(entries.filter((e) => e.kind === "break")),
       overtimeMinutes: minutes(work.filter((e) => e.overtime)),
       standbyMinutes: day.standbyMinutes,
-      absences: day.absences.map((a) => ({
-        ...a,
-        requested: requested(a.type),
-      })),
+      // A whole-day absence over a weekend or holiday has no hours there; it is not a line.
+      absences: day.absences
+        .filter((a) => a.minutes > 0)
+        .map((a) => ({ ...a, requested: requested(a.type) })),
     };
   });
 }

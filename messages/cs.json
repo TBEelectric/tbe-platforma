@@ -619,7 +619,7 @@
     },
     "export": {
       "employment": "{type}{hours, select, none {} other { {hours} h týdně}}",
-      "warningOnDate": "{date, date, dayMonth}: {message}",
+      "warningOnDate": "{date, date, dayMonth} – {message}",
       "hoursHeader": "{label} (h)",
       "yes": "ano",
       "noJob": "Režie (bez zakázky)",
@@ -678,7 +678,7 @@
         "version": "Uzavřeno {closedAt, date, short}, verze {version}",
         "draft": "Pracovní verze – neuzavřeno",
         "draftNote": "Stav výkazu: {status}. Údaje se mohou změnit až do uzávěrky měsíce.",
-        "generated": "Vytvořeno {at, date, short} {at, time, short}",
+        "generated": "Vytvořeno {at, date, short} {at, time, ::Hmm}",
         "page": "Strana {page} z {pages}",
         "day": "Den",
         "intervals": "Začátek – konec práce",
