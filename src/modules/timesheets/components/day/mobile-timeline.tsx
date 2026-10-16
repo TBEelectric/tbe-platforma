@@ -1,6 +1,6 @@
 "use client";
 
-import { Coffee, Lock, Minus, Plus, Trash2, X } from "lucide-react";
+import { Coffee, Lock, Minus, Plus, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
   useCallback,
@@ -152,6 +152,14 @@ export function MobileTimeline({
     const id = setTimeout(() => setMessage(null), 5000);
     return () => clearTimeout(id);
   }, [message, setMessage]);
+
+  // „Interval smazán · Vrátit“ stays for a few seconds.
+  const { deleted, clearDeleted } = tl;
+  useEffect(() => {
+    if (!deleted) return;
+    const id = setTimeout(clearDeleted, 5000);
+    return () => clearTimeout(id);
+  }, [deleted, clearDeleted]);
 
   // A touch that stays still for HOLD_MS arms drawing; from then on the page must not scroll.
   // touch-action cannot change mid-touch, so touchmove is cancelled while a gesture is armed.
@@ -690,6 +698,28 @@ export function MobileTimeline({
         />
       )}
 
+      {tl.deleted && !selected && (
+        <div
+          role="status"
+          className={cn(
+            "fixed inset-x-4 z-40 flex items-center justify-between gap-3 rounded-xl bg-[#142433] py-1.5 pr-1.5 pl-4 text-[15px] text-white shadow-lg",
+            // Above the „Obvyklý den / Jako včera“ bar when the last interval was deleted.
+            canFill
+              ? "bottom-[calc(9.5rem+env(safe-area-inset-bottom))]"
+              : "bottom-[calc(4.25rem+env(safe-area-inset-bottom))]",
+          )}
+        >
+          {t("timesheets.timeline.deleted")}
+          <button
+            type="button"
+            onClick={tl.undoRemove}
+            className="min-h-11 rounded-lg px-3 font-semibold text-[#7fd6cc]"
+          >
+            {t("timesheets.timeline.undo")}
+          </button>
+        </div>
+      )}
+
       {tl.message && (
         <p
           role="status"
@@ -703,6 +733,9 @@ export function MobileTimeline({
     </div>
   );
 }
+
+/** Dragging the panel's handle further down than this closes the panel. */
+const CLOSE_DRAG_PX = 60;
 
 /** Edge handle of the selected entry: a 44 px touch target straddling the edge, a small pill to see. */
 function Handle({
@@ -761,6 +794,9 @@ function EntryPanel({
 }) {
   const t = useTranslations("timesheets.timeline");
   const isBreak = entry.kind === "break";
+  const [drag, setDrag] = useState(0);
+  const dragStart = useRef<number | null>(null);
+  const dragged = useRef(false);
   const step = (
     edge: "start" | "end",
     value: number,
@@ -785,9 +821,43 @@ function EntryPanel({
       role="group"
       aria-label={t("panelLabel")}
       // Covers the bottom navigation while an interval is open (as the day detail in Můj měsíc).
+      style={{
+        transform: drag ? `translateY(${drag}px)` : undefined,
+        transition: drag ? "none" : "transform 150ms ease-out",
+      }}
       className="fixed inset-x-0 bottom-0 z-50 flex flex-col gap-2.5 rounded-t-[18px] bg-card px-4 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(15,47,69,.18)]"
     >
-      <div aria-hidden className="mx-auto h-1.5 w-10 rounded-full bg-border" />
+      {/* Tap the handle or drag it down to close (the bottom-sheet gesture); a tap outside closes too. */}
+      <button
+        type="button"
+        aria-label={t("closePanel")}
+        onClick={() => {
+          if (dragged.current) dragged.current = false;
+          else onClose();
+        }}
+        onPointerDown={(event) => {
+          dragStart.current = event.clientY;
+          event.currentTarget.setPointerCapture(event.pointerId);
+        }}
+        onPointerMove={(event) => {
+          if (dragStart.current === null) return;
+          const dy = Math.max(0, event.clientY - dragStart.current);
+          if (dy > 4) dragged.current = true;
+          setDrag(dy);
+        }}
+        onPointerUp={() => {
+          dragStart.current = null;
+          setDrag(0);
+          if (drag > CLOSE_DRAG_PX) onClose();
+        }}
+        onPointerCancel={() => {
+          dragStart.current = null;
+          setDrag(0);
+        }}
+        className="-mx-4 -mt-2 flex h-9 touch-none items-center justify-center self-stretch"
+      >
+        <span aria-hidden className="h-1.5 w-10 rounded-full bg-border" />
+      </button>
       <div className="flex items-center justify-between gap-1">
         {step("start", entry.start, t("startEarlier"), t("startLater"))}
         <span aria-hidden className="text-muted-foreground">
@@ -796,53 +866,41 @@ function EntryPanel({
         {step("end", entry.end, t("endEarlier"), t("endLater"))}
         <button
           type="button"
-          aria-label={t("close")}
-          onClick={onClose}
-          className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-muted text-foreground"
-        >
-          <X aria-hidden className="size-5" />
-        </button>
-      </div>
-      {/* Kind and job chips scroll; deleting stays at the row's end, always visible. */}
-      <div className="-mx-4 flex items-center gap-2 pr-4">
-        <div className="flex min-w-0 flex-1 [scrollbar-width:none] items-center gap-2 overflow-x-auto pl-4">
-          <KindChip
-            brk
-            active={isBreak}
-            onClick={() => onKind(isBreak ? "work" : "break")}
-          >
-            <Coffee className="size-[18px]" aria-hidden />
-            {t("break")}
-          </KindChip>
-          <span aria-hidden className="h-7 w-px shrink-0 bg-border" />
-          {chips.map((j) => (
-            <KindChip
-              key={j.id}
-              active={!isBreak && entry.jobId === j.id}
-              onClick={() => onJob(j.id)}
-            >
-              <span
-                aria-hidden
-                className="size-2.5 shrink-0 rounded-full"
-                style={{ background: j.color }}
-              />
-              <span className="max-w-[9.5rem] truncate">{jobLabel(j)}</span>
-            </KindChip>
-          ))}
-          <KindChip active={false} onClick={onMore}>
-            {t("moreJobs")}
-          </KindChip>
-        </div>
-        <span aria-hidden className="h-7 w-px shrink-0 bg-border" />
-        <button
-          type="button"
           aria-label={t("delete")}
           title={t("delete")}
           onClick={onDelete}
-          className="flex size-11 shrink-0 items-center justify-center rounded-xl border border-border bg-card text-[#8a4205] [&_svg]:size-5"
+          className="ml-1 flex size-11 shrink-0 items-center justify-center rounded-xl text-[#8a4205] hover:bg-muted [&_svg]:size-5"
         >
           <Trash2 aria-hidden />
         </button>
+      </div>
+      <div className="-mx-4 flex [scrollbar-width:none] items-center gap-2 overflow-x-auto px-4">
+        <KindChip
+          brk
+          active={isBreak}
+          onClick={() => onKind(isBreak ? "work" : "break")}
+        >
+          <Coffee className="size-[18px]" aria-hidden />
+          {t("break")}
+        </KindChip>
+        <span aria-hidden className="h-7 w-px shrink-0 bg-border" />
+        {chips.map((j) => (
+          <KindChip
+            key={j.id}
+            active={!isBreak && entry.jobId === j.id}
+            onClick={() => onJob(j.id)}
+          >
+            <span
+              aria-hidden
+              className="size-2.5 shrink-0 rounded-full"
+              style={{ background: j.color }}
+            />
+            <span className="max-w-[9.5rem] truncate">{jobLabel(j)}</span>
+          </KindChip>
+        ))}
+        <KindChip active={false} onClick={onMore}>
+          {t("moreJobs")}
+        </KindChip>
       </div>
       {!isBreak && (
         <div className="-mx-4 flex [scrollbar-width:none] items-center gap-2 overflow-x-auto px-4">

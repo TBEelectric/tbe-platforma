@@ -385,7 +385,10 @@
         "confirm": "Uložit",
         "saved": "Obvyklý den uložen. Zakázky a druh práce se neukládají.",
         "failed": "Obvyklý den se nepodařilo uložit."
-      }
+      },
+      "deleted": "Interval smazán",
+      "undo": "Vrátit",
+      "closePanel": "Zavřít úpravu intervalu"
     },
     "someone": {
       "subtitle": "Den {date}. Každá změna za jiného vyžaduje důvod, který se uloží do historie.",

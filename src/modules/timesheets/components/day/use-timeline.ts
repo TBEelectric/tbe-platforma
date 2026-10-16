@@ -283,13 +283,36 @@ export function useTimeline({
     [enqueue],
   );
 
+  /** The entry deleted a moment ago, for „Vrátit“ (cleared after a few seconds by the screen). */
+  const [deleted, setDeleted] = useState<TimelineEntry | null>(null);
+
   const remove = useCallback(() => {
     if (!selectedId) return;
     const id = selectedId;
+    setDeleted(entries.find((e) => e.id === id) ?? null);
     setEntries(localDelete(entries, id));
     setSelectedId(null);
     enqueue((resolve) => ({ type: "delete", id: resolve(id) }));
   }, [enqueue, entries, selectedId]);
+
+  const clearDeleted = useCallback(() => setDeleted(null), []);
+
+  /** Undo of a delete: the same entry is created again (the server checks it like any new one). */
+  const undoRemove = useCallback(() => {
+    if (!deleted) return;
+    const { start, end, kind, jobId, workTypeId, note } = deleted;
+    const id = `tmp-${++tempCounter.current}`;
+    setDeleted(null);
+    setEntries((list) =>
+      localCreate(list, id, { start, end }, { kind, jobId, workTypeId }).map(
+        (e) => (e.id === id ? { ...e, note } : e),
+      ),
+    );
+    enqueue(
+      () => ({ type: "create", start, end, kind, jobId, workTypeId, note }),
+      id,
+    );
+  }, [deleted, enqueue]);
 
   /**
    * Quick buttons of an entry: the last used jobs plus its own (see `jobChipIds`). The order is
@@ -360,6 +383,9 @@ export function useTimeline({
     setOwnTemplate: (items: DayTemplateItem[]) =>
       setDay((d) => ({ ...d, template: { items, source: "own" } })),
     remove,
+    deleted,
+    undoRemove,
+    clearDeleted,
     createLocal: (id: string, range: AxisRange) =>
       setEntries((list) =>
         localCreate(list, id, range, { kind: "work", ...defaults() }),
