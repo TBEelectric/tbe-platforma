@@ -8,15 +8,30 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { calendarDate, capitalize } from "@/i18n/format";
 import { translate, type Msg } from "@/i18n/messages";
-import { addDays, isWeekend, monthStart } from "@/lib/dates";
+import {
+  addDays,
+  isWeekend,
+  monthStart,
+  pragueDate,
+  pragueTime,
+} from "@/lib/dates";
 import { formatMinutes } from "@/lib/duration";
 import { cn } from "@/lib/utils";
 import type { MonthLookups, MonthView } from "../../month-data";
-import { monthEnd, type MonthDay } from "../../rules/month-summary";
+import { monthEnd } from "../../rules/month-summary";
 import { confirmableFrom } from "../../rules/timesheet-transitions";
 import type { TimesheetStatus } from "../../rules/time-entry";
 import { ConfirmMonth } from "./confirm-month";
-import { StandbyPanel, type StandbyItem } from "./standby-panel";
+import {
+  MonthCalendar,
+  type DayDetailData,
+  type DetailEntry,
+} from "./month-calendar";
+import {
+  StandbyEditorProvider,
+  StandbyPanel,
+  type StandbyItem,
+} from "./standby-panel";
 
 /** Whether the own month can be confirmed now (timesheetTransition "confirm"); null for someone else's. */
 export type ConfirmState = { ok: true } | { ok: false; error: Msg } | null;
@@ -149,6 +164,23 @@ export function MonthScreen({
       </Button>
     );
 
+  const calendarHeader = (
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <h2 className="text-lg font-bold">{t("timesheets.month.calendar")}</h2>
+      <ul className="flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-muted-foreground">
+        <Legend className="bg-primary">
+          {t("timesheets.month.legendToday")}
+        </Legend>
+        <Legend className="bg-[#f0a24a]">
+          {t("timesheets.month.legendMissing")}
+        </Legend>
+        <Legend className="bg-[#c3cad3]">
+          {t("timesheets.month.legendOff")}
+        </Legend>
+      </ul>
+    </div>
+  );
+
   return (
     <>
       {forSomeoneElse && (
@@ -259,141 +291,139 @@ export function MonthScreen({
         />
       </div>
 
-      <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <section className="flex flex-col gap-4 rounded-xl border border-border bg-card p-3 sm:p-5">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-bold">
-              {t("timesheets.month.calendar")}
-            </h2>
-            <ul className="flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-muted-foreground">
-              <Legend className="bg-primary">
-                {t("timesheets.month.legendToday")}
-              </Legend>
-              <Legend className="bg-[#f0a24a]">
-                {t("timesheets.month.legendMissing")}
-              </Legend>
-              <Legend className="bg-[#c3cad3]">
-                {t("timesheets.month.legendOff")}
-              </Legend>
-            </ul>
-          </div>
-          <Calendar
+      <StandbyEditorProvider
+        employeeId={view.employee.id}
+        needsReason={forSomeoneElse}
+        defaultDate={today >= month && today <= monthEnd(month) ? today : month}
+      >
+        <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+          <MonthCalendar
+            header={calendarHeader}
+            footer={
+              showConfirm && (
+                <ConfirmBar
+                  confirm={confirm}
+                  month={month}
+                  today={today}
+                  missingDays={s.missingDays}
+                  dayHref={dayHref}
+                />
+              )
+            }
             days={s.days}
             month={month}
-            dayHref={dayHref}
-            workTypeName={workTypeName}
-          />
-          {showConfirm && (
-            <ConfirmBar
-              confirm={confirm}
-              month={month}
-              today={today}
-              missingDays={s.missingDays}
-              dayHref={dayHref}
-            />
-          )}
-        </section>
-
-        <aside className="flex flex-col gap-5">
-          <BreakdownCard
-            title={t("timesheets.month.byJob")}
-            rows={s.byJob.map((j) => {
-              const job = view.jobs.find((x) => x.id === j.jobId);
-              return {
-                key: j.jobId ?? "none",
-                label: job ? job.label : t("timesheets.month.noJob"),
-                // The name under „Firma, místo“ (the label already is the name without them).
-                detail: job && job.name !== job.label ? job.name : undefined,
-                color: job?.color,
-                minutes: j.minutes,
-              };
-            })}
-            empty={t("timesheets.month.nothingYet")}
-          />
-          <BreakdownCard
-            title={t("timesheets.month.byWorkType")}
-            rows={s.byWorkType.map((w) => ({
-              key: w.workTypeId ?? "none",
-              label:
-                workTypeName(w.workTypeId) ?? t("timesheets.month.noWorkType"),
-              minutes: w.minutes,
-            }))}
-            empty={t("timesheets.month.nothingYet")}
-          />
-          <StandbyPanel
-            employeeId={view.employee.id}
-            items={standbys}
-            canWrite={canWriteStandby}
-            locked={view.locked}
-            needsReason={forSomeoneElse}
-            defaultDate={
-              today >= month && today <= monthEnd(month) ? today : month
+            workTypes={view.workTypes}
+            details={dayDetails(view, standbys, (w) => translate(t, w))}
+            dayLinks={
+              dayHref
+                ? Object.fromEntries(
+                    s.days.map((d) => [d.date, dayHref(d.date)]),
+                  )
+                : null
             }
+            locked={view.locked}
+            statusLabel={statusLabel}
+            canEditStandby={canWriteStandby}
+            employeeName={forSomeoneElse ? name : null}
           />
-          {s.warnings.length > 0 && (
+
+          <aside className="flex flex-col gap-5">
+            <BreakdownCard
+              title={t("timesheets.month.byJob")}
+              rows={s.byJob.map((j) => {
+                const job = view.jobs.find((x) => x.id === j.jobId);
+                return {
+                  key: j.jobId ?? "none",
+                  label: job ? job.label : t("timesheets.month.noJob"),
+                  // The name under „Firma, místo“ (the label already is the name without them).
+                  detail: job && job.name !== job.label ? job.name : undefined,
+                  color: job?.color,
+                  minutes: j.minutes,
+                };
+              })}
+              empty={t("timesheets.month.nothingYet")}
+            />
+            <BreakdownCard
+              title={t("timesheets.month.byWorkType")}
+              rows={s.byWorkType.map((w) => ({
+                key: w.workTypeId ?? "none",
+                label:
+                  workTypeName(w.workTypeId) ??
+                  t("timesheets.month.noWorkType"),
+                minutes: w.minutes,
+              }))}
+              empty={t("timesheets.month.nothingYet")}
+            />
+            <StandbyPanel
+              items={standbys}
+              canWrite={canWriteStandby}
+              locked={view.locked}
+            />
+            {s.warnings.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t("timesheets.month.warnings")}</CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-2 text-[15px]">
+                  {s.warnings.map((w, i) => (
+                    <p key={`${w.code}-${w.date ?? i}`}>
+                      {w.date &&
+                        `${format.dateTime(calendarDate(w.date), "dayMonth")} · `}
+                      {translate(t, w.message)}
+                    </p>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
             <Card>
               <CardHeader>
-                <CardTitle>{t("timesheets.month.warnings")}</CardTitle>
+                <CardTitle>{t("timesheets.month.flow")}</CardTitle>
               </CardHeader>
-              <CardContent className="flex flex-col gap-2 text-[15px]">
-                {s.warnings.map((w, i) => (
-                  <p key={`${w.code}-${w.date ?? i}`}>
-                    {w.date &&
-                      `${format.dateTime(calendarDate(w.date), "dayMonth")} · `}
-                    {translate(t, w.message)}
-                  </p>
-                ))}
+              <CardContent>
+                <ol className="flex flex-col gap-4">
+                  {(
+                    [
+                      ["flowOpen", t("timesheets.month.flowOpenText")],
+                      [
+                        "flowConfirm",
+                        t("timesheets.month.flowConfirmText", {
+                          from: calendarDate(confirmableFrom(month)),
+                        }),
+                      ],
+                      ["flowApprove", t("timesheets.month.flowApproveText")],
+                      ["flowClose", t("timesheets.month.flowCloseText")],
+                    ] as const
+                  ).map(([key, text], i) => {
+                    const done = i <= FLOW.indexOf(view.status);
+                    return (
+                      <li key={key} className="flex items-start gap-3">
+                        <span
+                          className={cn(
+                            "flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-bold",
+                            done
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted text-muted-foreground",
+                          )}
+                        >
+                          {i + 1}
+                        </span>
+                        <span className="flex flex-col">
+                          <span className="text-[15px] font-semibold">
+                            {t(`timesheets.month.${key}`)}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            {text}
+                          </span>
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ol>
               </CardContent>
             </Card>
-          )}
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("timesheets.month.flow")}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ol className="flex flex-col gap-4">
-                {(
-                  [
-                    ["flowOpen", t("timesheets.month.flowOpenText")],
-                    [
-                      "flowConfirm",
-                      t("timesheets.month.flowConfirmText", {
-                        from: calendarDate(confirmableFrom(month)),
-                      }),
-                    ],
-                    ["flowApprove", t("timesheets.month.flowApproveText")],
-                    ["flowClose", t("timesheets.month.flowCloseText")],
-                  ] as const
-                ).map(([key, text], i) => {
-                  const done = i <= FLOW.indexOf(view.status);
-                  return (
-                    <li key={key} className="flex items-start gap-3">
-                      <span
-                        className={cn(
-                          "flex size-7 shrink-0 items-center justify-center rounded-full text-sm font-bold",
-                          done
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-muted-foreground",
-                        )}
-                      >
-                        {i + 1}
-                      </span>
-                      <span className="flex flex-col">
-                        <span className="text-[15px] font-semibold">
-                          {t(`timesheets.month.${key}`)}
-                        </span>
-                        <span className="text-sm text-muted-foreground">
-                          {text}
-                        </span>
-                      </span>
-                    </li>
-                  );
-                })}
-              </ol>
-            </CardContent>
-          </Card>
-        </aside>
-      </div>
+          </aside>
+        </div>
+      </StandbyEditorProvider>
 
       {confirm !== null && (
         <>
@@ -405,6 +435,67 @@ export function MonthScreen({
         </>
       )}
     </>
+  );
+}
+
+/** The day detail's data per date, from what getMonth already returns (no rules here). */
+function dayDetails(
+  view: MonthView & MonthLookups,
+  standbys: StandbyItem[],
+  translateMsg: (message: Msg) => string,
+): Record<string, DayDetailData> {
+  const jobs = new Map(view.jobs.map((j) => [j.id, j]));
+  const workTypes = new Map(view.workTypes.map((w) => [w.id, w.name]));
+  return Object.fromEntries(
+    view.summary.days.map((day) => {
+      const entries: DetailEntry[] = view.entries
+        .filter((e) => e.workDate === day.date)
+        .sort((a, b) => a.startAt.getTime() - b.startAt.getTime())
+        .map((e) => {
+          const job = e.jobId ? jobs.get(e.jobId) : undefined;
+          return {
+            id: e.id,
+            kind: e.kind,
+            from: pragueTime(e.startAt),
+            to: pragueTime(e.endAt),
+            nextDay: pragueDate(e.endAt) > day.date,
+            startMs: e.startAt.getTime(),
+            endMs: e.endAt.getTime(),
+            minutes: Math.round(
+              (e.endAt.getTime() - e.startAt.getTime()) / 60_000,
+            ),
+            job: job
+              ? { code: job.code, label: job.label, color: job.color }
+              : null,
+            workType: e.workTypeId
+              ? (workTypes.get(e.workTypeId) ?? null)
+              : null,
+            note: e.note,
+          };
+        });
+      const requested = (type: string) =>
+        view.absences.some(
+          (a) =>
+            a.type === type &&
+            a.status === "requested" &&
+            a.dateFrom <= day.date &&
+            day.date <= a.dateTo,
+        );
+      return [
+        day.date,
+        {
+          entries,
+          absences: day.absences.map((a) => ({
+            ...a,
+            requested: requested(a.type),
+          })),
+          standbys: standbys.filter((sb) => sb.startDate === day.date),
+          warnings: view.summary.warnings
+            .filter((w) => w.date === day.date)
+            .map((w) => translateMsg(w.message)),
+        },
+      ];
+    }),
   );
 }
 
@@ -454,193 +545,6 @@ function Legend({
       {children}
     </li>
   );
-}
-
-const WEEK_MONDAY = "2024-01-01"; // a Monday, for weekday names
-
-function Calendar({
-  days,
-  month,
-  dayHref,
-  workTypeName,
-}: {
-  days: MonthDay[];
-  month: string;
-  dayHref: ((date: string) => string) | null;
-  workTypeName: (id: string | null) => string | null;
-}) {
-  const format = useFormatter();
-  const locale = useLocale();
-  // Monday-first grid: days of the previous and next month fill the first and last week.
-  const lead = (calendarDate(month).getUTCDay() + 6) % 7;
-  const trail = (7 - ((lead + days.length) % 7)) % 7;
-  const before = Array.from({ length: lead }, (_, i) =>
-    addDays(month, i - lead),
-  );
-  const after = Array.from({ length: trail }, (_, i) =>
-    addDays(monthEnd(month), i + 1),
-  );
-  const outside = (date: string) => (
-    <div
-      key={date}
-      aria-hidden
-      className="px-1.5 pt-1.5 text-[13px] text-[#9aa5b1] sm:px-3 sm:pt-3 sm:text-sm"
-    >
-      {Number(date.slice(8))}
-    </div>
-  );
-
-  return (
-    <div className="grid grid-cols-7 gap-1 sm:gap-2">
-      {Array.from({ length: 7 }, (_, i) => (
-        <div
-          key={i}
-          className="px-1 text-[13px] font-semibold text-muted-foreground sm:px-1.5"
-        >
-          {capitalize(
-            format.dateTime(calendarDate(addDays(WEEK_MONDAY, i)), {
-              weekday: "short",
-            }),
-            locale,
-          )}
-        </div>
-      ))}
-      {before.map(outside)}
-      {days.map((day) => (
-        <DayCell
-          key={day.date}
-          day={day}
-          href={dayHref?.(day.date) ?? null}
-          workTypeName={workTypeName}
-        />
-      ))}
-      {after.map(outside)}
-    </div>
-  );
-}
-
-function DayCell({
-  day,
-  href,
-  workTypeName,
-}: {
-  day: MonthDay;
-  href: string | null;
-  workTypeName: (id: string | null) => string | null;
-}) {
-  const t = useTranslations("timesheets");
-  const format = useFormatter();
-  const off = day.state === "weekend" || day.state === "holiday";
-  const absences = day.absences.map((a) =>
-    t("month.absenceCell", {
-      type: t(`absenceType.${a.type}`),
-      hours: formatMinutes(a.minutes),
-    }),
-  );
-  const workTypes = day.workTypeIds
-    .map(workTypeName)
-    .filter(Boolean)
-    .slice(0, 2)
-    .join(", ")
-    .toLowerCase();
-
-  let main: string | null = null;
-  const lines: string[] = [];
-  if (day.workMinutes > 0) {
-    main = formatMinutes(day.workMinutes);
-    if (workTypes) lines.push(capitalizeFirst(workTypes));
-    lines.push(...absences);
-  } else if (day.state === "missing") {
-    main = t("month.missing");
-    lines.push(t("month.fillRecord"));
-  } else if (day.state === "holiday") {
-    main = t("month.holiday");
-    if (day.holidayName) lines.push(day.holidayName);
-  } else if (day.state === "absence") {
-    main = formatMinutes(day.absences.reduce((sum, a) => sum + a.minutes, 0));
-    lines.push(...absences.map((a) => a.replace(/^\+ /, "")));
-  } else if (!off) {
-    main = "–";
-  }
-  if (day.isToday) lines.push(t("month.today"));
-  if (day.standbyMinutes > 0)
-    lines.push(
-      t("month.standbyCell", { time: formatMinutes(day.standbyMinutes) }),
-    );
-
-  const className = cn(
-    "flex h-14 min-w-0 flex-col overflow-hidden rounded-lg border px-1.5 py-1.5 text-left no-underline sm:h-24 sm:rounded-[10px] sm:px-3 sm:py-2",
-    off && "border-transparent bg-[#f1f4f7]",
-    day.state === "missing" && "border-[#f0c48a] bg-warning",
-    day.state === "absence" && "border-transparent bg-info",
-    !off &&
-      day.state !== "missing" &&
-      day.state !== "absence" &&
-      "border-border bg-card",
-    day.isToday && "border-2 border-primary",
-    href && "hover:border-primary/60",
-  );
-  const content = (
-    <>
-      <span
-        className={cn(
-          "text-[13px] font-semibold text-muted-foreground sm:text-sm",
-          day.state === "missing" && "text-warning-foreground",
-        )}
-      >
-        {Number(day.date.slice(8))}
-      </span>
-      {main && (
-        <span
-          className={cn(
-            "truncate text-[13px] leading-tight font-bold tabular-nums sm:text-lg",
-            day.state === "missing" && "text-warning-foreground",
-            main === "–" && "font-normal text-muted-foreground",
-          )}
-        >
-          {main}
-        </span>
-      )}
-      {lines.length > 0 && (
-        <span
-          className={cn(
-            "mt-0.5 hidden min-w-0 text-xs leading-snug text-muted-foreground sm:block",
-            day.state === "missing" && "text-warning-foreground",
-          )}
-        >
-          {lines.map((line, i) => (
-            <span key={i} className="block truncate">
-              {line}
-            </span>
-          ))}
-        </span>
-      )}
-    </>
-  );
-  const label = t("month.openDay", { date: calendarDate(day.date) });
-  // Cells have one size; long texts (holiday names) are cut and shown whole on hover.
-  const tooltip = [
-    format.dateTime(calendarDate(day.date), "weekday"),
-    ...[main, ...lines].filter((x) => x && x !== "–"),
-  ].join("\n");
-  return href ? (
-    <Link
-      href={href}
-      className={className}
-      aria-label={`${label}: ${[main, ...lines].filter(Boolean).join(", ")}`}
-      title={tooltip}
-    >
-      {content}
-    </Link>
-  ) : (
-    <div className={className} title={tooltip}>
-      {content}
-    </div>
-  );
-}
-
-function capitalizeFirst(text: string) {
-  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 function ConfirmBar({

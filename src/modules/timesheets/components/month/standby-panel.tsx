@@ -2,7 +2,15 @@
 
 import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useActionState, useEffect, useState } from "react";
+import {
+  createContext,
+  useActionState,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { useFormStatus } from "react-dom";
 import {
   Field,
@@ -39,35 +47,86 @@ export type StandbyItem = {
   duration: string;
 };
 
-/**
- * Standby (pohotovost) of the month: a list, and a panel to add, change or delete one. Read-only when
- * the month is locked or the viewer may not write the employee's time; the server checks again.
- */
-export function StandbyPanel({
+type StandbyEditor = { open: (item: StandbyItem | null) => void };
+
+const StandbyEditorContext = createContext<StandbyEditor | null>(null);
+
+/** Opens the standby panel (add or change) from the standby card and from the day detail. */
+export function useStandbyEditor(): StandbyEditor {
+  const editor = useContext(StandbyEditorContext);
+  if (!editor)
+    throw new Error("useStandbyEditor outside StandbyEditorProvider");
+  return editor;
+}
+
+/** The one standby panel of the month screen; its children open it through useStandbyEditor. */
+export function StandbyEditorProvider({
   employeeId,
-  items,
-  canWrite,
-  locked,
   needsReason,
   defaultDate,
+  children,
 }: {
   employeeId: string;
-  items: StandbyItem[];
-  canWrite: boolean;
-  locked: boolean;
   /** Someone else's standby: every change needs a reason. */
   needsReason: boolean;
   defaultDate: string;
+  children: ReactNode;
 }) {
   const t = useTranslations("timesheets.month");
-  const [open, setOpen] = useState(false);
+  const [isOpen, setOpen] = useState(false);
   const [editing, setEditing] = useState<StandbyItem | null>(null);
-  const editable = canWrite && !locked;
+  const editor = useMemo<StandbyEditor>(
+    () => ({
+      open: (item) => {
+        setEditing(item);
+        setOpen(true);
+      },
+    }),
+    [],
+  );
 
-  const openPanel = (item: StandbyItem | null) => {
-    setEditing(item);
-    setOpen(true);
-  };
+  return (
+    <StandbyEditorContext.Provider value={editor}>
+      {children}
+      <Sheet open={isOpen} onOpenChange={setOpen}>
+        <SheetContent className="w-full overflow-y-auto sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle>
+              {editing ? t("standbyEdit") : t("standbyAdd")}
+            </SheetTitle>
+          </SheetHeader>
+          {isOpen && (
+            <StandbyForm
+              key={editing?.id ?? "new"}
+              employeeId={employeeId}
+              item={editing}
+              needsReason={needsReason}
+              defaultDate={defaultDate}
+              onDone={() => setOpen(false)}
+            />
+          )}
+        </SheetContent>
+      </Sheet>
+    </StandbyEditorContext.Provider>
+  );
+}
+
+/**
+ * Standby (pohotovost) of the month: a list with add and change buttons. Read-only when the month is
+ * locked or the viewer may not write the employee's time; the server checks again.
+ */
+export function StandbyPanel({
+  items,
+  canWrite,
+  locked,
+}: {
+  items: StandbyItem[];
+  canWrite: boolean;
+  locked: boolean;
+}) {
+  const t = useTranslations("timesheets.month");
+  const editor = useStandbyEditor();
+  const editable = canWrite && !locked;
 
   return (
     <Card>
@@ -79,7 +138,7 @@ export function StandbyPanel({
             size="icon"
             aria-label={t("standbyAdd")}
             title={t("standbyAdd")}
-            onClick={() => openPanel(null)}
+            onClick={() => editor.open(null)}
           >
             <Plus />
           </Button>
@@ -105,7 +164,7 @@ export function StandbyPanel({
             <span className="flex items-center gap-2">
               <span className="font-bold tabular-nums">{item.duration}</span>
               {editable && (
-                <Button variant="outline" onClick={() => openPanel(item)}>
+                <Button variant="outline" onClick={() => editor.open(item)}>
                   {t("standbyEdit")}
                 </Button>
               )}
@@ -123,26 +182,6 @@ export function StandbyPanel({
           </p>
         )}
       </CardContent>
-
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-md">
-          <SheetHeader>
-            <SheetTitle>
-              {editing ? t("standbyEdit") : t("standbyAdd")}
-            </SheetTitle>
-          </SheetHeader>
-          {open && (
-            <StandbyForm
-              key={editing?.id ?? "new"}
-              employeeId={employeeId}
-              item={editing}
-              needsReason={needsReason}
-              defaultDate={defaultDate}
-              onDone={() => setOpen(false)}
-            />
-          )}
-        </SheetContent>
-      </Sheet>
     </Card>
   );
 }
