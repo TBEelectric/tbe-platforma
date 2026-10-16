@@ -701,6 +701,30 @@ Obrazovky do té doby ukazují tlačítka, jejichž krok ještě není hotový, 
 - [ ] Nasazení na VPS (Docker Compose, Caddy, zálohy, ověřená obnova)
 - [ ] PWA (instalace na plochu firemních telefonů)
 - [ ] Playwright testy hlavních scénářů (zápis dne, potvrzení, schválení, uzávěrka)
+- [ ] **5.2 – Bezpečnostní kontrola před pilotem**
+      Než aplikaci začnou používat piloti, ověřit, že pravidla ze sekcí Oprávnění a Export a audit
+      v `docs/technicky-navrh.md` platí na serveru, ne jen v UI. Ověřuje se skripty a testy proti lokální databázi
+      se seed daty (příkaz `pnpm security:check`, jde zopakovat před každým nasazením), ne ručním klikáním. Nálezy
+      se v tomto kroku opraví; co opravu kroku přesahuje, se zapíše do `docs/bezpecnost.md` se závažností a návrhem.
+      (1) **Oprávnění na serveru:** soupis všech stránek, server akcí a route handlerů (exporty, šablona importu)
+      a toho, co kontrolují. Pro zaměstnance, vedoucího cizí party, správce docházky a administrátora ověřit, že cizí
+      data nejdou zobrazit ani změnit podvržením `?employee=`, `?team=`, `?month=`, `?date=`, ID v cestě nebo ve
+      vstupu server akce (cizí interval, výkaz, absence, pohotovost, zakázky party; zápis do potvrzeného nebo
+      uzavřeného měsíce). (2) **Vývojové přihlášení nikdy v produkci:** produkční build s `DEV_LOGIN=true` nemá
+      sekci, akci ani endpoint (404); test hlídá `isDevLoginEnabled`; `DEV_LOGIN` není v produkční konfiguraci.
+      (3) **Přihlášení a session:** přihlásí se jen povolené e-maily; archivovaný zaměstnanec se nepřihlásí a jeho
+      běžící session přestane platit; po odebrání role práva zmizí hned při dalším požadavku; odhlášení zruší session
+      i na serveru; cookies `HttpOnly` a `SameSite`, v produkci `Secure`; server akce a Better Auth odmítnou cizí
+      origin, rozšířené `trustedOrigins` a `allowedDevOrigins` jen ve vývoji. (4) **Exporty a e-maily:** mzdový XLSX
+      a PDF a CSV hodin po zakázkách stáhne jen ten, komu to tabulka Oprávnění dovoluje; PDF měsíce zaměstnance jen
+      ten, kdo smí měsíc vidět; odpovědi s osobními daty se necachují. E-maily (připomínky) jdou jen dotčenému
+      zaměstnanci, obsahují jen nutné minimum a odkaz na `BETTER_AUTH_URL`, žádné údaje jiných lidí.
+      (5) **Závislosti a tajemství:** `pnpm audit` bez neřešených high/critical; v repozitáři ani v historii gitu
+      žádné tajemství (`.env`, klíče Google, `BETTER_AUTH_SECRET`); `.env.example` jen se zástupnými hodnotami;
+      logy a chybové stránky v produkci neukazují tajemství, SQL ani stack trace.
+      Hotovo, když: `pnpm security:check` projde všechny role, server akce a exporty a skončí bez chyby; nálezy jsou
+      opravené nebo zapsané v `docs/bezpecnost.md` (spolu s tím, jak kontrolu zopakovat); lint/typecheck/test/build
+      prochází.
 - [ ] Pilot na 3–5 lidech jeden měsíc, souběžně s Excelem
 
 ## Souběžně – příprava vozového parku
