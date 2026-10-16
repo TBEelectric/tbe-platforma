@@ -428,7 +428,7 @@
       "differenceDetail": "fond k dnešku {fund}{missing, select, none {} other {, chybí {missing}}}",
       "differenceNoFund": "bez fondu (DPP)",
       "standby": "Pohotovost",
-      "standbyDetail": "k odměně {payable}, práce v ní {work}",
+      "standbyDetail": "k odměně {payable}, práce během pohotovosti {work}",
       "calendar": "Kalendář",
       "legendToday": "dnes",
       "legendMissing": "chybí záznam",
