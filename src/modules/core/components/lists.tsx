@@ -85,6 +85,7 @@ export function TeamsTable({ rows }: { rows: TeamRow[] }) {
     <DataTable
       data={archivedFilter(rows, show)}
       columns={columns}
+      rowHref={(row) => `/employees/teams/${row.id}`}
       searchPlaceholder={t("searchTeams")}
       toolbar={<ArchiveFilter value={show} onChange={setShow} />}
     />
@@ -143,6 +144,7 @@ export function JobsTable({ rows }: { rows: JobRow[] }) {
     <DataTable
       data={archivedFilter(rows, show)}
       columns={columns}
+      rowHref={(row) => `/jobs/${row.id}`}
       searchPlaceholder={t("searchJobs")}
       toolbar={<ArchiveFilter value={show} onChange={setShow} />}
     />
@@ -192,6 +194,7 @@ export function CustomersTable({ rows }: { rows: CustomerRow[] }) {
     <DataTable
       data={archivedFilter(rows, show)}
       columns={columns}
+      rowHref={(row) => `/jobs/customers/${row.id}`}
       searchPlaceholder={t("searchCustomers")}
       toolbar={<ArchiveFilter value={show} onChange={setShow} />}
     />

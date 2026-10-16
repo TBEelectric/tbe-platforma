@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { CalendarDays, Plus } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { PageHeader } from "@/components/shell/page-header";
@@ -33,7 +33,21 @@ export default async function EmployeesPage() {
         active="/employees"
         showImport={canManageAccess(user.actor)}
       />
-      <EmployeesTable rows={rows} />
+      <EmployeesTable
+        rows={rows}
+        rowLinks={[
+          // Docházka: the employee's month (the month page checks who may see it).
+          {
+            label: t("timesheets.employeeLinks.month"),
+            ariaLabel: t("timesheets.employeeLinks.monthAria", {
+              name: "{name}",
+            }),
+            href: "/timesheets/month?employee={id}",
+            icon: <CalendarDays aria-hidden />,
+            tracksTimeOnly: true,
+          },
+        ]}
+      />
     </>
   );
 }

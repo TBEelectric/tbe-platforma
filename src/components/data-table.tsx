@@ -17,7 +17,8 @@ import {
 } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ArrowUpDown, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
-import type { ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import type { MouseEvent, ReactNode } from "react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -64,9 +65,24 @@ export function dataTableColumns<TData extends RowData>() {
   return createColumnHelper<DataTableFeatures, TData>();
 }
 
+/** A click on a row opens its href, unless it hit a control inside the row (a link, button, field). */
+function openRow(
+  event: MouseEvent,
+  href: string,
+  push: (href: string) => void,
+) {
+  const target = event.target as HTMLElement;
+  if (target.closest("a, button, input, select, textarea, label")) return;
+  // Text being selected is not a click on the row.
+  if (window.getSelection()?.toString()) return;
+  if (event.metaKey || event.ctrlKey) window.open(href, "_blank");
+  else push(href);
+}
+
 /**
  * Sortable, searchable table in the TBE style. Columns use the helper from dataTableColumns();
  * text columns sort in Czech order. On phones the table scrolls horizontally.
+ * With rowHref the whole row opens the record; keep a real link in one cell for the keyboard.
  */
 export function DataTable<TData extends RowData & { id: string }>({
   data,
@@ -75,6 +91,7 @@ export function DataTable<TData extends RowData & { id: string }>({
   toolbar,
   empty,
   rowClassName,
+  rowHref,
 }: {
   data: TData[];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any -- column value types differ per column
@@ -83,8 +100,10 @@ export function DataTable<TData extends RowData & { id: string }>({
   toolbar?: ReactNode;
   empty?: string;
   rowClassName?: (row: TData) => string | undefined;
+  rowHref?: (row: TData) => string;
 }) {
   const t = useTranslations("common");
+  const router = useRouter();
   searchPlaceholder ??= t("search");
   empty ??= t("noRecords");
   const table = useTable(
@@ -163,24 +182,34 @@ export function DataTable<TData extends RowData & { id: string }>({
                 </td>
               </tr>
             ) : (
-              rows.map((row) => (
-                <tr
-                  key={row.id}
-                  className={cn(
-                    "border-b border-[#eef1f5] last:border-0",
-                    rowClassName?.(row.original),
-                  )}
-                >
-                  {row.getAllCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      className="px-3 py-3 align-middle whitespace-nowrap"
-                    >
-                      <table.FlexRender cell={cell} />
-                    </td>
-                  ))}
-                </tr>
-              ))
+              rows.map((row) => {
+                const href = rowHref?.(row.original);
+                return (
+                  <tr
+                    key={row.id}
+                    onClick={
+                      href
+                        ? (event) => openRow(event, href, router.push)
+                        : undefined
+                    }
+                    className={cn(
+                      "border-b border-[#eef1f5] last:border-0",
+                      href &&
+                        "cursor-pointer transition-colors hover:bg-muted/60",
+                      rowClassName?.(row.original),
+                    )}
+                  >
+                    {row.getAllCells().map((cell) => (
+                      <td
+                        key={cell.id}
+                        className="px-3 py-3 align-middle whitespace-nowrap"
+                      >
+                        <table.FlexRender cell={cell} />
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

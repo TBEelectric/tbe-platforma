@@ -917,6 +917,10 @@
         "cannotRemind": "Tomuto zaměstnanci nemůžete připomínat.",
         "sendFailed": "E-mail se nepodařilo odeslat. Zkuste to znovu později."
       }
+    },
+    "employeeLinks": {
+      "month": "Měsíc",
+      "monthAria": "Měsíc v docházce – {name}"
     }
   },
   "jobs": {
@@ -1042,7 +1046,8 @@
       "filterActive": "Aktivní",
       "filterInactive": "Neaktivní",
       "filterArchived": "Archivovaní",
-      "filterAll": "Všichni"
+      "filterAll": "Všichni",
+      "links": "Odkazy"
     },
     "form": {
       "signInEmail": "Přihlašovací e-mail (Google)",

@@ -2,14 +2,32 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { DataTable, dataTableColumns } from "@/components/data-table";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { NativeSelect } from "@/components/ui/native-select";
 import type { EmployeeListRow } from "../employees";
 
+/**
+ * A link of another module shown in each row (e.g. Docházka: the employee's month). The page in src/app
+ * supplies it, so core does not know other modules' URLs. "{id}" in href is the employee id.
+ */
+export type EmployeeRowLink = {
+  label: string;
+  /** Accessible name; "{name}" is the employee's name. */
+  ariaLabel: string;
+  href: string;
+  icon?: ReactNode;
+  /** Only for employees who record attendance. */
+  tracksTimeOnly?: boolean;
+};
+
 const col = dataTableColumns<EmployeeListRow>();
-const employeeColumns = (t: ReturnType<typeof useTranslations<never>>) =>
+const employeeColumns = (
+  t: ReturnType<typeof useTranslations<never>>,
+  rowLinks: EmployeeRowLink[],
+) =>
   col.columns([
     col.accessor("personalNumber", {
       header: t("core.employees.personalNumberShort"),
@@ -88,13 +106,51 @@ const employeeColumns = (t: ReturnType<typeof useTranslations<never>>) =>
           ),
       },
     ),
+    ...(rowLinks.length === 0
+      ? []
+      : [
+          col.display({
+            id: "links",
+            header: () => (
+              <span className="sr-only">{t("core.employees.links")}</span>
+            ),
+            cell: ({ row }) => (
+              <div className="flex justify-end gap-2">
+                {rowLinks
+                  .filter(
+                    (link) => !link.tracksTimeOnly || row.original.tracksTime,
+                  )
+                  .map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href.replace("{id}", row.original.id)}
+                      aria-label={link.ariaLabel.replace(
+                        "{name}",
+                        row.original.name,
+                      )}
+                      className={buttonVariants({ variant: "outline" })}
+                    >
+                      {link.icon}
+                      {link.label}
+                    </Link>
+                  ))}
+              </div>
+            ),
+          }),
+        ]),
   ]);
 
 type Filter = "active" | "inactive" | "archived" | "all";
 
-export function EmployeesTable({ rows }: { rows: EmployeeListRow[] }) {
+export function EmployeesTable({
+  rows,
+  rowLinks = [],
+}: {
+  rows: EmployeeListRow[];
+  rowLinks?: EmployeeRowLink[];
+}) {
   const t = useTranslations();
-  const columns = useMemo(() => employeeColumns(t), [t]);
+  const columns = useMemo(() => employeeColumns(t, rowLinks), [t, rowLinks]);
   const [filter, setFilter] = useState<Filter>("active");
   const visible = rows.filter((r) =>
     filter === "all"
@@ -109,6 +165,7 @@ export function EmployeesTable({ rows }: { rows: EmployeeListRow[] }) {
     <DataTable
       data={visible}
       columns={columns}
+      rowHref={(row) => `/employees/${row.id}`}
       searchPlaceholder={t("core.employees.search")}
       toolbar={
         <NativeSelect
