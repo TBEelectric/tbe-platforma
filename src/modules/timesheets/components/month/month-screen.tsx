@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileDown } from "lucide-react";
 import Link from "next/link";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import type { ReactNode } from "react";
@@ -114,7 +114,7 @@ export function MonthScreen({
   const pdf = (
     <span title={t("timesheets.month.pdfHint")}>
       <Button variant="outline" disabled aria-describedby="pdf-hint">
-        <Download />
+        <FileDown data-icon="inline-start" className="size-5" />
         {t("timesheets.month.downloadPdf")}
       </Button>
       <span id="pdf-hint" className="sr-only">
@@ -153,21 +153,25 @@ export function MonthScreen({
             <span>{[name, employment, fund].filter(Boolean).join(" · ")}</span>
           </span>
         }
-        actions={
-          <>
-            <div className="flex gap-2">{nav}</div>
-            {headerActions}
-            {pdf}
-            {showConfirm && (
-              <ConfirmMonth
-                month={month}
-                disabled={!canConfirm}
-                className="hidden lg:flex"
-              />
-            )}
-          </>
-        }
       />
+
+      {/* Month actions on the left, navigation on the right. */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {pdf}
+          {showConfirm && (
+            <ConfirmMonth
+              month={month}
+              disabled={!canConfirm}
+              className="hidden lg:flex"
+            />
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex gap-2">{nav}</div>
+          {headerActions}
+        </div>
+      </div>
 
       {view.status === "open" && view.returnReason && (
         <p className="rounded-lg bg-warning px-4 py-3 text-[15px] text-warning-foreground">
