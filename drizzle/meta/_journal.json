@@ -71,6 +71,13 @@
       "when": 1792089479876,
       "tag": "0009_month_data",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792147980000,
+      "tag": "0010_notification",
+      "breakpoints": true
     }
   ]
 }

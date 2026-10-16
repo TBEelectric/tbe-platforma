@@ -282,6 +282,31 @@ export const reminderLog = timesheetsSchema.table(
   (table) => [uniqueIndex().on(table.employeeId, table.kind, table.refDate)],
 );
 
+/**
+ * E-mail events written with the change that causes them (returned timesheet, reopened month); the
+ * worker (4.5) sends them and fills sent_at. Nothing is sent from a server action.
+ */
+export const notification = timesheetsSchema.table(
+  "notification",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    /** Recipient. */
+    employeeId: uuid()
+      .notNull()
+      .references(() => employee.id),
+    /** Event kind: timesheet_returned, timesheet_reopened. */
+    kind: text().notNull(),
+    /** First day of the month the event is about. */
+    month: date({ mode: "string" }).notNull(),
+    /** Values for the e-mail text, e.g. the reason. */
+    data: jsonb().notNull(),
+    createdByUserId: uuid().references(() => user.id),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    sentAt: timestamp({ withTimezone: true }),
+  },
+  (table) => [index().on(table.sentAt)],
+);
+
 /** Yearly leave entitlement in hours. Balance = entitled + carried over − taken. */
 export const leaveEntitlement = timesheetsSchema.table(
   "leave_entitlement",

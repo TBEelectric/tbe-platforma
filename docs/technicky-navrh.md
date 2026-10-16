@@ -34,6 +34,8 @@ Nový pojem se nejdřív zapíše sem.
 | Uzávěrka | `period_close` | Uzavření měsíce pro všechny zaměstnance |
 | Verze podkladu | `period_export` | Uložený snímek dat měsíce pro mzdovou účetní; každé uzavření = nová verze |
 | Připomínka | `reminder` | E-mail o nevyplněném dni nebo lhůtě; odeslání se zapisuje do `reminder_log` |
+| Oznámení | `notification` | Událost pro e-mail zapsaná spolu se změnou (vrácený výkaz, znovu otevřený měsíc); odešle ji worker |
+| Samoschválení | `self_approval` | Jediný správce docházky schválil vlastní výkaz; audit to označí |
 | Zakázky party | `team_job` | Zakázky připnuté vedoucím pro rychlý výběr |
 | Šablona dne | `day_template` | „Obvyklý den“ zaměstnance pro rychlé vyplnění |
 | Fond pracovní doby | `work_schedule` | Plánovaná doba a režim (pružná, nerovnoměrná) |
@@ -76,6 +78,7 @@ Sazby se zatím neevidují, `employment` i `job` je mohou dostat později.
 | `period_close` | month, closed_by, closed_at, reopened_by, reopened_at, reopen_reason, export_version | |
 | `period_export` | month, version (unikátně s month), created_at, created_by_user_id, data (JSON) | Snímek dat podkladu pro mzdy při každém uzavření; exporty čtou jen snímek |
 | `reminder_log` | employee_id, kind, ref_date, sent_at (unikátně employee_id + kind + ref_date) | Odeslané připomínky; nic se nepošle dvakrát |
+| `notification` | employee_id (příjemce), kind (`timesheet_returned`, `timesheet_reopened`), month, data (JSON: důvod…), created_by_user_id, created_at, sent_at | Fronta e-mailů: zapisuje se ve stejné transakci jako změna, odesílá worker (prázdné `sent_at` = čeká) |
 | `timesheet_settings` | key, value, valid_from | Prahy a limity; výchozí šablona „Obvyklý den“ |
 | `day_template` | employee_id (unikátní), items (JSON: od, do, typ `work`/`break`), updated_at | „Můj obvyklý den“ – ukládá zaměstnanec sám z vyplněného dne; správce může smazat; bez něj platí výchozí šablona firmy z `timesheet_settings`; změny do auditu |
 
@@ -89,8 +92,22 @@ otevřený (open) ──potvrdí zaměstnanec──▶ potvrzený (confirmed) �
      └──────────── správce znovu otevře s důvodem (nová verze exportu) ─────────── uzavřený (closed) ──▶ export
 ```
 
-Od potvrzení jsou intervaly zamčené. Uzávěrku lze provést, až jsou všechny výkazy měsíce schválené.
-Výkaz vedoucího schvaluje správce docházky.
+Od potvrzení jsou intervaly, absence i pohotovost zamčené; vrácením se výkaz znovu odemkne.
+Uzávěrku lze provést, až jsou všechny výkazy měsíce schválené. Pravidla: `rules/timesheet-transitions.ts`
+a `rules/period-close.ts`.
+
+- **Potvrdit:** jen vlastní výkaz, nejdřív 1. den dalšího měsíce, bez chybějících pracovních dnů a bez
+  nerozhodnutých žádostí o absenci v měsíci.
+- **Schválit / vrátit:** vedoucí své party, správce kohokoli; nikdo sám sebe. Výkaz vedoucího i správce schvaluje
+  správce docházky; je-li správce jediný, schválí si výkaz sám a audit to označí (`self_approval`).
+  Administrátor bez role správce neschvaluje. **Vrátit** lze potvrzený i schválený výkaz až do uzávěrky,
+  vždy s důvodem, který zaměstnanec uvidí; vrácení zapíše oznámení pro e-mail.
+- **Hromadně schválit:** jen potvrzené výkazy bez upozornění měsíce; ostatní se přeskočí s důvodem.
+- **Uzavřít:** správce, po skončení měsíce, bez chyb v kontrole před uzávěrkou (všechny výkazy zaměstnanců
+  s docházkou a úvazkem v měsíci schválené, žádné nerozhodnuté absence, žádné chybějící dny; upozornění jsou
+  jen informace). Výkazy → `closed`, uloží se snímek `period_export` verze n.
+- **Znovu otevřít:** správce s důvodem a výběrem zaměstnanců; jejich výkazy → `open` (s důvodem jako
+  důvodem vrácení, oznámení pro e-mail), ostatní → `approved`. Další uzavření = verze n+1.
 
 ## Pravidla a výpočty
 
