@@ -13,6 +13,7 @@ import { formatMinutes } from "@/lib/duration";
 import { cn } from "@/lib/utils";
 import type { DayView } from "../../day";
 import type { TimelineDay } from "../../timeline";
+import { DaySwipe } from "./day-swipe";
 import { ResponsiveTimeline } from "./responsive-timeline";
 
 /** Můj den (docs/design/screens/02-muj-den, 06-mobil-den). */
@@ -94,6 +95,10 @@ export function DayScreen({
 
   return (
     <>
+      <DaySwipe
+        previousHref={hrefFor(addDays(view.date, -1))}
+        nextHref={hrefFor(addDays(view.date, 1))}
+      />
       {/* Phone header */}
       <div className="-mx-4 -mt-5 flex flex-col gap-4 bg-sidebar px-4 pt-4 pb-5 text-white sm:-mx-8 sm:-mt-7 sm:px-8 lg:hidden">
         <div className="flex items-center justify-between gap-2">
