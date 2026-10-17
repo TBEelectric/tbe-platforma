@@ -140,7 +140,7 @@ export function MonthScreen({
 
   const calendarHeader = (
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <h2 className="text-lg font-bold">{t("timesheets.month.calendar")}</h2>
+      <h2 className="text-lg font-bold">{capitalize(monthName, locale)}</h2>
       <ul className="flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-muted-foreground">
         <Legend className="bg-primary">
           {t("timesheets.month.legendToday")}
@@ -270,7 +270,7 @@ export function MonthScreen({
         needsReason={forSomeoneElse}
         defaultDate={today >= month && today <= monthEnd(month) ? today : month}
       >
-        <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="grid items-start gap-5 min-[1404px]:grid-cols-[minmax(0,1fr)_340px]">
           <MonthCalendar
             header={calendarHeader}
             footer={
@@ -303,7 +303,7 @@ export function MonthScreen({
             nextHref={monthHref(addDays(monthEnd(month), 1))}
           />
 
-          <aside className="flex flex-col gap-5">
+          <aside className="grid items-start gap-5 min-[1404px]:flex min-[1404px]:flex-col min-[1404px]:items-stretch md:grid-cols-2">
             <BreakdownCard
               title={t("timesheets.month.byJob")}
               rows={s.byJob.map((j) => {
