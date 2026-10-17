@@ -8,7 +8,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { calendarDate, capitalize } from "@/i18n/format";
 import { translate, type Msg } from "@/i18n/messages";
-import { isWeekend } from "@/lib/dates";
+import { addDays, isWeekend, monthStart } from "@/lib/dates";
 import { formatMinutes } from "@/lib/duration";
 import { cn } from "@/lib/utils";
 import type { MonthLookups, MonthView } from "../../month-data";
@@ -96,6 +96,8 @@ export function MonthScreen({
       })
     : t("timesheets.month.noFund");
 
+  const h = (minutes: number) =>
+    `${formatMinutes(minutes)} ${t("timesheets.day.hoursUnit")}`;
   const nav = <MonthNav month={month} today={today} monthHref={monthHref} />;
 
   // A file download, so a plain link (not next/link): a working version until the month is closed.
@@ -208,23 +210,23 @@ export function MonthScreen({
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
         <StatCard
           label={t("timesheets.month.worked")}
-          value={formatMinutes(s.worked.totalMinutes)}
+          value={h(s.worked.totalMinutes)}
           detail={t("timesheets.month.workedTo", {
             date: calendarDate(lastShown),
           })}
         />
         <StatCard
           label={t("timesheets.month.absence")}
-          value={formatMinutes(s.absences.totalMinutes)}
+          value={h(s.absences.totalMinutes)}
           detail={
             [
               ...s.absences.byType.map(
                 (a) =>
-                  `${t(`timesheets.absenceType.${a.type}`)} ${formatMinutes(a.minutes)}`,
+                  `${t(`timesheets.absenceType.${a.type}`)} ${h(a.minutes)}`,
               ),
               s.absences.requestedMinutes > 0 &&
                 t("timesheets.month.absenceRequested", {
-                  hours: formatMinutes(s.absences.requestedMinutes),
+                  hours: h(s.absences.requestedMinutes),
                 }),
             ]
               .filter(Boolean)
@@ -233,7 +235,7 @@ export function MonthScreen({
         />
         <StatCard
           label={t("timesheets.month.difference")}
-          value={s.fund ? formatMinutes(s.fund.differenceMinutes) : "–"}
+          value={s.fund ? h(s.fund.differenceMinutes) : "–"}
           valueClassName={
             s.fund && s.fund.differenceMinutes < 0
               ? "text-warning-foreground"
@@ -242,7 +244,7 @@ export function MonthScreen({
           detail={
             s.fund
               ? t("timesheets.month.differenceDetail", {
-                  fund: formatMinutes(s.fund.toDateMinutes),
+                  fund: h(s.fund.toDateMinutes),
                   missing:
                     s.missingDays
                       .slice(0, 2)
@@ -255,10 +257,10 @@ export function MonthScreen({
         />
         <StatCard
           label={t("timesheets.month.standby")}
-          value={formatMinutes(s.standby.totalMinutes)}
+          value={h(s.standby.totalMinutes)}
           detail={t("timesheets.month.standbyDetail", {
-            payable: formatMinutes(s.standby.payableMinutes),
-            work: formatMinutes(s.standby.workMinutes),
+            payable: h(s.standby.payableMinutes),
+            work: h(s.standby.workMinutes),
           })}
         />
       </div>
@@ -297,6 +299,8 @@ export function MonthScreen({
             statusLabel={statusLabel}
             canEditStandby={canWriteStandby}
             employeeName={forSomeoneElse ? name : null}
+            previousHref={monthHref(monthStart(addDays(month, -1)))}
+            nextHref={monthHref(addDays(monthEnd(month), 1))}
           />
 
           <aside className="flex flex-col gap-5">

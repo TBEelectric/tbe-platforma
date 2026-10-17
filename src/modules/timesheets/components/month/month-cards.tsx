@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatMinutes } from "@/lib/duration";
 import { cn } from "@/lib/utils";
@@ -53,6 +54,7 @@ export function BreakdownRows({
   rows: BreakdownRow[];
   empty: string;
 }) {
+  const t = useTranslations("timesheets.day");
   return (
     <div className="flex flex-col text-[15px]">
       {rows.length === 0 && <p className="text-muted-foreground">{empty}</p>}
@@ -79,7 +81,7 @@ export function BreakdownRows({
             </span>
           </span>
           <span className="font-bold tabular-nums">
-            {formatMinutes(row.minutes)}
+            {formatMinutes(row.minutes)} {t("hoursUnit")}
           </span>
         </div>
       ))}

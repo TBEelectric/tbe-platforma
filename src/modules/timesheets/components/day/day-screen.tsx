@@ -251,7 +251,7 @@ function DayContent({
                   ? t("timesheets.day.workedToday")
                   : t("timesheets.day.worked")
               }
-              value={formatMinutes(view.totals.workMinutes)}
+              value={`${formatMinutes(view.totals.workMinutes)} ${t("timesheets.day.hoursUnit")}`}
               detail={
                 view.totals.from
                   ? t("common.dateRange", {
@@ -263,14 +263,14 @@ function DayContent({
             />
             <StatCard
               label={t("timesheets.day.breaks")}
-              value={formatMinutes(view.totals.breakMinutes)}
+              value={`${formatMinutes(view.totals.breakMinutes)} ${t("timesheets.day.hoursUnit")}`}
               detail={t("timesheets.day.breakCount", {
                 count: view.totals.breakCount,
               })}
             />
             <StatCard
               label={t("timesheets.day.monthToDate", { month })}
-              value={formatMinutes(view.monthWorkMinutes)}
+              value={`${formatMinutes(view.monthWorkMinutes)} ${t("timesheets.day.hoursUnit")}`}
               detail={
                 view.missingDays.length > 0
                   ? t("timesheets.day.missing", {
@@ -404,7 +404,8 @@ function DayContent({
                         </span>
                       </span>
                       <span className="font-bold tabular-nums">
-                        {formatMinutes(j.minutes)}
+                        {formatMinutes(j.minutes)}{" "}
+                        {t("timesheets.day.hoursUnit")}
                       </span>
                     </div>
                     <div className="h-1.5 rounded-full bg-[#eef1f4]">

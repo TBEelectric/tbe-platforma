@@ -9,6 +9,7 @@ import {
   X,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import {
   useCallback,
@@ -75,6 +76,8 @@ export function MonthCalendar({
   statusLabel,
   canEditStandby,
   employeeName,
+  previousHref,
+  nextHref,
 }: {
   header: ReactNode;
   footer: ReactNode;
@@ -90,8 +93,12 @@ export function MonthCalendar({
   canEditStandby: boolean;
   /** Someone else's month: their name in the detail header. */
   employeeName: string | null;
+  /** Neighbour months for the phone swipe (null: no such month). */
+  previousHref: string | null;
+  nextHref: string | null;
 }) {
   const format = useFormatter();
+  const router = useRouter();
   const locale = useLocale();
   const desktop = useSyncExternalStore(
     subscribe,
@@ -124,7 +131,7 @@ export function MonthCalendar({
   useEffect(() => {
     if (selected) {
       lastSelected.current = selected;
-      closeRef.current?.focus({ preventScroll: true });
+      (closeRef.current ?? popoverRef.current)?.focus({ preventScroll: true });
     } else if (lastSelected.current) {
       cells.current.get(lastSelected.current)?.focus({ preventScroll: true });
       lastSelected.current = null;
@@ -173,6 +180,72 @@ export function MonthCalendar({
       document.removeEventListener("mousedown", onDown);
     };
   }, [selected, desktop, close, step]);
+
+  // Phone: swiping the calendar sideways changes the month (the page follows the finger, then leaves).
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section || desktop || selected) return;
+    const DECIDE_PX = 10;
+    const MIN_DX = 70;
+    let startX = 0;
+    let startY = 0;
+    let startTime = 0;
+    let mode: "idle" | "pending" | "drag" = "idle";
+    let dx = 0;
+    const set = (x: number, ms: number) => {
+      section.style.transition = ms ? `transform ${ms}ms ease-out` : "none";
+      section.style.transform = x ? `translateX(${x}px)` : "";
+    };
+    const onStart = (event: TouchEvent) => {
+      mode = event.touches.length === 1 ? "pending" : "idle";
+      startX = event.touches[0].clientX;
+      startY = event.touches[0].clientY;
+      startTime = Date.now();
+      dx = 0;
+    };
+    const onMove = (event: TouchEvent) => {
+      if (mode === "idle") return;
+      const mx = event.touches[0].clientX - startX;
+      const my = event.touches[0].clientY - startY;
+      if (mode === "pending") {
+        if (Math.abs(mx) < DECIDE_PX && Math.abs(my) < DECIDE_PX) return;
+        if (Math.abs(mx) >= 1.5 * Math.abs(my)) mode = "drag";
+        else {
+          mode = "idle";
+          return;
+        }
+      }
+      const blocked = (mx > 0 ? previousHref : nextHref) === null;
+      dx = blocked ? mx / 4 : mx;
+      set(dx, 0);
+    };
+    const onEnd = () => {
+      if (mode !== "drag") {
+        mode = "idle";
+        return;
+      }
+      mode = "idle";
+      const href = dx > 0 ? previousHref : nextHref;
+      const far = Math.abs(dx) >= Math.max(MIN_DX, window.innerWidth * 0.3);
+      const flick = Date.now() - startTime <= 300 && Math.abs(dx) >= MIN_DX;
+      if (href && (far || flick)) {
+        set(Math.sign(dx) * window.innerWidth, 180);
+        window.setTimeout(() => router.push(href, { scroll: false }), 180);
+      } else set(0, 180);
+    };
+    section.addEventListener("touchstart", onStart, { passive: true });
+    section.addEventListener("touchmove", onMove, { passive: true });
+    section.addEventListener("touchend", onEnd);
+    section.addEventListener("touchcancel", onEnd);
+    return () => {
+      section.removeEventListener("touchstart", onStart);
+      section.removeEventListener("touchmove", onMove);
+      section.removeEventListener("touchend", onEnd);
+      section.removeEventListener("touchcancel", onEnd);
+      section.style.transition = "";
+      section.style.transform = "";
+    };
+  }, [desktop, selected, previousHref, nextHref, router]);
 
   // Desktop placement: under the day, centred on it and kept inside the calendar block; above it when
   // it does not fit below; otherwise on the side with more room, with the list scrolling inside.
@@ -227,23 +300,24 @@ export function MonthCalendar({
   );
 
   const selectedDay = index >= 0 ? days[index] : null;
-  const detail = selectedDay && (
+  const detailOf = (at: number) => (
     <DayDetail
-      day={selectedDay}
-      data={details[selectedDay.date]}
-      href={dayLinks?.[selectedDay.date] ?? null}
+      day={days[at]}
+      data={details[days[at].date]}
+      href={dayLinks?.[days[at].date] ?? null}
       locked={locked}
       statusLabel={statusLabel}
       canEditStandby={canEditStandby}
       employeeName={employeeName}
-      isFirst={index === 0}
-      isLast={index === days.length - 1}
+      isFirst={at === 0}
+      isLast={at === days.length - 1}
       desktop={desktop}
       closeRef={closeRef}
       onStep={step}
       onClose={close}
     />
   );
+  const detail = selectedDay && detailOf(index);
 
   return (
     <section
@@ -310,22 +384,214 @@ export function MonthCalendar({
             className="fixed inset-0 z-50 bg-[rgba(15,47,69,.35)]"
             onClick={close}
           />
-          <div
-            ref={popoverRef}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="day-detail-title"
-            className="fixed inset-x-0 bottom-0 z-50 flex max-h-[78vh] flex-col rounded-t-[18px] bg-card pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_30px_rgba(15,47,69,.18)]"
+          <PhoneSheet
+            sheetRef={popoverRef}
+            dayKey={selectedDay?.date ?? ""}
+            onClose={close}
+            onStep={step}
+            previous={index > 0 ? detailOf(index - 1) : null}
+            next={index < days.length - 1 ? detailOf(index + 1) : null}
           >
-            <div
-              aria-hidden
-              className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-[#cfd6de]"
-            />
             {detail}
-          </div>
+          </PhoneSheet>
         </>
       )}
     </section>
+  );
+}
+
+/**
+ * The phone's bottom panel: dragging it down closes it (like the panel of Můj den). A drag starts on
+ * the handle or header, or on the list when it is scrolled to the top; the list scrolls as usual.
+ */
+function PhoneSheet({
+  sheetRef,
+  onClose,
+  onStep,
+  dayKey,
+  previous,
+  next,
+  children,
+}: {
+  sheetRef: RefObject<HTMLDivElement | null>;
+  /** Changes when another day is shown. */
+  dayKey: string;
+  /** The neighbour days, shown beside the current one while swiping. */
+  previous: ReactNode;
+  next: ReactNode;
+  onClose: () => void;
+  /** Sideways swipe: the next (+1) or previous (−1) day. */
+  onStep: (delta: number) => void;
+  children: ReactNode;
+}) {
+  const stripRef = useRef<HTMLDivElement>(null);
+  // The new day replaces the neighbour that has just slid in: back to rest without animation.
+  useLayoutEffect(() => {
+    const el = stripRef.current;
+    if (!el) return;
+    el.style.transition = "none";
+    el.style.transform = "";
+    for (const n of el.querySelectorAll<HTMLElement>("[data-neighbour]"))
+      n.style.display = "none";
+  }, [dayKey]);
+  useEffect(() => {
+    const sheet = sheetRef.current;
+    if (!sheet) return;
+    const DECIDE_PX = 8;
+    const CLOSE_PX = 100;
+    const FLICK_MS = 300;
+    let startX = 0;
+    let startY = 0;
+    let startTime = 0;
+    let mode: "idle" | "pending" | "drag" | "side" | "scroll" = "idle";
+    let dy = 0;
+    let dx = 0;
+
+    const set = (y: number, ms: number) => {
+      sheet.style.transition = ms ? `transform ${ms}ms ease-out` : "none";
+      sheet.style.transform = y ? `translateY(${y}px)` : "";
+    };
+    const slide = (x: number, ms: number) => {
+      const el = stripRef.current;
+      if (!el) return;
+      el.style.transition = ms ? `transform ${ms}ms ease-out` : "none";
+      el.style.transform = x ? `translateX(${x}px)` : "";
+    };
+    const showNeighbours = (on: boolean) => {
+      for (const n of sheet.querySelectorAll<HTMLElement>("[data-neighbour]"))
+        n.style.display = on ? "" : "none";
+    };
+    const scroller = () =>
+      sheet.querySelector<HTMLElement>("[data-sheet-scroll]");
+
+    const onStart = (event: TouchEvent) => {
+      if (event.touches.length !== 1) {
+        mode = "idle";
+        return;
+      }
+      const target = event.target as HTMLElement;
+      const list = scroller();
+      // Inside the scrolled list the touch belongs to the list.
+      mode =
+        list && list.contains(target) && list.scrollTop > 0
+          ? "scroll"
+          : "pending";
+      startX = event.touches[0].clientX;
+      startY = event.touches[0].clientY;
+      startTime = Date.now();
+      dy = 0;
+      dx = 0;
+    };
+    const onMove = (event: TouchEvent) => {
+      if (mode === "idle" || mode === "scroll") return;
+      const touch = event.touches[0];
+      const mx = touch.clientX - startX;
+      const my = touch.clientY - startY;
+      if (mode === "pending") {
+        if (Math.abs(my) < DECIDE_PX && Math.abs(mx) < DECIDE_PX) return;
+        if (Math.abs(mx) >= 1.5 * Math.abs(my)) {
+          mode = "side";
+          showNeighbours(true);
+        } else if (my > 0 && my > Math.abs(mx)) {
+          mode = "drag";
+        } else {
+          mode = "scroll";
+          return;
+        }
+      }
+      event.preventDefault();
+      if (mode === "side") {
+        const blocked = (mx > 0 ? previous : next) === null;
+        dx = blocked ? mx / 4 : mx;
+        slide(dx, 0);
+        return;
+      }
+      dy = Math.max(0, my);
+      set(dy, 0);
+    };
+    const onEnd = () => {
+      if (mode === "side") {
+        mode = "idle";
+        const fast = Date.now() - startTime <= 300 && Math.abs(dx) >= 50;
+        const target = dx > 0 ? previous : next;
+        const width = sheet.offsetWidth;
+        if (target && (Math.abs(dx) >= width * 0.3 || fast)) {
+          // Slide the neighbour fully in; the layout effect above then swaps in the real day.
+          slide(Math.sign(dx) * (width + 24), 180);
+          window.setTimeout(() => onStep(dx < 0 ? 1 : -1), 180);
+        } else {
+          slide(0, 160);
+          window.setTimeout(() => showNeighbours(false), 160);
+        }
+        return;
+      }
+      if (mode !== "drag") {
+        mode = "idle";
+        return;
+      }
+      mode = "idle";
+      const flick = Date.now() - startTime <= FLICK_MS && dy >= 40;
+      if (dy >= CLOSE_PX || flick) {
+        set(sheet.offsetHeight, 200);
+        window.setTimeout(onClose, 200);
+      } else {
+        set(0, 180);
+      }
+    };
+
+    sheet.addEventListener("touchstart", onStart, { passive: true });
+    sheet.addEventListener("touchmove", onMove, { passive: false });
+    sheet.addEventListener("touchend", onEnd);
+    sheet.addEventListener("touchcancel", onEnd);
+    return () => {
+      sheet.removeEventListener("touchstart", onStart);
+      sheet.removeEventListener("touchmove", onMove);
+      sheet.removeEventListener("touchend", onEnd);
+      sheet.removeEventListener("touchcancel", onEnd);
+    };
+  }, [sheetRef, onClose, onStep, previous, next]);
+
+  return (
+    <div
+      ref={sheetRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="day-detail-title"
+      tabIndex={-1}
+      className="fixed inset-x-0 bottom-0 z-50 flex max-h-[78vh] flex-col rounded-t-[18px] bg-card pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_30px_rgba(15,47,69,.18)] outline-none"
+    >
+      <div
+        aria-hidden
+        className="mx-auto mt-2 h-1 w-10 shrink-0 rounded-full bg-[#cfd6de]"
+      />
+      <div className="relative flex min-h-0 flex-col overflow-hidden">
+        <div ref={stripRef} className="relative flex min-h-0 flex-col">
+          {children}
+          {previous && (
+            <div
+              data-neighbour
+              inert
+              aria-hidden
+              style={{ display: "none" }}
+              className="absolute top-0 right-[calc(100%+1.5rem)] flex w-full flex-col"
+            >
+              {previous}
+            </div>
+          )}
+          {next && (
+            <div
+              data-neighbour
+              inert
+              aria-hidden
+              style={{ display: "none" }}
+              className="absolute top-0 left-[calc(100%+1.5rem)] flex w-full flex-col"
+            >
+              {next}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -348,7 +614,7 @@ function DayCell({
   const absences = day.absences.map((a) =>
     t("month.absenceCell", {
       type: t(`absenceType.${a.type}`),
-      hours: formatMinutes(a.minutes),
+      hours: `${formatMinutes(a.minutes)} ${t("day.hoursUnit")}`,
     }),
   );
   const workTypes = day.workTypeIds
@@ -361,7 +627,7 @@ function DayCell({
   let main: string | null = null;
   const lines: string[] = [];
   if (day.workMinutes > 0) {
-    main = formatMinutes(day.workMinutes);
+    main = `${formatMinutes(day.workMinutes)} ${t("day.hoursUnit")}`;
     if (workTypes) lines.push(capitalizeFirst(workTypes));
     lines.push(...absences);
   } else if (day.state === "missing") {
@@ -371,7 +637,7 @@ function DayCell({
     main = t("month.holiday");
     if (day.holidayName) lines.push(day.holidayName);
   } else if (day.state === "absence") {
-    main = formatMinutes(day.absences.reduce((sum, a) => sum + a.minutes, 0));
+    main = `${formatMinutes(day.absences.reduce((sum, a) => sum + a.minutes, 0))} ${t("day.hoursUnit")}`;
     lines.push(...absences.map((a) => a.replace(/^\+ /, "")));
   } else if (!off) {
     main = "–";
@@ -379,7 +645,9 @@ function DayCell({
   if (day.isToday) lines.push(t("month.today"));
   if (day.standbyMinutes > 0)
     lines.push(
-      t("month.standbyCell", { time: formatMinutes(day.standbyMinutes) }),
+      t("month.standbyCell", {
+        time: `${formatMinutes(day.standbyMinutes)} ${t("day.hoursUnit")}`,
+      }),
     );
 
   const label = t("month.openDay", { date: calendarDate(day.date) });
@@ -587,34 +855,39 @@ function DayDetail({
         >
           <ChevronRight />
         </button>
-        <button
-          ref={closeRef}
-          type="button"
-          className={iconButton}
-          aria-label={t("month.detailClose")}
-          onClick={onClose}
-        >
-          <X />
-        </button>
+        {desktop && (
+          <button
+            ref={closeRef}
+            type="button"
+            className={iconButton}
+            aria-label={t("month.detailClose")}
+            onClick={onClose}
+          >
+            <X />
+          </button>
+        )}
       </div>
 
-      <div className="flex min-h-0 flex-col gap-3 overflow-y-auto px-4 py-3">
+      <div
+        data-sheet-scroll
+        className="flex min-h-0 flex-col gap-3 overflow-y-auto px-4 py-3"
+      >
         {(entries.length > 0 || absences.length > 0) && (
           <div className="flex flex-wrap gap-x-5 gap-y-1">
             <Stat
               label={t("month.detailWork")}
-              value={formatMinutes(day.workMinutes)}
+              value={`${formatMinutes(day.workMinutes)} ${t("day.hoursUnit")}`}
             />
             {breakMinutes > 0 && (
               <Stat
                 label={t("month.detailBreaks")}
-                value={formatMinutes(breakMinutes)}
+                value={`${formatMinutes(breakMinutes)} ${t("day.hoursUnit")}`}
               />
             )}
             {absenceMinutes > 0 && (
               <Stat
                 label={t("month.detailAbsence")}
-                value={formatMinutes(absenceMinutes)}
+                value={`${formatMinutes(absenceMinutes)} ${t("day.hoursUnit")}`}
               />
             )}
           </div>
@@ -668,7 +941,7 @@ function DayDetail({
                   {a.requested && <span>{t("month.detailRequested")}</span>}
                 </span>
                 <span className="text-sm font-bold tabular-nums">
-                  {formatMinutes(a.minutes)}
+                  {formatMinutes(a.minutes)} {t("day.hoursUnit")}
                 </span>
               </li>
             ))}
@@ -683,7 +956,8 @@ function DayDetail({
             className="flex items-center justify-between gap-2.5 rounded-[10px] bg-[#eef4fb] px-3 py-2 text-[13px]"
           >
             <span>
-              <b>{t("month.standbyTitle")}</b> {s.label} · {s.duration}
+              <b>{t("month.standbyTitle")}</b> {s.label} · {s.duration}{" "}
+              {t("day.hoursUnit")}
             </span>
             {canEditStandby && !locked && (
               <button

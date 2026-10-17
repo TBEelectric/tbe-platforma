@@ -125,6 +125,7 @@ export function StandbyPanel({
   locked: boolean;
 }) {
   const t = useTranslations("timesheets.month");
+  const unit = useTranslations("timesheets.day")("hoursUnit");
   const editor = useStandbyEditor();
   const editable = canWrite && !locked;
 
@@ -162,7 +163,9 @@ export function StandbyPanel({
               )}
             </span>
             <span className="flex items-center gap-2">
-              <span className="font-bold tabular-nums">{item.duration}</span>
+              <span className="font-bold tabular-nums">
+                {item.duration} {unit}
+              </span>
               {editable && (
                 <Button variant="outline" onClick={() => editor.open(item)}>
                   {t("standbyEdit")}

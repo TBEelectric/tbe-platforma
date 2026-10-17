@@ -136,7 +136,7 @@ export function EntryRow({
           e.kind === "break" && "font-medium text-muted-foreground",
         )}
       >
-        {formatMinutes(e.minutes)}
+        {formatMinutes(e.minutes)} {t("day.hoursUnit")}
       </span>
       {extra && <div className="col-span-3 mt-1.5">{extra}</div>}
     </li>

@@ -333,7 +333,7 @@ export function DesktopTimeline({
   const isToday = day.date === day.today;
   const futureFrom = day.maxEnd < AXIS_END ? day.maxEnd : null;
   const activeJobs = day.jobs.filter((j) => j.active);
-  const canFill = !readOnly && entries.length === 0;
+  const canFill = !readOnly && entries.length === 0 && day.date <= day.today;
 
   const titleOf = (e: TimelineEntry) => {
     if (e.kind === "break") return t("break");
@@ -622,7 +622,8 @@ export function DesktopTimeline({
                     </span>
                   </span>
                   <strong className="tabular-nums">
-                    {formatMinutes(e.end - e.start)}
+                    {formatMinutes(e.end - e.start)}{" "}
+                    {root("timesheets.day.hoursUnit")}
                   </strong>
                 </button>
               </li>

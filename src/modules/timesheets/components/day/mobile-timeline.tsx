@@ -420,7 +420,7 @@ export function MobileTimeline({
   const activeJobs = day.jobs.filter((j) => j.active);
   const chips = selected ? tl.chipsFor(selected) : [];
 
-  const canFill = !readOnly && entries.length === 0;
+  const canFill = !readOnly && entries.length === 0 && day.date <= day.today;
 
   return (
     <div
@@ -551,12 +551,13 @@ export function MobileTimeline({
               const lines = blockLines(height);
               const active = e.id === selectedId;
               const duration = formatMinutes(e.end - e.start);
+              const shown = `${duration} ${t("timesheets.day.hoursUnit")}`;
               const sub = isBreak
-                ? duration
+                ? shown
                 : [
                     j?.siteName,
                     e.workTypeId ? workTypesById.get(e.workTypeId) : null,
-                    duration,
+                    shown,
                   ]
                     .filter(Boolean)
                     .join(" · ");
