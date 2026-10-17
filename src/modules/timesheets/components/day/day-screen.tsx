@@ -340,7 +340,7 @@ function DayContent({
         {banners}
       </div>
 
-      <div className="grid gap-5">
+      <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
         <section className="flex flex-col gap-4 lg:rounded-xl lg:border lg:border-border lg:bg-card lg:p-5">
           <div className="hidden items-center justify-between gap-3 lg:flex">
             <h2 className="text-lg font-bold">{longDate}</h2>
@@ -372,7 +372,7 @@ function DayContent({
         </section>
 
         {!preview && (
-          <aside className="hidden gap-5 lg:grid lg:grid-cols-3 lg:items-start">
+          <aside className="hidden gap-5 lg:grid lg:grid-cols-3 lg:items-start xl:flex xl:flex-col xl:items-stretch">
             <Card>
               <CardHeader>
                 <CardTitle>
@@ -403,7 +403,7 @@ function DayContent({
                           {j.label ?? t("timesheets.day.noJob")}
                         </span>
                       </span>
-                      <span className="font-bold tabular-nums">
+                      <span className="font-bold whitespace-nowrap tabular-nums">
                         {formatMinutes(j.minutes)}{" "}
                         {t("timesheets.day.hoursUnit")}
                       </span>
