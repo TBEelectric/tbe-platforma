@@ -5,6 +5,7 @@ import { ConfirmButton } from "@/components/form/confirm-button";
 import { PageHeader } from "@/components/shell/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requirePermission } from "@/lib/current-user";
+import { idOrNotFound } from "@/lib/ids";
 import {
   canManageEmployees,
   getTeam,
@@ -28,7 +29,7 @@ export default async function TeamDetailPage({
 }: PageProps<"/employees/teams/[id]">) {
   await requirePermission(canManageEmployees);
   const t = await getTranslations();
-  const { id } = await params;
+  const id = idOrNotFound((await params).id);
   const [team, employees, pinned, pinnable] = await Promise.all([
     getTeam(id),
     listEmployeeOptions(),

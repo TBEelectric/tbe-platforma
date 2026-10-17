@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { buttonVariants } from "@/components/ui/button";
 import { requirePermission } from "@/lib/current-user";
+import { isId } from "@/lib/ids";
 import { todayInPrague } from "@/lib/dates";
 import { db } from "@/lib/db";
 import type { Actor } from "@/modules/core";
@@ -20,7 +21,6 @@ import { DayScreen } from "@/modules/timesheets/components/day/day-screen";
 export const instant = false;
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
-const UUID = /^[0-9a-f-]{36}$/i;
 
 const canOpen = (actor: Actor) =>
   canRecordOwnTime(actor) || canWriteForSomeoneElse(actor);
@@ -37,7 +37,7 @@ export default async function DayPage({
       ? params.date
       : null;
   const requested =
-    typeof params.employee === "string" && UUID.test(params.employee)
+    typeof params.employee === "string" && isId(params.employee)
       ? params.employee
       : null;
 

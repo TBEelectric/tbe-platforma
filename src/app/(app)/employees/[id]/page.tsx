@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/shell/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requirePermission } from "@/lib/current-user";
+import { idOrNotFound } from "@/lib/ids";
 import { calendarDate } from "@/i18n/format";
 import { todayInPrague } from "@/lib/dates";
 import {
@@ -51,7 +52,7 @@ export default async function EmployeeDetailPage({
   params,
 }: PageProps<"/employees/[id]">) {
   const user = await requirePermission(canManageEmployees);
-  const { id } = await params;
+  const id = idOrNotFound((await params).id);
   const [detail, teams] = await Promise.all([
     getEmployeeDetail(id),
     listTeamOptions(),

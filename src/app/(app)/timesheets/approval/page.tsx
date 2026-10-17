@@ -1,4 +1,5 @@
 import { requirePermission } from "@/lib/current-user";
+import { isId } from "@/lib/ids";
 import { addDays, monthStart, todayInPrague } from "@/lib/dates";
 import {
   APPROVAL_TABS,
@@ -13,8 +14,6 @@ import { ApprovalScreen } from "@/modules/timesheets/components/approval/approva
 
 // Blocks on the auth check and reads today's date.
 export const instant = false;
-
-const UUID = /^[0-9a-f-]{36}$/i;
 
 const one = (value: string | string[] | undefined) =>
   typeof value === "string" ? value : undefined;
@@ -55,7 +54,7 @@ export default async function ApprovalPage({
   const employeeParam = one(params.employee);
   const selectedId =
     employeeParam &&
-    UUID.test(employeeParam) &&
+    isId(employeeParam) &&
     data.employees.some((v) => v.employee.id === employeeParam)
       ? employeeParam
       : null;

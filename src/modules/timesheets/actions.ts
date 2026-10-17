@@ -5,7 +5,8 @@ import { z } from "zod";
 import { msg } from "@/i18n/messages";
 import { requirePermission, type CurrentUser } from "@/lib/current-user";
 import { handleFormAction } from "@/lib/form-action";
-import { UserError, type FormState } from "@/lib/form-state";
+import { type FormState } from "@/lib/form-state";
+import { bound, boundId, idOrNotFound } from "@/lib/ids";
 import {
   canManageEmployees,
   leaveFormSchema,
@@ -48,6 +49,9 @@ import {
 
 const DAY = "/timesheets/day";
 
+// Bound arguments come from the client: bound / boundId / idOrNotFound check them like form fields,
+// after the permission check.
+
 const writerOf = (user: CurrentUser) => ({
   userId: user.userId,
   actor: user.actor,
@@ -63,7 +67,7 @@ export async function setLeaveAction(
     leaveFormSchema,
     formData,
     (user, data) =>
-      setLeaveEntitlement({ userId: user.userId }, employeeId, data),
+      setLeaveEntitlement({ userId: user.userId }, boundId(employeeId), data),
     "/employees",
   );
 }
@@ -74,7 +78,7 @@ export async function deleteDayTemplateAction(
   employeeId: string,
 ): Promise<void> {
   const user = await requirePermission(canManageDayTemplates);
-  await deleteDayTemplate({ userId: user.userId }, employeeId);
+  await deleteDayTemplate({ userId: user.userId }, idOrNotFound(employeeId));
   revalidatePath("/employees", "layout");
   revalidatePath(DAY, "layout");
 }
@@ -130,7 +134,7 @@ export async function decideAbsenceAction(
     reasonSchema,
     formData,
     async (user, data) => {
-      await decideAbsence(writerOf(user), id, decision, data.reason);
+      await decideAbsence(writerOf(user), boundId(id), decision, data.reason);
       return decision === "approve"
         ? msg("timesheets.messages.approved")
         : msg("timesheets.messages.rejected");
@@ -149,7 +153,7 @@ export async function cancelAbsenceAction(
     reasonSchema,
     formData,
     async (user, data) => {
-      await cancelAbsence(writerOf(user), id, data.reason);
+      await cancelAbsence(writerOf(user), boundId(id), data.reason);
       return msg("timesheets.messages.absenceCancelled");
     },
     ABSENCES,
@@ -190,7 +194,7 @@ export async function updateStandbyAction(
     standbyFormSchema,
     formData,
     async (user, data) => {
-      await updateStandby(writerOf(user), id, data);
+      await updateStandby(writerOf(user), boundId(id), data);
       return msg("timesheets.messages.standbySaved");
     },
     MONTH,
@@ -209,7 +213,7 @@ export async function deleteStandbyAction(
     changeReasonSchema,
     formData,
     async (user, data) => {
-      await deleteStandby(writerOf(user), id, data.reason);
+      await deleteStandby(writerOf(user), boundId(id), data.reason);
       return msg("timesheets.messages.standbyDeleted");
     },
     MONTH,
@@ -228,7 +232,12 @@ export async function setOvertimeAction(
     changeReasonSchema,
     formData,
     async (user, data) => {
-      await setEntryOvertime(writerOf(user), entryId, overtime, data.reason);
+      await setEntryOvertime(
+        writerOf(user),
+        boundId(entryId),
+        overtime,
+        data.reason,
+      );
       return overtime
         ? msg("timesheets.messages.overtimeSet")
         : msg("timesheets.messages.overtimeCleared");
@@ -242,13 +251,6 @@ export async function setOvertimeAction(
 /** Můj měsíc, Schvalování and Uzávěrka all live under /timesheets. */
 const TIMESHEETS = "/timesheets";
 const noFields = z.object({});
-
-/** Bound arguments come from the client: check them like form fields. */
-function bound<T>(schema: z.ZodType<T>, value: unknown): T {
-  const parsed = schema.safeParse(value);
-  if (!parsed.success) throw new UserError(msg("errors.notFound"));
-  return parsed.data;
-}
 
 /** The employee confirms their own month. */
 export async function confirmTimesheetAction(
@@ -299,7 +301,7 @@ export async function decideTimesheetAction(
       await changeTimesheet(
         writerOf(user),
         bound(z.enum(["approve", "return"]), decision),
-        bound(z.uuid(), employeeId),
+        boundId(employeeId),
         bound(monthSchema, month),
         data.reason,
       );
@@ -412,7 +414,7 @@ export async function remindEmployeeAction(
     async (user) => {
       const result = await remindEmployee(
         writerOf(user),
-        bound(z.uuid(), employeeId),
+        boundId(employeeId),
         bound(monthSchema, month),
       );
       return msg("timesheets.reminders.sentOne", result);

@@ -3,6 +3,7 @@ import { calendarDate } from "@/i18n/format";
 import { msg, translate, type Msg } from "@/i18n/messages";
 import { monthStart, todayInPrague } from "@/lib/dates";
 import { fileSlug } from "@/lib/file-name";
+import { isId } from "@/lib/ids";
 import type { Actor } from "../../core";
 import { getJobHours, getMonthPdfData, getPeriodSnapshot } from "../exports";
 import { payrollTables } from "../rules/export-rows";
@@ -127,7 +128,7 @@ export async function monthPdfFile(
   const employeeId = query.get("employee") ?? ownEmployeeId;
   const month = query.get("month") ?? monthStart(todayInPrague());
   if (!monthSchema.safeParse(month).success) return notFound();
-  const data = /^[0-9a-f-]{36}$/i.test(employeeId)
+  const data = isId(employeeId)
     ? await getMonthPdfData(actor, employeeId, month)
     : null;
   if (!data) return notFound();

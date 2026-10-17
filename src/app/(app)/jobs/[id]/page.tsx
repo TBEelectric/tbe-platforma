@@ -5,6 +5,7 @@ import { ConfirmButton } from "@/components/form/confirm-button";
 import { PageHeader } from "@/components/shell/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { requirePermission } from "@/lib/current-user";
+import { idOrNotFound } from "@/lib/ids";
 import {
   canManageJobs,
   getJob,
@@ -21,7 +22,7 @@ export default async function JobDetailPage({
 }: PageProps<"/jobs/[id]">) {
   await requirePermission(canManageJobs);
   const t = await getTranslations();
-  const { id } = await params;
+  const id = idOrNotFound((await params).id);
   const [job, customers, sites] = await Promise.all([
     getJob(id),
     listCustomerOptions(),

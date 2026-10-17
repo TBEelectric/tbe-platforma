@@ -4,6 +4,7 @@ import { getFormatter, getTranslations } from "next-intl/server";
 import { buttonVariants } from "@/components/ui/button";
 import { calendarDate } from "@/i18n/format";
 import { requirePermission } from "@/lib/current-user";
+import { isId } from "@/lib/ids";
 import { monthStart, pragueDate, pragueTime, todayInPrague } from "@/lib/dates";
 import { formatMinutes } from "@/lib/duration";
 import { isTeamLead, type Actor } from "@/modules/core";
@@ -23,8 +24,6 @@ import {
 // Blocks on the auth check and reads today's date.
 export const instant = false;
 
-const UUID = /^[0-9a-f-]{36}$/i;
-
 const canOpen = (actor: Actor) =>
   canRecordOwnTime(actor) || canWriteForSomeoneElse(actor);
 
@@ -39,7 +38,7 @@ export default async function MonthPage({
     ? (params.month as string)
     : monthStart(today);
   const requested =
-    typeof params.employee === "string" && UUID.test(params.employee)
+    typeof params.employee === "string" && isId(params.employee)
       ? params.employee
       : null;
 

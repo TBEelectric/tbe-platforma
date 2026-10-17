@@ -5,6 +5,7 @@ import { ConfirmButton } from "@/components/form/confirm-button";
 import { PageHeader } from "@/components/shell/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { requirePermission } from "@/lib/current-user";
+import { idOrNotFound } from "@/lib/ids";
 import { canManageJobs, getCustomer } from "@/modules/core";
 import {
   setCustomerArchivedAction,
@@ -19,7 +20,7 @@ export default async function CustomerDetailPage({
 }: PageProps<"/jobs/customers/[id]">) {
   await requirePermission(canManageJobs);
   const t = await getTranslations();
-  const { id } = await params;
+  const id = idOrNotFound((await params).id);
   const customer = await getCustomer(id);
   if (!customer) notFound();
   const archived = !!customer.archivedAt;

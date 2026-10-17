@@ -7,6 +7,7 @@ import { msg } from "@/i18n/messages";
 import { handleFormAction } from "@/lib/form-action";
 import { requirePermission, type CurrentUser } from "@/lib/current-user";
 import { UserError, type FormState } from "@/lib/form-state";
+import { boundId, idOrNotFound } from "@/lib/ids";
 import {
   addEmployment,
   changeTeam,
@@ -48,6 +49,7 @@ import { pinTeamJob, unpinTeamJob } from "./team-jobs";
 import { createTeam, setTeamArchived, updateTeam } from "./teams";
 
 // Every action: requirePermission (server-side check) → Zod validation → service (audited) → revalidate.
+// Bound IDs come from the client: boundId / idOrNotFound check them after the permission check.
 
 const EMPLOYEES = "/employees";
 const JOBS = "/jobs";
@@ -106,7 +108,7 @@ export async function updateEmployeeAction(
     employeeFormSchema,
     formData,
     async (user, data) => {
-      const detail = await getEmployeeDetail(id);
+      const detail = await getEmployeeDetail(boundId(id));
       if (!detail) throw new UserError(msg("errors.notFound"));
       // The e-mail grants sign-in, so only an administrator may change it.
       if (
@@ -155,7 +157,7 @@ export async function addEmploymentAction(
     canManageEmployees,
     employmentFormSchema,
     formData,
-    (user, data) => addEmployment(ctxOf(user), employeeId, data),
+    (user, data) => addEmployment(ctxOf(user), boundId(employeeId), data),
     EMPLOYEES,
   );
 }
@@ -170,7 +172,7 @@ export async function updateEmploymentAction(
     employmentFormSchema,
     formData,
     (user, data) =>
-      updateEmployment(ctxOf(user), employmentId, {
+      updateEmployment(ctxOf(user), boundId(employmentId), {
         ...data,
         // Read after the permission check (handle), never before it.
         validTo: String(formData.get("validTo") ?? "") || null,
@@ -188,7 +190,7 @@ export async function changeTeamAction(
     canManageEmployees,
     membershipFormSchema,
     formData,
-    (user, data) => changeTeam(ctxOf(user), employeeId, data),
+    (user, data) => changeTeam(ctxOf(user), boundId(employeeId), data),
     EMPLOYEES,
   );
 }
@@ -205,7 +207,7 @@ export async function setRolesAction(
     (user, data) =>
       setRoles(
         { ...ctxOf(user), actorEmployeeId: user.actor.employeeId },
-        employeeId,
+        boundId(employeeId),
         data,
       ),
     EMPLOYEES,
@@ -239,7 +241,7 @@ export async function updateTeamAction(
     canManageEmployees,
     teamFormSchema,
     formData,
-    (user, data) => updateTeam(ctxOf(user), id, data),
+    (user, data) => updateTeam(ctxOf(user), boundId(id), data),
     EMPLOYEES,
   );
 }
@@ -249,7 +251,7 @@ export async function setTeamArchivedAction(
   archived: boolean,
 ): Promise<void> {
   const user = await requirePermission(canManageEmployees);
-  await setTeamArchived(ctxOf(user), id, archived);
+  await setTeamArchived(ctxOf(user), idOrNotFound(id), archived);
   revalidatePath(EMPLOYEES, "layout");
 }
 
@@ -260,7 +262,7 @@ const pinSchema = z.object({ jobId: z.uuid({ error: "validation.choose" }) });
 /** Coarse check first, then the team: a lead only for their own team (404 otherwise, like requirePermission). */
 async function requireTeamPinner(teamId: string) {
   const user = await requirePermission(canPinAnyTeamJobs);
-  if (!canPinTeamJobs(user.actor, teamId)) notFound();
+  if (!canPinTeamJobs(user.actor, idOrNotFound(teamId))) notFound();
   return user;
 }
 
@@ -284,7 +286,7 @@ export async function unpinTeamJobAction(
   jobId: string,
 ): Promise<void> {
   const user = await requireTeamPinner(teamId);
-  await unpinTeamJob(ctxOf(user), teamId, jobId);
+  await unpinTeamJob(ctxOf(user), teamId, idOrNotFound(jobId));
   revalidatePath(EMPLOYEES, "layout");
 }
 
@@ -317,7 +319,7 @@ export async function updateJobAction(
     canManageJobs,
     jobFormSchema,
     formData,
-    (user, data) => updateJob(ctxOf(user), id, data),
+    (user, data) => updateJob(ctxOf(user), boundId(id), data),
     JOBS,
   );
 }
@@ -327,7 +329,7 @@ export async function setJobArchivedAction(
   archived: boolean,
 ): Promise<void> {
   const user = await requirePermission(canManageJobs);
-  await setJobArchived(ctxOf(user), id, archived);
+  await setJobArchived(ctxOf(user), idOrNotFound(id), archived);
   revalidatePath(JOBS, "layout");
 }
 
@@ -358,7 +360,7 @@ export async function updateCustomerAction(
     canManageJobs,
     customerFormSchema,
     formData,
-    (user, data) => updateCustomer(ctxOf(user), id, data),
+    (user, data) => updateCustomer(ctxOf(user), boundId(id), data),
     JOBS,
   );
 }
@@ -368,6 +370,6 @@ export async function setCustomerArchivedAction(
   archived: boolean,
 ): Promise<void> {
   const user = await requirePermission(canManageJobs);
-  await setCustomerArchived(ctxOf(user), id, archived);
+  await setCustomerArchived(ctxOf(user), idOrNotFound(id), archived);
   revalidatePath(JOBS, "layout");
 }

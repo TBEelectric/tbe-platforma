@@ -132,7 +132,9 @@ Vstupy od klienta jsou vždy podvrhnutelné: pole formuláře, bound argumenty a
   `BETTER_AUTH_URL`.
 - **Chyby a tajemství** (`suites/errors.ts`): chybové stránky, chybné akce a chyby Better Auth bez SQL, stack
   trace, cest a URL databáze; hodnoty `BETTER_AUTH_SECRET`, `GOOGLE_CLIENT_SECRET`, `SMTP_PASSWORD` nejsou
-  v odpovědích, logu serveru ani v `.next/static`.
+  v odpovědích, logu serveru ani v `.next/static`. Neplatné ID (`x`, 36 pomlček) v cestě detailu, v `?employee=`
+  a v bound argumentech akcí skončí 404 / chybou formuláře „Záznam nenalezen.“ bez chyby v logu serveru;
+  log celého běhu nesmí obsahovat chybu `22P02`.
 
 Ručně (mimo `security:check`) se v kroku 5.2 prošlo: `pnpm audit`, historie gitu (147 commitů: žádný soubor
 `.env*` kromě `.env.example`, žádné klíče Google, privátní klíče ani tokeny; hodnoty z lokálního `.env` se
@@ -158,13 +160,18 @@ s nutností jiné role; **nízká** – bez úniku dat (chybový kód, odolnost,
 | 2 | nízká | `setEmployeeStateAction`: argument `change` z `.bind` se neověřoval; neznámá hodnota skončila chybou 500 (nic se nezměnilo). | `change` a `id` ověřuje Zod, jinak 404. |
 | 3 | nízká | `updateEmploymentAction` četla formulář před kontrolou oprávnění; požadavek s nevalidními argumenty skončil 500 místo přesměrování na přihlášení. | Čte se až po `requirePermission` (uvnitř `handleFormAction`). |
 
+### Opravené po kroku 5.2
+
+| # | Závažnost | Nález | Oprava |
+| --- | --- | --- | --- |
+| 6 | nízká | Neplatné UUID v cestě nebo v argumentu akce (např. `/employees/abc` jako správce, `setLeaveAction("x")`) skončilo chybou databáze `22P02` a 500 místo 404. Odpověď nic neprozradila (jen digest), ale log serveru dostal chybu se SQL a parametry. Volná kontrola `/^[0-9a-f-]{36}$/` u `?employee=` (Den, Měsíc, PDF měsíce) pustila do databáze i 36 pomlček. | Helper `src/lib/ids.ts` (test): stránky detailu a akce bez formuláře volají `idOrNotFound` (→ `notFound()`), formulářové akce `boundId` (→ chyba „Záznam nenalezen.“), `?employee=` `isId`; vždy až po `requirePermission`. Případy v `security:check` (`suites/errors.ts`). |
+
 ### Otevřené
 
 | # | Závažnost | Nález | Návrh |
 | --- | --- | --- | --- |
 | 4 | nízká | `pnpm audit`: **high** `braces` ≤ 3.0.3 (GHSA-vfj7-8cjw-p6xm, DoS hluboce vnořeným vzorem) přes `shadcn` → `fast-glob`/`micromatch` a `eslint-config-next`. Nejde aktualizovat: opravená verze 3.0.4 v registru npm zatím není (nejnovější je 3.0.3). Dosah: jen nástroje (CLI shadcn, ESLint, build) se vzory z repozitáře, aplikace ho se vstupem uživatele nevolá. | Po vydání 3.0.4 `pnpm update braces` (případně `pnpm.overrides`); `shadcn` se za běhu používá jen kvůli `shadcn/tailwind.css`. |
 | 5 | nízká | `pnpm audit`: moderate `esbuild` ≤ 0.24.2 (dev server esbuild) přes `drizzle-kit` → `@esbuild-kit`. Dev server esbuild se nikde nespouští, `drizzle-kit` jen pro migrace. | Aktualizovat s novější verzí `drizzle-kit`. |
-| 6 | nízká | Neplatné UUID v cestě nebo v argumentu akce (např. `/employees/abc` jako správce, `setLeaveAction("x")`) skončí chybou databáze a 500 místo 404. Odpověď nic neprozradí (jen digest), ale log serveru dostane chybu se SQL a parametry. | Ověřovat UUID v `params` a bound argumentech (malý helper), nebo převádět chybu `22P02` na `notFound()`. |
 | 7 | info | Zamítnutá stránka se streamuje se stavem 200; `notFound()`/`redirect()` přijde v payloadu (Cache Components). Obsah stránky se nevykreslí, data neuniknou; jen stavový kód není 404/307. | Ponechat. Kontrola proto hledá značku `NEXT_HTTP_ERROR_FALLBACK;404` a `NEXT_REDIRECT`. |
 | 8 | info | `NextIntlClientProvider` posílá do prohlížeče celý katalog překladů (i texty administrace a vývojového přihlášení). Texty nejsou tajné. | Při růstu katalogu předávat jen potřebné jmenné prostory (výkon). |
 | 9 | info | Log serveru při chybě obsahuje SQL i s parametry (ID, jména). | Při nasazení na VPS: přístup k logům jen pro správce, rotace logů. |
