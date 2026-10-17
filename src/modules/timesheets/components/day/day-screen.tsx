@@ -13,19 +13,12 @@ import { formatMinutes } from "@/lib/duration";
 import { cn } from "@/lib/utils";
 import type { DayView } from "../../day";
 import type { TimelineDay } from "../../timeline";
+import { DayPicker, type DayPickerItem } from "./day-picker";
 import { DaySwipe } from "./day-swipe";
+import { MobileTimeline } from "./mobile-timeline";
 import { ResponsiveTimeline } from "./responsive-timeline";
 
-/** Můj den (docs/design/screens/02-muj-den, 06-mobil-den). */
-export function DayScreen({
-  view,
-  timeline,
-  hrefFor,
-  title,
-  forSomeoneElse,
-  headerActions,
-  ownDayHref,
-}: {
+type DayProps = {
   view: DayView;
   /** The same day for the interactive phone timeline. */
   timeline: TimelineDay;
@@ -37,7 +30,47 @@ export function DayScreen({
   headerActions?: ReactNode;
   /** Back to the own day (when writing for someone else). */
   ownDayHref?: string;
+};
+
+/** Můj den (docs/design/screens/02-muj-den, 06-mobil-den). */
+export function DayScreen({
+  previous,
+  next,
+  ...props
+}: DayProps & {
+  /** The previous / next day as `DayPreview`, shown beside the day while swiping on the phone. */
+  previous?: ReactNode;
+  next?: ReactNode;
 }) {
+  const { view, hrefFor } = props;
+  return (
+    <DaySwipe
+      date={view.date}
+      previousHref={hrefFor(addDays(view.date, -1))}
+      nextHref={hrefFor(addDays(view.date, 1))}
+      previous={previous}
+      next={next}
+    >
+      <DayContent {...props} />
+    </DaySwipe>
+  );
+}
+
+/** A neighbouring day while swiping: the phone layout of the day, drawn only (not interactive). */
+export function DayPreview(props: DayProps) {
+  return <DayContent {...props} preview />;
+}
+
+function DayContent({
+  view,
+  timeline,
+  hrefFor,
+  title,
+  forSomeoneElse,
+  headerActions,
+  ownDayHref,
+  preview = false,
+}: DayProps & { preview?: boolean }) {
   const t = useTranslations();
   const format = useFormatter();
   const locale = useLocale();
@@ -50,6 +83,29 @@ export function DayScreen({
   const statusText = t("timesheets.day.monthStatus", { month, status });
   const isToday = view.date === view.today;
   const lockedOrOpen = view.locked ? "neutral" : "soft";
+
+  // Phone header: who (when writing for someone else); "Dnes" sits beside the title, the month status stays on the desktop.
+  const subtitle = [forSomeoneElse && view.employee.name]
+    .filter(Boolean)
+    .join(" · ");
+  const [year, monthNumber] = view.date.split("-").map(Number);
+  const monthDays: DayPickerItem[] = Array.from(
+    { length: new Date(Date.UTC(year, monthNumber, 0)).getUTCDate() },
+    (_, i) => {
+      const date = `${view.date.slice(0, 8)}${String(i + 1).padStart(2, "0")}`;
+      return {
+        date,
+        href: hrefFor(date),
+        label: format.dateTime(calendarDate(date), {
+          weekday: "short",
+          day: "numeric",
+          month: "numeric",
+        }),
+        today: date === view.today,
+        missing: view.missingDays.includes(date),
+      };
+    },
+  );
 
   const nav = (
     <>
@@ -95,75 +151,74 @@ export function DayScreen({
 
   return (
     <>
-      <DaySwipe
-        date={view.date}
-        previousHref={hrefFor(addDays(view.date, -1))}
-        nextHref={hrefFor(addDays(view.date, 1))}
-      >
-        {/* Phone header */}
-        <div className="-mx-4 -mt-5 flex flex-col gap-4 bg-sidebar px-4 pt-4 pb-5 text-white sm:-mx-8 sm:-mt-7 sm:px-8 lg:hidden">
-          <div className="flex items-center justify-between gap-2">
-            <Link
-              href={hrefFor(addDays(view.date, -1))}
-              aria-label={t("timesheets.day.previousDay")}
-              className="flex size-11 items-center justify-center rounded-lg bg-white/10 text-white"
-            >
-              <ChevronLeft className="size-5" />
-            </Link>
-            <div className="min-w-0 text-center">
-              <h1 className="text-lg leading-tight font-bold">
-                {capitalize(format.dateTime(day, "weekdayLong"), locale)}
-              </h1>
-              <p className="text-sm text-white/75">
-                {forSomeoneElse ? `${view.employee.name} · ` : ""}
-                {isToday ? `${t("timesheets.day.today")} · ` : ""}
-                {statusText}
-              </p>
-            </div>
-            <Link
-              href={hrefFor(addDays(view.date, 1))}
-              aria-label={t("timesheets.day.nextDay")}
-              className="flex size-11 items-center justify-center rounded-lg bg-white/10 text-white"
-            >
-              <ChevronRight className="size-5" />
-            </Link>
+      {/* Phone header */}
+      <div className="-mx-4 -mt-5 flex flex-col gap-4 bg-sidebar px-4 pt-4 pb-5 text-white sm:-mx-8 sm:-mt-7 sm:px-8 lg:hidden">
+        <div className="flex items-center justify-between gap-2">
+          <Link
+            href={hrefFor(addDays(view.date, -1))}
+            aria-label={t("timesheets.day.previousDay")}
+            className="flex size-11 items-center justify-center rounded-lg bg-white/10 text-white"
+          >
+            <ChevronLeft className="size-5" />
+          </Link>
+          <div className="min-w-0 text-center">
+            <DayPicker
+              title={capitalize(format.dateTime(day, "weekdayLong"), locale)}
+              current={view.date}
+              items={monthDays}
+              label={t("timesheets.day.pickDay")}
+              todayLabel={t("timesheets.day.today")}
+              isToday={isToday}
+            />
+            {subtitle && <p className="text-sm text-white/75">{subtitle}</p>}
           </div>
-          <div className="grid grid-cols-3 gap-2">
-            <MobileStat
-              label={t("timesheets.day.worked")}
-              value={formatMinutes(view.totals.workMinutes)}
-            />
-            <MobileStat
-              label={t("timesheets.day.breaks")}
-              value={formatMinutes(view.totals.breakMinutes)}
-            />
-            <MobileStat
-              label={t("timesheets.day.fromTo")}
-              value={
-                view.totals.from
-                  ? `${view.totals.from.replace(/^0/, "")}–${(view.totals.to ?? "").replace(/^0/, "")}`
-                  : "–"
-              }
-              small
-            />
-          </div>
+          <Link
+            href={hrefFor(addDays(view.date, 1))}
+            aria-label={t("timesheets.day.nextDay")}
+            className="flex size-11 items-center justify-center rounded-lg bg-white/10 text-white"
+          >
+            <ChevronRight className="size-5" />
+          </Link>
         </div>
+        <div className="grid grid-cols-3 gap-2">
+          <MobileStat
+            label={t("timesheets.day.worked")}
+            value={formatMinutes(view.totals.workMinutes)}
+            unit={t("timesheets.day.hoursUnit")}
+          />
+          <MobileStat
+            label={t("timesheets.day.breaks")}
+            value={formatMinutes(view.totals.breakMinutes)}
+            unit={t("timesheets.day.hoursUnit")}
+          />
+          <MobileStat
+            label={t("timesheets.day.fromTo")}
+            value={
+              view.totals.from
+                ? `${view.totals.from.replace(/^0/, "")}–${(view.totals.to ?? "").replace(/^0/, "")}`
+                : "–"
+            }
+            small
+          />
+        </div>
+      </div>
 
-        {forSomeoneElse && (
-          <p className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-lg bg-info px-4 py-3 text-[15px] text-info-foreground">
-            <span>
-              {t.rich("timesheets.day.writingFor", {
-                name: view.employee.name,
-                strong: (chunks) => <strong>{chunks}</strong>,
-              })}
-            </span>
-            {ownDayHref && (
-              <Link href={ownDayHref}>{t("timesheets.day.backToOwn")}</Link>
-            )}
-          </p>
-        )}
+      {forSomeoneElse && (
+        <p className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-lg bg-info px-4 py-3 text-[15px] text-info-foreground">
+          <span>
+            {t.rich("timesheets.day.writingFor", {
+              name: view.employee.name,
+              strong: (chunks) => <strong>{chunks}</strong>,
+            })}
+          </span>
+          {ownDayHref && (
+            <Link href={ownDayHref}>{t("timesheets.day.backToOwn")}</Link>
+          )}
+        </p>
+      )}
 
-        {/* Desktop header and cards */}
+      {/* Desktop header and cards */}
+      {!preview && (
         <div className="hidden flex-col gap-5 lg:flex">
           <PageHeader
             title={title}
@@ -254,60 +309,69 @@ export function DayScreen({
             />
           </div>
         </div>
+      )}
 
-        {/* Phone banners */}
-        <div className="flex flex-col gap-2 lg:hidden">
-          {headerActions && (
-            <div className="flex justify-end">{headerActions}</div>
-          )}
-          {view.missingDays.length > 0 && (
-            <Link
-              href={hrefFor(view.missingDays[0])}
-              className="flex min-h-11 items-center justify-between gap-3 rounded-lg bg-warning px-4 py-3 text-[15px] text-warning-foreground no-underline"
-            >
-              <span>
-                {t("timesheets.day.dayMissing", {
-                  day: weekday(view.missingDays[0]),
-                })}
-              </span>
-              <span className="font-semibold">{t("timesheets.day.fill")}</span>
-            </Link>
-          )}
-          {view.warnings.map((w) => (
-            <p
-              key={w.code}
-              className="rounded-lg bg-warning px-4 py-3 text-[15px] text-warning-foreground"
-            >
-              {translate(t, w.message)}
-            </p>
-          ))}
-          {banners}
-        </div>
+      {/* Phone banners */}
+      <div className="flex flex-col gap-2 lg:hidden">
+        {headerActions && (
+          <div className="flex justify-end">{headerActions}</div>
+        )}
+        {view.missingDays.length > 0 && (
+          <Link
+            href={hrefFor(view.missingDays[0])}
+            className="flex min-h-11 items-center justify-between gap-3 rounded-lg bg-warning px-4 py-3 text-[15px] text-warning-foreground no-underline"
+          >
+            <span>
+              {t("timesheets.day.dayMissing", {
+                day: weekday(view.missingDays[0]),
+              })}
+            </span>
+            <span className="font-semibold">{t("timesheets.day.fill")}</span>
+          </Link>
+        )}
+        {view.warnings.map((w) => (
+          <p
+            key={w.code}
+            className="rounded-lg bg-warning px-4 py-3 text-[15px] text-warning-foreground"
+          >
+            {translate(t, w.message)}
+          </p>
+        ))}
+        {banners}
+      </div>
 
-        <div className="grid gap-5">
-          <section className="flex flex-col gap-4 lg:rounded-xl lg:border lg:border-border lg:bg-card lg:p-5">
-            <div className="hidden items-center justify-between gap-3 lg:flex">
-              <h2 className="text-lg font-bold">{longDate}</h2>
-              <div className="flex items-center gap-3">
-                <Badge variant={lockedOrOpen}>
-                  <span
-                    aria-hidden
-                    className="size-2 rounded-full bg-current"
-                  />
-                  {statusText}
-                </Badge>
-                <div className="flex items-center gap-2">{nav}</div>
-              </div>
+      <div className="grid gap-5">
+        <section className="flex flex-col gap-4 lg:rounded-xl lg:border lg:border-border lg:bg-card lg:p-5">
+          <div className="hidden items-center justify-between gap-3 lg:flex">
+            <h2 className="text-lg font-bold">{longDate}</h2>
+            <div className="flex items-center gap-3">
+              <Badge variant={lockedOrOpen}>
+                <span aria-hidden className="size-2 rounded-full bg-current" />
+                {statusText}
+              </Badge>
+              <div className="flex items-center gap-2">{nav}</div>
             </div>
-            <div className="hidden lg:block">{banners}</div>
+          </div>
+          <div className="hidden lg:block">{banners}</div>
+          {preview ? (
+            <MobileTimeline
+              key={`${view.employee.id}-${view.date}`}
+              day={timeline}
+              employeeId={view.employee.id}
+              needsReason={forSomeoneElse}
+              preview
+            />
+          ) : (
             <ResponsiveTimeline
               key={`${view.employee.id}-${view.date}`}
               day={timeline}
               employeeId={view.employee.id}
               needsReason={forSomeoneElse}
             />
-          </section>
+          )}
+        </section>
 
+        {!preview && (
           <aside className="hidden gap-5 lg:grid lg:grid-cols-3 lg:items-start">
             <Card>
               <CardHeader>
@@ -422,8 +486,8 @@ export function DayScreen({
               </CardContent>
             </Card>
           </aside>
-        </div>
-      </DaySwipe>
+        )}
+      </div>
     </>
   );
 }
@@ -454,10 +518,13 @@ function MobileStat({
   label,
   value,
   small,
+  unit,
 }: {
   label: string;
   value: string;
   small?: boolean;
+  /** Small muted unit after the value (durations, so they are not read as a time of day). */
+  unit?: string;
 }) {
   return (
     <div className="flex flex-col gap-0.5 rounded-xl bg-white/10 px-3 py-2.5">
@@ -471,6 +538,11 @@ function MobileStat({
         )}
       >
         {value}
+        {unit && (
+          <span className="ml-1 text-sm font-semibold text-white/60">
+            {unit}
+          </span>
+        )}
       </span>
     </div>
   );

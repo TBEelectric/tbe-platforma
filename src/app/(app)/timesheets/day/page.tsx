@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { notFound, redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { buttonVariants } from "@/components/ui/button";
 import { requirePermission } from "@/lib/current-user";
 import { isId } from "@/lib/ids";
-import { isCalendarDate, todayInPrague } from "@/lib/dates";
+import { addDays, isCalendarDate, todayInPrague } from "@/lib/dates";
 import { db } from "@/lib/db";
 import type { Actor } from "@/modules/core";
 import {
@@ -15,7 +16,10 @@ import {
   loadDay,
   teamOn,
 } from "@/modules/timesheets";
-import { DayScreen } from "@/modules/timesheets/components/day/day-screen";
+import {
+  DayPreview,
+  DayScreen,
+} from "@/modules/timesheets/components/day/day-screen";
 
 // Blocks on the auth check and reads today's date.
 export const instant = false;
@@ -62,26 +66,103 @@ export default async function DayPage({
   ]);
   if (!view) notFound();
   const query = forSomeoneElse ? `&employee=${employeeId}` : "";
+  const hrefFor = (d: string) => `/timesheets/day?date=${d}${query}`;
   const t = await getTranslations("timesheets.day");
+  const headerActionsOn = (d: string) =>
+    canWriteForSomeoneElse(user.actor) && (
+      <Link
+        href={`/timesheets/day/someone?date=${d}`}
+        className={buttonVariants({ variant: "outline" })}
+      >
+        {t("writeForSomeone")}
+      </Link>
+    );
+
+  const ownDayHrefOn = (d: string) =>
+    forSomeoneElse && canRecordOwnTime(user.actor)
+      ? `/timesheets/day?date=${d}`
+      : undefined;
+
+  // Shared by the previous / next day shown beside the day while swiping on the phone.
+  const neighbour = {
+    employeeId,
+    forSomeoneElse,
+    actor: user.actor,
+    hrefFor,
+    writeForSomeoneLabel: t("writeForSomeone"),
+  };
+
   return (
     <DayScreen
       view={view}
       timeline={timeline}
       title={forSomeoneElse ? t("titleSomeone") : t("title")}
       forSomeoneElse={forSomeoneElse}
-      hrefFor={(d) => `/timesheets/day?date=${d}${query}`}
+      hrefFor={hrefFor}
+      previous={
+        <Suspense>
+          <NeighbourDay {...neighbour} date={addDays(date, -1)} />
+        </Suspense>
+      }
+      next={
+        <Suspense>
+          <NeighbourDay {...neighbour} date={addDays(date, 1)} />
+        </Suspense>
+      }
+      headerActions={headerActionsOn(date)}
+      ownDayHref={ownDayHrefOn(date)}
+    />
+  );
+}
+
+/** The previous / next day beside the day while swiping on the phone; streamed after the day itself. */
+async function NeighbourDay({
+  date,
+  employeeId,
+  forSomeoneElse,
+  actor,
+  hrefFor,
+  writeForSomeoneLabel,
+}: {
+  date: string;
+  employeeId: string;
+  forSomeoneElse: boolean;
+  actor: Actor;
+  hrefFor: (date: string) => string;
+  writeForSomeoneLabel: string;
+}) {
+  if (
+    forSomeoneElse &&
+    !canWriteTimeFor(actor, {
+      employeeId,
+      teamId: await teamOn(db, employeeId, date),
+    })
+  )
+    return null;
+  const [view, timeline] = await Promise.all([
+    loadDay(employeeId, date),
+    getTimelineDay(employeeId, date, new Date(), actor),
+  ]);
+  if (!view) return null;
+  return (
+    <DayPreview
+      view={view}
+      timeline={timeline}
+      title=""
+      forSomeoneElse={forSomeoneElse}
+      hrefFor={hrefFor}
       headerActions={
-        canWriteForSomeoneElse(user.actor) && (
+        canWriteForSomeoneElse(actor) && (
           <Link
             href={`/timesheets/day/someone?date=${date}`}
             className={buttonVariants({ variant: "outline" })}
           >
-            {t("writeForSomeone")}
+            {writeForSomeoneLabel}
           </Link>
         )
       }
       ownDayHref={
-        forSomeoneElse && canRecordOwnTime(user.actor)
+        forSomeoneElse && canRecordOwnTime(actor)
           ? `/timesheets/day?date=${date}`
           : undefined
       }

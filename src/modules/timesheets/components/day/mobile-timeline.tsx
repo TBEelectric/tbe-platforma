@@ -97,11 +97,14 @@ export function MobileTimeline({
   day: initial,
   employeeId,
   needsReason,
+  preview = false,
 }: {
   day: TimelineDay;
   employeeId: string;
   /** Writing for someone else: a reason is required before the first change. */
   needsReason: boolean;
+  /** The neighbouring day shown while swiping (DaySwipe): drawn only, without the fixed bars. */
+  preview?: boolean;
 }) {
   const t = useTranslations();
   const [reason, setReason] = useState("");
@@ -440,8 +443,9 @@ export function MobileTimeline({
       )}
       <DayNotice editability={editability} />
 
-      {canFill && (
+      {canFill && !preview && (
         <div
+          data-swipe-hide
           role="group"
           aria-label={t("timesheets.timeline.emptyDay")}
           className="fixed inset-x-0 bottom-[calc(3.5rem+env(safe-area-inset-bottom))] z-30 grid grid-cols-2 gap-2 rounded-t-[18px] bg-card px-4 pt-4 pb-3 shadow-[0_-8px_30px_rgba(15,47,69,.18)]"
@@ -622,7 +626,8 @@ export function MobileTimeline({
               );
             })}
 
-            {futureFrom !== null && (
+            {/* Only the rest of today is dimmed; a whole future day is plain (a tap says why it is not writable). */}
+            {futureFrom !== null && futureFrom > range.start && (
               <div
                 aria-hidden
                 className="pointer-events-none absolute inset-x-0 bg-background/60"
@@ -695,6 +700,7 @@ export function MobileTimeline({
 
       {tl.deleted && !selected && (
         <div
+          data-swipe-hide
           role="status"
           className={cn(
             "fixed inset-x-4 z-40 flex items-center justify-between gap-3 rounded-xl bg-[#142433] py-1.5 pr-1.5 pl-4 text-[15px] text-white shadow-lg",
@@ -729,7 +735,7 @@ export function MobileTimeline({
   );
 }
 
-/** Dragging the panel's handle further down than this closes the panel. */
+/** Dragging the panel's handle this far down closes it (also when expanded), up expands it. */
 const CLOSE_DRAG_PX = 60;
 
 /** Edge handle of the selected entry: a 44 px touch target straddling the edge, a small pill to see. */
@@ -790,7 +796,21 @@ function EntryPanel({
   const t = useTranslations("timesheets.timeline");
   const isBreak = entry.kind === "break";
   const [drag, setDrag] = useState(0);
+  /** Expanded by swiping up: the jobs and work types are listed one under another. */
+  const [expanded, setExpanded] = useState(false);
+  /** Swiping up: the expanded layout is already drawn and the panel grows with the finger. */
+  const [peek, setPeek] = useState(false);
+  /** Explicit panel height while it follows the finger or settles after release (null = natural). */
+  const [sheet, setSheet] = useState<{ h: number; animate: boolean } | null>(
+    null,
+  );
+  const panelRef = useRef<HTMLDivElement>(null);
+  const startHeight = useRef(0);
+  /** How much the panel can still grow (its expanded content height minus the collapsed one). */
+  const room = useRef(Infinity);
   const dragStart = useRef<number | null>(null);
+  const maxHeight = () => window.innerHeight * 0.85;
+  const full = expanded || peek;
   const dragged = useRef(false);
   const step = (
     edge: "start" | "end",
@@ -812,15 +832,27 @@ function EntryPanel({
   );
   return (
     <div
+      ref={panelRef}
       data-timeline-panel
+      data-swipe-hide
       role="group"
       aria-label={t("panelLabel")}
       // Covers the bottom navigation while an interval is open (as the day detail in Můj měsíc).
       style={{
-        transform: drag ? `translateY(${drag}px)` : undefined,
+        transform: drag > 0 ? `translateY(${drag}px)` : undefined,
         transition: drag ? "none" : "transform 150ms ease-out",
+        ...(sheet && {
+          height: sheet.h,
+          overflow: "hidden",
+          transition: sheet.animate ? "height 150ms ease-out" : "none",
+        }),
       }}
-      className="fixed inset-x-0 bottom-0 z-50 flex flex-col gap-2.5 rounded-t-[18px] bg-card px-4 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(15,47,69,.18)]"
+      className={cn(
+        "fixed inset-x-0 bottom-0 z-50 flex flex-col gap-2.5 rounded-t-[18px] bg-card px-4 pt-2 pb-[calc(0.75rem+env(safe-area-inset-bottom))] shadow-[0_-8px_30px_rgba(15,47,69,.18)]",
+        // While the panel is taller than its height (growing under the finger) the rows keep their size.
+        "[&>*]:shrink-0",
+        full && "max-h-[85dvh] overflow-y-auto",
+      )}
     >
       {/* Tap the handle or drag it down to close (the bottom-sheet gesture); a tap outside closes too. */}
       <button
@@ -828,34 +860,91 @@ function EntryPanel({
         aria-label={t("closePanel")}
         onClick={() => {
           if (dragged.current) dragged.current = false;
+          else if (expanded) setExpanded(false);
           else onClose();
         }}
         onPointerDown={(event) => {
           dragStart.current = event.clientY;
+          startHeight.current = panelRef.current?.offsetHeight ?? 0;
+          room.current = Infinity;
           event.currentTarget.setPointerCapture(event.pointerId);
         }}
         onPointerMove={(event) => {
           if (dragStart.current === null) return;
-          const dy = Math.max(0, event.clientY - dragStart.current);
-          if (dy > 4) dragged.current = true;
-          setDrag(dy);
+          const dy = event.clientY - dragStart.current;
+          if (Math.abs(dy) > 4) dragged.current = true;
+          if (expanded) {
+            setDrag(dy);
+            return;
+          }
+          // Collapsed: down moves the panel, up grows it under the finger.
+          if (dy < 0) {
+            setPeek(true);
+            setDrag(0);
+            // The panel never grows beyond its content (or the screen limit), however far the finger goes.
+            const el = panelRef.current;
+            let natural = Infinity;
+            if (el) {
+              const prev = el.style.height;
+              el.style.height = "auto";
+              natural = el.offsetHeight;
+              el.style.height = prev;
+            }
+            room.current = Math.min(natural, maxHeight()) - startHeight.current;
+            setSheet({
+              h: Math.min(
+                startHeight.current - dy,
+                maxHeight(),
+                Math.max(natural, startHeight.current),
+              ),
+              animate: false,
+            });
+          } else {
+            setPeek(false);
+            setSheet(null);
+            setDrag(dy);
+          }
         }}
         onPointerUp={() => {
           dragStart.current = null;
           setDrag(0);
+          if (peek) {
+            const current = panelRef.current?.offsetHeight ?? 0;
+            // A short list of jobs leaves little room to grow: half of it is enough to expand.
+            const need = Math.min(CLOSE_DRAG_PX, Math.max(room.current, 0) / 2);
+            if (current - startHeight.current > need) {
+              const target = Math.min(
+                panelRef.current?.scrollHeight ?? current,
+                maxHeight(),
+              );
+              setExpanded(true);
+              setPeek(false);
+              setSheet({ h: target, animate: true });
+              setTimeout(() => setSheet(null), 170);
+            } else {
+              setSheet({ h: startHeight.current, animate: true });
+              setTimeout(() => {
+                setPeek(false);
+                setSheet(null);
+              }, 170);
+            }
+            return;
+          }
           if (drag > CLOSE_DRAG_PX) onClose();
         }}
         onPointerCancel={() => {
           dragStart.current = null;
           setDrag(0);
+          setPeek(false);
+          setSheet(null);
         }}
         className="-mx-4 -mt-2 flex h-9 touch-none items-center justify-center self-stretch"
       >
         <span aria-hidden className="h-1.5 w-10 rounded-full bg-border" />
       </button>
-      <div className="flex items-center justify-between gap-1">
+      <div className="flex items-center gap-3 border-b border-border pb-2.5">
         {step("start", entry.start, t("startEarlier"), t("startLater"))}
-        <span aria-hidden className="text-muted-foreground">
+        <span aria-hidden className="text-xl font-bold text-foreground">
           –
         </span>
         {step("end", entry.end, t("endEarlier"), t("endLater"))}
@@ -864,12 +953,19 @@ function EntryPanel({
           aria-label={t("delete")}
           title={t("delete")}
           onClick={onDelete}
-          className="ml-1 flex size-11 shrink-0 items-center justify-center rounded-xl text-[#8a4205] hover:bg-muted [&_svg]:size-5"
+          className="ml-auto flex size-11 shrink-0 items-center justify-center rounded-xl text-[#8a4205] hover:bg-muted [&_svg]:size-5"
         >
           <Trash2 aria-hidden />
         </button>
       </div>
-      <div className="-mx-4 flex [scrollbar-width:none] items-center gap-2 overflow-x-auto px-4">
+      <div
+        className={cn(
+          "flex gap-2",
+          full
+            ? "flex-col items-stretch"
+            : "-mx-4 [scrollbar-width:none] items-center overflow-x-auto px-4",
+        )}
+      >
         <KindChip
           brk
           active={isBreak}
@@ -878,7 +974,13 @@ function EntryPanel({
           <Coffee className="size-[18px]" aria-hidden />
           {t("break")}
         </KindChip>
-        <span aria-hidden className="h-7 w-px shrink-0 bg-border" />
+        <span
+          aria-hidden
+          className={cn(
+            "shrink-0 bg-border",
+            full ? "h-px w-full" : "h-7 w-px",
+          )}
+        />
         {chips.map((j) => (
           <KindChip
             key={j.id}
@@ -890,7 +992,11 @@ function EntryPanel({
               className="size-2.5 shrink-0 rounded-full"
               style={{ background: j.color }}
             />
-            <span className="max-w-[9.5rem] truncate">{jobLabel(j)}</span>
+            <span
+              className={cn("truncate", full ? "min-w-0" : "max-w-[9.5rem]")}
+            >
+              {jobLabel(j)}
+            </span>
           </KindChip>
         ))}
         <KindChip active={false} onClick={onMore}>
@@ -898,7 +1004,14 @@ function EntryPanel({
         </KindChip>
       </div>
       {!isBreak && (
-        <div className="-mx-4 flex [scrollbar-width:none] items-center gap-2 overflow-x-auto px-4">
+        <div
+          className={cn(
+            "flex gap-2",
+            full
+              ? "flex-wrap"
+              : "-mx-4 [scrollbar-width:none] items-center overflow-x-auto px-4",
+          )}
+        >
           {workTypes.map((w) => (
             <KindChip
               key={w.id}

@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 export type TabItem = { label: string; href: string; icon: ReactNode };
 
 const tabClass =
-  "flex min-h-14 flex-1 flex-col items-center justify-center gap-1 text-[13px] no-underline [&_svg]:size-6";
+  "flex min-h-14 flex-1 flex-col items-center justify-center text-[13px] no-underline [&_svg]:size-6";
 
 /**
  * Phone/tablet navigation at the bottom (docs/design/screens/06-mobil-den): the module's main tabs
@@ -50,17 +50,24 @@ export function MobileNav({
             aria-current={active ? "page" : undefined}
             className={cn(
               tabClass,
-              active ? "font-semibold text-primary" : "text-muted-foreground",
+              // The current page: bold green label and a thicker icon.
+              active
+                ? "font-bold text-primary [&_svg]:stroke-[2.5]"
+                : "text-muted-foreground/75",
             )}
           >
-            {tab.icon}
+            <span className="flex h-8 w-16 items-center justify-center">
+              {tab.icon}
+            </span>
             {tab.label}
           </Link>
         );
       })}
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetTrigger className={cn(tabClass, "text-muted-foreground")}>
-          <Menu aria-hidden />
+        <SheetTrigger className={cn(tabClass, "text-muted-foreground/75")}>
+          <span className="flex h-8 w-16 items-center justify-center">
+            <Menu aria-hidden />
+          </span>
           {t("more")}
         </SheetTrigger>
         <SheetContent
