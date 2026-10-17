@@ -1,6 +1,18 @@
 /** All dates are displayed in this time zone; the database stores timestamptz. */
 export const APP_TIME_ZONE = "Europe/Prague";
 
+/**
+ * A real calendar date "YYYY-MM-DD" (2026-02-30 and 2026-13-01 are not). Client dates are checked with
+ * this before they reach the database: Postgres rejects an impossible date with error 22008 (HTTP 500,
+ * SQL in the log), while a regex or Date.parse lets it through.
+ */
+export function isCalendarDate(value: unknown): value is string {
+  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value))
+    return false;
+  const d = new Date(`${value}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === value;
+}
+
 /** Shifts a calendar date "YYYY-MM-DD" by whole days (no time zone involved). */
 export function addDays(date: string, days: number): string {
   const d = new Date(`${date}T00:00:00Z`);
@@ -64,7 +76,7 @@ export function pragueDate(instant: Date): string {
  */
 export function pragueInstant(date: string, time: string): Date | null {
   const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(time);
-  if (!match || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
+  if (!match || !isCalendarDate(date)) return null;
   const wallClock = Date.parse(`${date}T${time}:00Z`);
   if (Number.isNaN(wallClock)) return null;
   // Prague is UTC+2 in summer and UTC+1 in winter; try the earlier instant first.

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   addDays,
+  isCalendarDate,
   isWeekend,
   monthStart,
   pragueDate,
@@ -8,6 +9,34 @@ import {
   pragueTime,
   todayInPrague,
 } from "./dates";
+
+describe("isCalendarDate", () => {
+  it("accepts real dates including leap days", () => {
+    expect(isCalendarDate("2026-10-17")).toBe(true);
+    expect(isCalendarDate("2024-02-29")).toBe(true);
+    expect(isCalendarDate("2000-02-29")).toBe(true);
+    expect(isCalendarDate("2026-12-31")).toBe(true);
+  });
+
+  it("rejects impossible days and months", () => {
+    expect(isCalendarDate("2026-02-30")).toBe(false);
+    expect(isCalendarDate("2025-02-29")).toBe(false);
+    expect(isCalendarDate("2100-02-29")).toBe(false);
+    expect(isCalendarDate("2026-04-31")).toBe(false);
+    expect(isCalendarDate("2026-13-01")).toBe(false);
+    expect(isCalendarDate("2026-00-10")).toBe(false);
+    expect(isCalendarDate("2026-01-00")).toBe(false);
+  });
+
+  it("rejects other shapes and types", () => {
+    expect(isCalendarDate("2026-1-05")).toBe(false);
+    expect(isCalendarDate("2026-01-05T00:00")).toBe(false);
+    expect(isCalendarDate(" 2026-01-05")).toBe(false);
+    expect(isCalendarDate("")).toBe(false);
+    expect(isCalendarDate(undefined)).toBe(false);
+    expect(isCalendarDate(["2026-01-05"])).toBe(false);
+  });
+});
 
 describe("addDays", () => {
   it("crosses month, year and DST boundaries by calendar days", () => {

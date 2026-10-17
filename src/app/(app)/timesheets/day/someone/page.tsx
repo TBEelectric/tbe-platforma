@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/shell/page-header";
 import { Card, CardContent } from "@/components/ui/card";
 import { requirePermission } from "@/lib/current-user";
 import { calendarDate } from "@/i18n/format";
-import { todayInPrague } from "@/lib/dates";
+import { isCalendarDate, todayInPrague } from "@/lib/dates";
 import {
   canRecordOwnTime,
   canWriteForSomeoneElse,
@@ -21,10 +21,7 @@ export default async function WriteForSomeonePage({
 }: PageProps<"/timesheets/day/someone">) {
   const user = await requirePermission(canWriteForSomeoneElse);
   const { date: raw } = await searchParams;
-  const date =
-    typeof raw === "string" && /^\d{4}-\d{2}-\d{2}$/.test(raw)
-      ? raw
-      : todayInPrague();
+  const date = isCalendarDate(raw) ? raw : todayInPrague();
   const employees = await listWritableEmployees(user.actor, date);
   const t = await getTranslations("timesheets");
   const format = await getFormatter();

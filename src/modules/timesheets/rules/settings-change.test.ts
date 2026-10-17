@@ -103,6 +103,12 @@ describe("settingsFormSchema", () => {
     });
   });
 
+  it("refuses an impossible date", () => {
+    expect(errorsOf({ validFrom: "2026-02-30" })).toEqual({
+      validFrom: "validation.invalidDate",
+    });
+  });
+
   it("keeps the deadlines in order: confirm, approve, close", () => {
     expect(errorsOf({ confirmDeadlineDay: "6" })).toEqual({
       approveDeadlineDay: "validation.deadlineOrder",

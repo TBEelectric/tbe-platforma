@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { MessageKey, MessageValues, Msg } from "@/i18n/messages";
+import { isCalendarDate } from "@/lib/dates";
 
 // Form schemas shared by forms, server actions and the import. Messages are translation keys
 // (validation.*), shown next to the field; fieldErrors() turns issues into Msg.
@@ -21,10 +22,7 @@ const isoDate = () =>
   z
     .string({ error: "validation.required" })
     .regex(/^\d{4}-\d{2}-\d{2}$/, "validation.enterDate")
-    .refine(
-      (v) => !Number.isNaN(Date.parse(`${v}T00:00:00Z`)),
-      "validation.invalidDate",
-    );
+    .refine(isCalendarDate, "validation.invalidDate");
 
 const optionalUuid = z
   .string()

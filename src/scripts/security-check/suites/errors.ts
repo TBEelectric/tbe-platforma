@@ -27,8 +27,12 @@ function secrets(): Array<[string, string]> {
 /** Not a UUID; the second passes a loose /^[0-9a-f-]{36}$/ check, Postgres still rejects it. */
 const BAD_IDS = ["x", "-".repeat(36)];
 
+/** Pass a /^\d{4}-\d{2}-\d{2}$/ check (and Date.parse), Postgres rejects them with error 22008. */
+const BAD_DATES = ["2026-02-30", "2026-13-01", "2025-02-29"];
+
 /** What the server logs for an unexpected error (a 500), e.g. a failed query. */
-const SERVER_ERROR = /22P02|invalid input syntax|Failed query|\bError\b/;
+const SERVER_ERROR =
+  /22P02|22008|invalid input syntax|field value out of range|Failed query|\bError\b/;
 
 /** Runs a request and returns what the server logged meanwhile (requests run one at a time). */
 async function serverLogDuring<T>(
@@ -103,6 +107,72 @@ export async function errorsSuite(ctx: Ctx) {
           );
           assert(res.status < 500, `status ${res.status}`);
           assert(leaksIn(res.body).length === 0, "shows internals");
+          assert(!SERVER_ERROR.test(log), `server log: ${log.slice(0, 300)}`);
+        },
+      );
+
+  // Impossible dates in ?date=: the page falls back to its default day, never a database error.
+  for (const path of [
+    "/timesheets/day?date=",
+    `/timesheets/day?employee=${fx.ids.eb}&date=`,
+    "/timesheets/day/someone?date=",
+  ])
+    for (const bad of BAD_DATES)
+      await report.check(
+        `${path.replace(fx.ids.eb, "eb")}${bad} has no server error`,
+        async () => {
+          const [res, log] = await serverLogDuring(ctx, () =>
+            ctx.as("mg").get(`${path}${bad}`),
+          );
+          assert(res.status < 500, `status ${res.status}`);
+          assert(leaksIn(res.body).length === 0, "shows internals");
+          assert(!SERVER_ERROR.test(log), `server log: ${log.slice(0, 300)}`);
+        },
+      );
+
+  // Impossible dates in timeline action arguments: their usual refusal, never a database error.
+  for (const [label, expected, run] of [
+    [
+      "timelineAction",
+      { ok: false, error: "validation.invalid" },
+      (date: string) =>
+        ctx.call("mg", "timeline", "timelineAction", [
+          {
+            employeeId: fx.ids.eb,
+            date,
+            reason: "secchk",
+            command: { type: "fill", source: "usual" },
+          },
+        ]),
+    ],
+    [
+      "loadTimelineDayAction",
+      null,
+      (date: string) =>
+        ctx.call("mg", "timeline", "loadTimelineDayAction", [fx.ids.eb, date]),
+    ],
+    [
+      "pinTeamJobAction",
+      null,
+      (date: string) =>
+        ctx.call("mg", "timeline", "pinTeamJobAction", [
+          fx.ids.eb,
+          date,
+          fx.jobs.j1,
+          true,
+        ]),
+    ],
+  ] as const)
+    for (const bad of BAD_DATES)
+      await report.check(
+        `${label}(${bad}) is refused, no server error`,
+        async () => {
+          const [res, log] = await serverLogDuring(ctx, () => run(bad));
+          assert(
+            res.kind === "ok" &&
+              JSON.stringify(res.value) === JSON.stringify(expected),
+            `${res.kind} ${JSON.stringify(res.value ?? null).slice(0, 120)}`,
+          );
           assert(!SERVER_ERROR.test(log), `server log: ${log.slice(0, 300)}`);
         },
       );
@@ -266,6 +336,14 @@ export async function errorsSuite(ctx: Ctx) {
     async () => {
       const log = ctx.server.output();
       assert(!/22P02|invalid input syntax for type uuid/.test(log), "found");
+    },
+  );
+
+  await report.check(
+    "no impossible-date errors (22008) in the server log",
+    async () => {
+      const log = ctx.server.output();
+      assert(!/22008|date\/time field value out of range/.test(log), "found");
     },
   );
 

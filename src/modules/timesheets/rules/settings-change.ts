@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { msg, type Msg } from "@/i18n/messages";
+import { isCalendarDate } from "@/lib/dates";
 import { formatMinutes } from "@/lib/duration";
 import {
   SETTING_KEYS,
@@ -151,7 +152,9 @@ const fields = Object.fromEntries(
 export const settingsFormSchema = z
   .object({
     ...fields,
-    validFrom: text.regex(/^\d{4}-\d{2}-\d{2}$/, "validation.enterDate"),
+    validFrom: text
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "validation.enterDate")
+      .refine(isCalendarDate, "validation.invalidDate"),
   })
   .superRefine((v, ctx) => {
     const issue = (path: SettingField, message: string) =>

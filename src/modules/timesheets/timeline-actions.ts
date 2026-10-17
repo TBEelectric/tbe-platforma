@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requirePermission } from "@/lib/current-user";
+import { isCalendarDate } from "@/lib/dates";
 import { canPinTeamJobs, pinTeamJob, unpinTeamJob, type Actor } from "../core";
 import { db } from "@/lib/db";
 import {
@@ -75,7 +76,7 @@ const commandSchema = z.discriminatedUnion("type", [
 
 const inputSchema = z.object({
   employeeId: id,
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  date: z.string().refine(isCalendarDate),
   /** Required when writing for someone else. */
   reason: z.string().max(500).nullable().optional(),
   command: commandSchema,
@@ -109,8 +110,7 @@ export async function loadTimelineDayAction(
   date: string,
 ): Promise<TimelineDay | null> {
   const user = await requirePermission(canWriteTime);
-  if (!id.safeParse(employeeId).success || !/^\d{4}-\d{2}-\d{2}$/.test(date))
-    return null;
+  if (!id.safeParse(employeeId).success || !isCalendarDate(date)) return null;
   const teamId = await teamOn(db, employeeId, date);
   if (!canWriteTimeFor(user.actor, { employeeId, teamId })) return null;
   return getTimelineDay(employeeId, date, new Date(), user.actor);
@@ -130,7 +130,7 @@ export async function pinTeamJobAction(
   if (
     !id.safeParse(employeeId).success ||
     !id.safeParse(jobId).success ||
-    !/^\d{4}-\d{2}-\d{2}$/.test(date)
+    !isCalendarDate(date)
   )
     return null;
   const teamId = await teamOn(db, employeeId, date);

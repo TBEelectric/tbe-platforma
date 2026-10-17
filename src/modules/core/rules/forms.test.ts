@@ -95,6 +95,13 @@ describe("employmentFormSchema", () => {
         scheduleType: "flexible",
       }).success,
     ).toBe(false);
+    expect(
+      employmentFormSchema.safeParse({
+        type: "dpp",
+        validFrom: "2026-02-30",
+        scheduleType: "flexible",
+      }).success,
+    ).toBe(false);
   });
 });
 

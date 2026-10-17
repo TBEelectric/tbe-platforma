@@ -4,7 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { buttonVariants } from "@/components/ui/button";
 import { requirePermission } from "@/lib/current-user";
 import { isId } from "@/lib/ids";
-import { todayInPrague } from "@/lib/dates";
+import { isCalendarDate, todayInPrague } from "@/lib/dates";
 import { db } from "@/lib/db";
 import type { Actor } from "@/modules/core";
 import {
@@ -20,8 +20,6 @@ import { DayScreen } from "@/modules/timesheets/components/day/day-screen";
 // Blocks on the auth check and reads today's date.
 export const instant = false;
 
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
-
 const canOpen = (actor: Actor) =>
   canRecordOwnTime(actor) || canWriteForSomeoneElse(actor);
 
@@ -30,12 +28,7 @@ export default async function DayPage({
 }: PageProps<"/timesheets/day">) {
   const user = await requirePermission(canOpen);
   const params = await searchParams;
-  const requestedDate =
-    typeof params.date === "string" &&
-    ISO_DATE.test(params.date) &&
-    !Number.isNaN(Date.parse(params.date))
-      ? params.date
-      : null;
+  const requestedDate = isCalendarDate(params.date) ? params.date : null;
   const requested =
     typeof params.employee === "string" && isId(params.employee)
       ? params.employee
