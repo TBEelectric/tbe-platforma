@@ -25,6 +25,9 @@ export const DAY_TO = 24 * 60;
 /** From 22:00 to 6:00 an entry is night work (visual note only; limits live in timesheet_settings). */
 export const NIGHT_START = 22 * 60;
 export const NIGHT_END = 6 * 60;
+/** The wide desktop axis folds the evening earlier: 21:00, with the hour after 20:00 shaded. */
+export const DESKTOP_DAY_TO = 21 * 60;
+export const EVENING_START = 20 * 60;
 
 const FULL_AXIS: AxisRange = { start: AXIS_START, end: AXIS_END };
 
@@ -62,9 +65,10 @@ export type NightState = {
 export function nightState(
   entries: AxisRange[],
   requested: { top: boolean; bottom: boolean },
+  dayTo: number = DAY_TO,
 ): NightState {
   const topForced = entries.some((e) => e.start < DAY_FROM);
-  const bottomForced = entries.some((e) => e.end > DAY_TO);
+  const bottomForced = entries.some((e) => e.end > dayTo);
   return {
     top: requested.top || topForced,
     bottom: requested.bottom || bottomForced,
@@ -76,9 +80,10 @@ export function nightState(
 /** The shown part of the axis: 5:00–24:00, with the night parts that are open. */
 export const shownRange = (
   night: Pick<NightState, "top" | "bottom">,
+  dayTo: number = DAY_TO,
 ): AxisRange => ({
   start: night.top ? AXIS_START : DAY_FROM,
-  end: night.bottom ? AXIS_END : DAY_TO,
+  end: night.bottom ? AXIS_END : dayTo,
 });
 
 /** Position of a minute in a shown range as a fraction 0–1 (for the horizontal axis). */

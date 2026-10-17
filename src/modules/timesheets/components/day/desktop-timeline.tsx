@@ -17,6 +17,9 @@ import { jobLabel } from "@/modules/core/shared";
 import type { TimelineDay, TimelineJob } from "../../timeline";
 import {
   AXIS_END,
+  DESKTOP_DAY_TO,
+  EVENING_START,
+  NIGHT_START,
   axisTime,
   dragCreate,
   halfHourMarks,
@@ -97,7 +100,10 @@ export function DesktopTimeline({
   const { day, entries, selectedId, message, setMessage, select } = tl;
   const editability = dayEditability(day);
   const readOnly = !editability.editable;
-  const { night, range, toggleTop, toggleBottom } = useNight(entries);
+  const { night, range, toggleTop, toggleBottom } = useNight(
+    entries,
+    DESKTOP_DAY_TO,
+  );
   const trackRef = useRef<HTMLDivElement>(null);
   const gesture = useRef<Active | null>(null);
   const [hover, setHover] = useState<number | null>(null);
@@ -396,6 +402,16 @@ export function DesktopTimeline({
                 }}
               />
             ))}
+            {range.end > EVENING_START && (
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-y-0 bg-[#6b7785]/[0.12]"
+                style={{
+                  left: pct(Math.max(EVENING_START, range.start)),
+                  width: `${(minuteFraction(Math.min(NIGHT_START, range.end), range) - minuteFraction(Math.max(EVENING_START, range.start), range)) * 100}%`,
+                }}
+              />
+            )}
             {halves.map((m) => (
               <div
                 key={m}
