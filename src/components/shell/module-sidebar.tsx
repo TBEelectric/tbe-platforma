@@ -40,7 +40,7 @@ export function ModuleSidebar({
 
   return (
     <div className="flex h-full flex-col gap-1 bg-sidebar px-3.5 py-5 text-sidebar-foreground">
-      <Link href="/" className="px-2 pt-1 pb-4 no-underline">
+      <Link href="/" className="px-2 pt-1 pb-7 no-underline">
         <Brand />
       </Link>
       <Link
